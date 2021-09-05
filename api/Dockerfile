@@ -7,9 +7,9 @@ RUN apk add --update --no-cache musl-dev
 # Build dependencies and proc-macros.
 WORKDIR /workspace/api
 RUN cargo init --bin --name api
-COPY ./macros/Cargo.toml ./macros/Cargo.lock ./macros/
-COPY ./macros/src/ ./macros/src/
-COPY ./Cargo.toml ./Cargo.lock ./
+COPY macros/Cargo.toml macros/Cargo.lock macros/
+COPY macros/src/ macros/src/
+COPY Cargo.toml Cargo.lock ./
 RUN cargo build --release
 
 # Build api.

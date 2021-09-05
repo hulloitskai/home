@@ -29,7 +29,7 @@ const HomePage: FC = () => {
 
   return (
     <Container>
-      <VStack spacing={[8, 12]} py={[12, 20]}>
+      <VStack spacing={[10, 12]} py={[16, 20]}>
         <VStack spacing={0}>
           <Text fontSize="6xl" fontWeight="bold">
             Hullo!

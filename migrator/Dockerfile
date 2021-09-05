@@ -12,10 +12,10 @@ FROM node:14-alpine3.13 AS runner
 RUN apk add --update --no-cache curl
 
 WORKDIR /app
-COPY ./migrations/ ./migrations/
-COPY ./migrate-mongo-config.js ./
-COPY --from=builder /dist/migrator/node_modules ./node_modules
-COPY --from=builder /dist/migrator/package.json ./package.json
+COPY migrations/ migrations/
+COPY migrate-mongo-config.js ./
+COPY --from=builder /dist/migrator/node_modules/ node_modules/
+COPY --from=builder /dist/migrator/package.json package.json
 
 ENTRYPOINT ["yarn"]
 CMD ["up"]
