@@ -19,7 +19,7 @@ impl HeartRateObject {
         updated_at.into()
     }
 
-    async fn measurement(&self) -> u8 {
+    async fn measurement(&self) -> u16 {
         self.measurement
     }
 

@@ -24,7 +24,7 @@ pub struct HeartRate {
     #[builder(default = Utc::now(), setter(skip))]
     pub updated_at: DateTime,
 
-    pub measurement: u8,
+    pub measurement: u16,
     pub timestamp: DateTime,
 }
 
@@ -33,7 +33,7 @@ struct HeartRateDocument {
     pub id: ObjectId,
     pub created_at: BsonDateTime,
     pub updated_at: BsonDateTime,
-    pub measurement: u8,
+    pub measurement: u16,
     pub timestamp: BsonDateTime,
 }
 

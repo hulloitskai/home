@@ -285,7 +285,7 @@ async fn import_health_data(
                 avg: measurement,
                 date: timestamp,
             } = measurement;
-            let measurement = measurement.round() as u8;
+            let measurement = measurement.round() as u16;
             let timestamp: DateTime<Utc> = {
                 let timestamp = DateTime::parse_from_str(
                     &timestamp, "%F %T %z",
