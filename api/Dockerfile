@@ -4,6 +4,9 @@ FROM rust:1.54-alpine as builder
 # Install system dependencies.
 RUN apk add --update --no-cache musl-dev
 
+ARG BUILD_VERSION
+ENV BUILD_VERSION=${BUILD_VERSION}
+
 # Build dependencies and proc-macros.
 WORKDIR /workspace/api
 RUN cargo init --bin --name api

@@ -3,23 +3,29 @@ use chrono::Local;
 use semver::Version;
 
 use git::{DescribeFormatOptions, DescribeOptions, Repository};
-use std::env::{var as get_env, VarError as EnvVarError};
+use std::env::var as env_var;
+use std::env::VarError as EnvVarError;
 
 fn main() -> Result<()> {
     // Set build timestamp.
-    set_env("BUILD_TIMESTAMP", &Local::now().to_rfc3339());
+    set_build_env("BUILD_TIMESTAMP", &Local::now().to_rfc3339());
 
-    // Set build version from git.
-    let version = git_version();
-    let version = match version {
-        Ok(version) => version,
-        Err(error) => {
-            eprintln!("failed to describe git version: {}", error);
-            String::new()
+    // Set build version.
+    let version = match env_var("BUILD_VERSION").ok() {
+        Some(version) => version,
+        None => {
+            let version = git_version();
+            match version {
+                Ok(version) => version,
+                Err(error) => {
+                    eprintln!("failed to describe git version: {}", error);
+                    String::new()
+                }
+            }
         }
     };
     let version = fmt_version(version);
-    set_env("BUILD_VERSION", &version);
+    set_build_env("BUILD_VERSION", &version);
 
     Ok(())
 }
@@ -34,7 +40,7 @@ fn git_version() -> Result<String> {
         )
         .context("failed to describe HEAD")?;
 
-    let suffix = get_env("BUILD_VERSION_DIRTY_SUFFIX");
+    let suffix = env_var("BUILD_VERSION_DIRTY_SUFFIX");
     let suffix = match suffix {
         Ok(suffix) => suffix,
         Err(error) => match error {
@@ -72,6 +78,6 @@ fn fmt_version(version: String) -> String {
     version.to_string()
 }
 
-fn set_env(key: &str, val: &str) {
+fn set_build_env(key: &str, val: &str) {
     println!("cargo:rustc-env={}={}", key, val);
 }

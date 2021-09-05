@@ -30,12 +30,20 @@ jobs:
         uses: hulloitskai/generate-docker-tags-action@v0.2.1
         with:
           repo: hulloitskai/home-api
+      - name: Describe build version
+        id: describe-version
+        uses: jimschubert/query-tag-action@v2
+        with:
+          commit-ish: HEAD
+          skip-unshallow: "true"
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: ./api/
           push: true
           tags: ${{ steps.generate-tags.outputs.tags }}
+          build-args: |
+            BUILD_VERSION=${{ steps.describe-version.outputs.tag }}
           cache-from: |
             type=local,src=/tmp/.docker-cache
           cache-to: |
