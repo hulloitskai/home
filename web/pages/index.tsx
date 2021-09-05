@@ -1,12 +1,16 @@
-import React, { FC } from "react";
+import React from "react";
+import type { NextPage } from "next";
+import { getPageCookies } from "components";
 
+import { WithUrqlState } from "next-urql";
+import { withClient } from "components";
 import { gql, useQuery } from "urql";
 
 import { Container, Box, VStack, Center } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/react";
 
 import { BeatingHeart, BEATING_HEART_RATE_FRAGMENT } from "components";
-import { withClient } from "components";
+import { ChakraProviderProps } from "components";
 
 import { HomePageQuery, HomePageQueryVariables } from "graphql-types";
 
@@ -21,7 +25,9 @@ const HOME_PAGE_QUERY = gql`
   ${BEATING_HEART_RATE_FRAGMENT}
 `;
 
-const HomePage: FC = () => {
+interface HomePageProps extends WithUrqlState, ChakraProviderProps {}
+
+const HomePage: NextPage<HomePageProps> = () => {
   const [{ data, error }] = useQuery<HomePageQuery, HomePageQueryVariables>({
     query: HOME_PAGE_QUERY,
   });
@@ -85,6 +91,12 @@ const HomePage: FC = () => {
       </VStack>
     </Container>
   );
+};
+
+HomePage.getInitialProps = ctx => {
+  return {
+    cookies: getPageCookies(ctx),
+  };
 };
 
 export default withClient({ ssr: true })(HomePage);

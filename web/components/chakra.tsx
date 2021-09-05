@@ -1,4 +1,5 @@
-import React, { FC } from "react";
+import React, { FC, useMemo } from "react";
+import { NextPageContext } from "next";
 
 import {
   gray,
@@ -14,7 +15,10 @@ import {
 
 import { ChakraProvider as Provider } from "@chakra-ui/react";
 import { ThemeConfig, useTheme, extendTheme } from "@chakra-ui/react";
-import { transparentize } from "@chakra-ui/theme-tools";
+import { cookieStorageManager } from "@chakra-ui/react";
+
+import { StyleFunctionProps } from "@chakra-ui/theme-tools";
+import { transparentize, mode } from "@chakra-ui/theme-tools";
 
 const config: ThemeConfig = {
   useSystemColorMode: true,
@@ -54,14 +58,15 @@ export const ChakraTheme = extendTheme({
     3.5: "0.875rem",
   },
   styles: {
-    global: {
+    global: (props: StyleFunctionProps) => ({
       html: {
         WebkitFontSmoothing: "auto",
       },
       body: {
         lineHeight: "normal",
+        bg: mode("white", "black")(props),
       },
-    },
+    }),
   },
   components: {
     Form: {
@@ -108,9 +113,34 @@ export const ChakraTheme = extendTheme({
   },
 });
 
-export const ChakraProvider: FC = ({ children }) => (
-  <Provider theme={ChakraTheme}>{children}</Provider>
-);
+export interface ChakraProviderProps {
+  cookies?: string;
+}
+
+export const ChakraProvider: FC<ChakraProviderProps> = ({
+  cookies,
+  children,
+}) => {
+  const colorModeManager = useMemo(() => {
+    return cookieStorageManager(cookies);
+  }, [cookies]);
+  return (
+    <Provider theme={ChakraTheme} colorModeManager={colorModeManager}>
+      {children}
+    </Provider>
+  );
+};
+
+export const getPageCookies = ({
+  req,
+}: NextPageContext): string | undefined => {
+  const { cookie } = req?.headers ?? {};
+  return cookie
+    ? Array.isArray(cookie)
+      ? cookie.join("; ")
+      : cookie
+    : undefined;
+};
 
 export const useTransparentize = (color: string, opacity: number): string => {
   const theme = useTheme();
