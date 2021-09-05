@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { NextPage } from "next";
 import { getPageCookies } from "components";
 
@@ -28,10 +28,23 @@ const HOME_PAGE_QUERY = gql`
 interface HomePageProps extends WithUrqlState, ChakraProviderProps {}
 
 const HomePage: NextPage<HomePageProps> = () => {
-  const [{ data, error }] = useQuery<HomePageQuery, HomePageQueryVariables>({
+  const [{ data, error, fetching: isLoading }, executeQuery] = useQuery<
+    HomePageQuery,
+    HomePageQueryVariables
+  >({
     query: HOME_PAGE_QUERY,
   });
   const { heartRate } = data ?? {};
+
+  // Update every 10 seconds.
+  useEffect(() => {
+    if (!isLoading) {
+      const timeout = setTimeout(() => {
+        executeQuery();
+      }, 10000);
+      return () => clearTimeout(timeout);
+    }
+  }, [data, isLoading, executeQuery]);
 
   return (
     <Container>

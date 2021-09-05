@@ -10,7 +10,7 @@ const App: FC<NextAppProps> = ({ Component, pageProps }) => {
   return (
     <>
       <Head>
-        <title>Hullo! It&apos;s Kai</title>
+        <title>It&apos;s Kai</title>
       </Head>
       <ChakraProvider cookies={pageProps.cookies}>
         <Component {...pageProps} />

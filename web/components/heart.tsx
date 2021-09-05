@@ -1,5 +1,4 @@
 import React, { FC, useMemo } from "react";
-import NoSSR from "react-no-ssr";
 import humanizeDuration from "humanize-duration";
 
 import { motion } from "framer-motion";
@@ -44,37 +43,33 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
   }, [interval]);
 
   return (
-    <NoSSR>
-      <Box pos="relative" {...otherProps}>
-        <Text
+    <Box pos="relative" {...otherProps}>
+      <Text
+        fontSize="3xl"
+        filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
+        _dark={{ opacity: 0.6 }}
+      >
+        ❤️
+      </Text>
+      <Center pos="absolute" inset={0}>
+        <MotionText
           fontSize="3xl"
-          filter={
-            bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"
+          initial={bpm ? undefined : false}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={
+            interval && duration
+              ? {
+                  duration,
+                  repeat: Infinity,
+                  repeatDelay: interval - duration,
+                }
+              : undefined
           }
-          _dark={{ opacity: 0.6 }}
         >
-          ❤️
-        </Text>
-        <Center pos="absolute" inset={0}>
-          <MotionText
-            fontSize="3xl"
-            initial={bpm ? undefined : false}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={
-              interval && duration
-                ? {
-                    duration,
-                    repeat: Infinity,
-                    repeatDelay: interval - duration,
-                  }
-                : undefined
-            }
-          >
-            {bpm === null ? "💔" : "❤️"}
-          </MotionText>
-        </Center>
-      </Box>
-    </NoSSR>
+          {bpm === null ? "💔" : "❤️"}
+        </MotionText>
+      </Center>
+    </Box>
   );
 };
 
