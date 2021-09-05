@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import humanizeDuration from "humanize-duration";
 
 import { motion } from "framer-motion";
@@ -82,16 +82,35 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
   ...otherProps
 }) => {
   const { measurement, timestamp } = rate ?? {};
-  const lastMeasured = useMemo(() => {
+
+  const [lastMeasured, setLastMeasured] = useState<string | undefined>();
+  useEffect(() => {
+    const humanizeDurationOptions: humanizeDuration.Options = {
+      largest: 1,
+      units: ["h", "m", "s"],
+      round: true,
+    };
     if (timestamp) {
-      const diff = DateTime.fromISO(timestamp).diffNow();
-      return humanizeDuration(diff.toMillis(), {
-        largest: 1,
-        units: ["h", "m", "s"],
-        round: true,
-      });
+      const lastMeasuredAt = DateTime.fromISO(timestamp);
+      const lastMeasured = humanizeDuration(
+        lastMeasuredAt.diffNow().toMillis(),
+        humanizeDurationOptions,
+      );
+      setLastMeasured(lastMeasured);
+
+      const interval = setInterval(() => {
+        const nextLastMeasured = humanizeDuration(
+          lastMeasuredAt.diffNow().toMillis(),
+          humanizeDurationOptions,
+        );
+        if (nextLastMeasured !== lastMeasured) {
+          setLastMeasured(nextLastMeasured);
+        }
+      }, 10000);
+      return () => clearInterval(interval);
     }
   }, [timestamp]);
+
   return (
     <VStack {...otherProps}>
       <Box />
