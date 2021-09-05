@@ -124,10 +124,10 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
       {rate && (
         <VStack spacing={0.5}>
           <Text color="gray.500" fontSize="sm" fontWeight="semibold">
-            {measurement} bpm
+            This is my heartbeat.
           </Text>
           <Text color="gray.400" fontSize="xs" _dark={{ color: "gray.600" }}>
-            measured {lastMeasured} ago
+            ({measurement} bpm, measured {lastMeasured} ago)
           </Text>
         </VStack>
       )}
