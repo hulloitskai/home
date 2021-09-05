@@ -47,7 +47,7 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
       <Text
         fontSize="3xl"
         filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
-        _dark={{ opacity: 0.6 }}
+        _dark={{ opacity: 0.75 }}
       >
         ❤️
       </Text>
@@ -81,36 +81,41 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
   rate,
   ...otherProps
 }) => {
-  const { measurement, timestamp } = rate ?? {};
+  const { measurement, timestamp: timestampISO } = rate ?? {};
 
   // Update last-measured description every 5 seconds.
   const [lastMeasured, setLastMeasured] = useState<string | undefined>();
-  useEffect(() => {
-    const humanizeDurationOptions: humanizeDuration.Options = {
-      largest: 1,
-      units: ["h", "m", "s"],
-      round: true,
-    };
-    if (timestamp) {
-      const lastMeasuredAt = DateTime.fromISO(timestamp);
-      const lastMeasured = humanizeDuration(
-        lastMeasuredAt.diffNow().toMillis(),
-        humanizeDurationOptions,
-      );
-      setLastMeasured(lastMeasured);
+  useEffect(
+    () => {
+      const humanizeDurationOptions: humanizeDuration.Options = {
+        largest: 1,
+        units: ["h", "m", "s"],
+        round: true,
+      };
+      if (timestampISO) {
+        const timestamp = DateTime.fromISO(timestampISO);
+        (() => {
+          const lastReported = humanizeDuration(
+            timestamp.diffNow().toMillis(),
+            humanizeDurationOptions,
+          );
+          setLastMeasured(lastReported);
+        })();
 
-      const interval = setInterval(() => {
-        const nextLastMeasured = humanizeDuration(
-          lastMeasuredAt.diffNow().toMillis(),
-          humanizeDurationOptions,
-        );
-        if (nextLastMeasured !== lastMeasured) {
-          setLastMeasured(nextLastMeasured);
-        }
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [timestamp]);
+        const interval = setInterval(() => {
+          const value = humanizeDuration(
+            timestamp.diffNow().toMillis(),
+            humanizeDurationOptions,
+          );
+          if (value !== lastMeasured) {
+            setLastMeasured(value);
+          }
+        }, 5000);
+        return () => clearInterval(interval);
+      }
+    },
+    [timestampISO], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <VStack {...otherProps}>
@@ -122,7 +127,7 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
             {measurement} bpm
           </Text>
           <Text color="gray.400" fontSize="xs" _dark={{ color: "gray.600" }}>
-            reported {lastMeasured} ago
+            measured {lastMeasured} ago
           </Text>
         </VStack>
       )}
