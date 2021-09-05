@@ -47,16 +47,17 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
     <NoSSR>
       <Box pos="relative" {...otherProps}>
         <Text
-          fontSize="2xl"
+          fontSize="3xl"
           filter={
             bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"
           }
+          _dark={{ opacity: 0.6 }}
         >
           ❤️
         </Text>
         <Center pos="absolute" inset={0}>
           <MotionText
-            fontSize="xl"
+            fontSize="3xl"
             initial={bpm ? undefined : false}
             animate={{ scale: [1, 1.1, 1] }}
             transition={
@@ -105,7 +106,7 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
           <Text color="gray.500" fontSize="sm" fontWeight="semibold">
             {measurement} bpm
           </Text>
-          <Text color="gray.400" fontSize="xs">
+          <Text color="gray.400" fontSize="xs" _dark={{ color: "gray.600" }}>
             reported {lastMeasured} ago
           </Text>
         </VStack>

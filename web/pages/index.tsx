@@ -36,7 +36,7 @@ const HomePage: FC = () => {
           </Text>
           <Text color="gray.500" fontSize="3xl" fontWeight="bold">
             It&apos;s me,{" "}
-            <Text as="span" color="gray.800">
+            <Text as="span" color="gray.800" _dark={{ color: "gray.300" }}>
               Kai
             </Text>
             .
@@ -47,7 +47,7 @@ const HomePage: FC = () => {
           <Box color="gray.500" fontSize="lg" fontWeight="semibold">
             {heartRate && (
               <Text>
-                <Text as="span" color="gray.800">
+                <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
                   I am currently alive
                 </Text>
                 , although little else is known about me at the current moment.
@@ -55,7 +55,7 @@ const HomePage: FC = () => {
             )}
             {(heartRate === null || error) && (
               <Text>
-                <Text as="span" color="gray.800">
+                <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
                   It is unknown whether I am alive.
                 </Text>{" "}
                 Little else is known about me at the current moment.
@@ -72,10 +72,10 @@ const HomePage: FC = () => {
           fontWeight="semibold"
         >
           <Center>
-            <Text fontSize="2xl">🚧</Text>
+            <Text fontSize="3xl">🚧</Text>
           </Center>
           <Text>
-            <Text as="span" color="gray.700">
+            <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
               This is a work-in-progress.
             </Text>
             <br />

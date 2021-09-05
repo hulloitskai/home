@@ -13,11 +13,15 @@ import {
 } from "tailwindcss/colors";
 
 import { ChakraProvider as Provider } from "@chakra-ui/react";
-import { Theme, useTheme, extendTheme } from "@chakra-ui/react";
+import { ThemeConfig, useTheme, extendTheme } from "@chakra-ui/react";
 import { transparentize } from "@chakra-ui/theme-tools";
 
-// @ts-ignore
-export const ChakraTheme: Theme = extendTheme({
+const config: ThemeConfig = {
+  useSystemColorMode: true,
+};
+
+export const ChakraTheme = extendTheme({
+  config,
   colors: {
     gray,
     red: rose,
