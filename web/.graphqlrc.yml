@@ -1,0 +1,6 @@
+schema: http://localhost:3000/graphql
+documents:
+  - ./components/**/*.ts
+  - ./components/**/*.tsx
+  - ./pages/**/*.ts
+  - ./pages/**/*.tsx

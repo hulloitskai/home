@@ -1,0 +1,18 @@
+overwrite: true
+schema: http://localhost:3000/graphql
+config:
+  dedupeFragments: true
+documents:
+  - ./components/**/*.ts
+  - ./components/**/*.tsx
+  - ./pages/**/*.ts
+  - ./pages/**/*.tsx
+generates:
+  graphql-types.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - urql-introspection
+  ./graphql-schema.json:
+    plugins:
+      - introspection
