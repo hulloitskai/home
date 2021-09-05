@@ -69,7 +69,7 @@ const HomePage: NextPage<HomePageProps> = () => {
                 <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
                   I am currently alive
                 </Text>
-                , although little else is known about me at the current moment.
+                , although little else is known about me at the moment.
               </Text>
             )}
             {(heartRate === null || error) && (
@@ -77,7 +77,7 @@ const HomePage: NextPage<HomePageProps> = () => {
                 <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
                   It is unknown whether I am alive.
                 </Text>{" "}
-                Little else is known about me at the current moment.
+                Little else is known about me at the moment.
               </Text>
             )}
             {heartRate === undefined && !error && <Text>Loading...</Text>}
