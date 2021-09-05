@@ -83,6 +83,7 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
 }) => {
   const { measurement, timestamp } = rate ?? {};
 
+  // Update last-measured description every 5 seconds.
   const [lastMeasured, setLastMeasured] = useState<string | undefined>();
   useEffect(() => {
     const humanizeDurationOptions: humanizeDuration.Options = {
@@ -106,7 +107,7 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
         if (nextLastMeasured !== lastMeasured) {
           setLastMeasured(nextLastMeasured);
         }
-      }, 10000);
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [timestamp]);

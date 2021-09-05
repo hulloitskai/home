@@ -36,12 +36,12 @@ const HomePage: NextPage<HomePageProps> = () => {
   });
   const { heartRate } = data ?? {};
 
-  // Update every 10 seconds.
+  // Update every 5 seconds.
   useEffect(() => {
     if (!isLoading) {
       const timeout = setTimeout(() => {
         executeQuery();
-      }, 10000);
+      }, 1000);
       return () => clearTimeout(timeout);
     }
   }, [data, isLoading, executeQuery]);
