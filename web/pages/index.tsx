@@ -49,16 +49,16 @@ const HomePage: NextPage<HomePageProps> = () => {
   return (
     <Container>
       <VStack spacing={[10, 12]} py={[16, 20]}>
-        <VStack spacing={0}>
+        <VStack>
           <Text fontSize="6xl" fontWeight="bold">
             Hullo!
           </Text>
-          <Text color="gray.500" fontSize="3xl" fontWeight="bold">
+          <Text color="gray.500" fontSize="2xl" fontWeight="bold">
             It&apos;s me,{" "}
             <Text as="span" color="gray.800" _dark={{ color: "gray.300" }}>
               Kai
             </Text>
-            .
+            , your favorite NPC.
           </Text>
         </VStack>
         <VStack align="stretch" spacing={3} w={64}>
