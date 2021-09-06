@@ -25,11 +25,12 @@ pub struct HeartRate {
     pub updated_at: DateTime,
 
     pub measurement: u16,
-    pub timestamp: DateTime,
+    pub timestamp: DateTime<FixedOffset>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct HeartRateDocument {
+    #[serde(rename = "_id")]
     pub id: ObjectId,
     pub created_at: BsonDateTime,
     pub updated_at: BsonDateTime,
@@ -76,6 +77,7 @@ impl Object for HeartRate {
             measurement,
             timestamp,
         } = from_document(doc)?;
+        let timestamp = DateTime::from(timestamp);
 
         let rate = Self {
             id,

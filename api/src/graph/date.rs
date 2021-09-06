@@ -30,9 +30,9 @@ scalar!(
 );
 
 #[derive(Debug, Clone, From, Into, Deref)]
-pub struct DateTimeScalar(DateTime);
+pub struct DateTimeScalar<Tz: TimeZone = Utc>(DateTime<Tz>);
 
-impl Serialize for DateTimeScalar {
+impl<Tz: TimeZone> Serialize for DateTimeScalar<Tz> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -41,7 +41,17 @@ impl Serialize for DateTimeScalar {
     }
 }
 
-impl<'de> Deserialize<'de> for DateTimeScalar {
+impl<'de> Deserialize<'de> for DateTimeScalar<Utc> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let date_time = DateTime::deserialize(deserializer)?;
+        Ok(date_time.into())
+    }
+}
+
+impl<'de> Deserialize<'de> for DateTimeScalar<FixedOffset> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
