@@ -41,7 +41,7 @@ const HomePage: NextPage<HomePageProps> = () => {
     if (!isLoading) {
       const timeout = setTimeout(() => {
         executeQuery();
-      }, 1000);
+      }, 5000);
       return () => clearTimeout(timeout);
     }
   }, [data, isLoading, executeQuery]);
