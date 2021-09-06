@@ -2,7 +2,9 @@ use anyhow::{Context, Result};
 use chrono::Local;
 use semver::Version;
 
-use git::{DescribeFormatOptions, DescribeOptions, Repository};
+use git::Repository;
+use git::{DescribeFormatOptions, DescribeOptions};
+
 use std::env::var as env_var;
 use std::env::VarError as EnvVarError;
 
@@ -12,8 +14,8 @@ fn main() -> Result<()> {
 
     // Set build version.
     let version = match env_var("BUILD_VERSION").ok() {
-        Some(version) => version,
-        None => {
+        Some(version) if !version.is_empty() => version,
+        _ => {
             let version = git_version();
             match version {
                 Ok(version) => version,
@@ -31,7 +33,7 @@ fn main() -> Result<()> {
 }
 
 fn git_version() -> Result<String> {
-    let repo = Repository::open(".").context("open repository")?;
+    let repo = Repository::discover(".").context("open repository")?;
     let desc = repo
         .describe(
             DescribeOptions::default()
@@ -44,7 +46,7 @@ fn git_version() -> Result<String> {
     let suffix = match suffix {
         Ok(suffix) => suffix,
         Err(error) => match error {
-            EnvVarError::NotPresent => "dirty".to_owned(),
+            EnvVarError::NotPresent => String::new(),
             error => return Err(error).context("failed to get dirty suffix"),
         },
     };
