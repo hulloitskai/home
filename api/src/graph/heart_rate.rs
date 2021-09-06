@@ -25,7 +25,6 @@ impl HeartRateObject {
 
     async fn timestamp(&self) -> DateTimeScalar {
         let timestamp = self.timestamp.clone();
-        let timestamp = DateTime::from(timestamp);
         timestamp.into()
     }
 }

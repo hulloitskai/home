@@ -25,7 +25,7 @@ pub struct HeartRate {
     pub updated_at: DateTime,
 
     pub measurement: u16,
-    pub timestamp: DateTime<FixedOffset>,
+    pub timestamp: DateTime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

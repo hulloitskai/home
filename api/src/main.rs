@@ -286,12 +286,17 @@ async fn import_health_data(
                 date: timestamp,
             } = measurement;
             let measurement = measurement.round() as u16;
-            let timestamp = DateTime::parse_from_str(&timestamp, "%F %T %z")
+            let timestamp = {
+                let timestamp = DateTime::parse_from_str(
+                    &timestamp, "%F %T %z",
+                )
                 .context("failed to parse heart rate measurement date")?;
+                DateTime::from(timestamp)
+            };
 
             ctx.transact(|ctx| async move {
                 let rate_exists = HeartRate::find_one({
-                    let timestamp =DateTime::from(timestamp);
+                    let timestamp = DateTime::from(timestamp);
                     HeartRateConditions::builder()
                         .timestamp(Comparison::Eq(timestamp))
                         .build()
