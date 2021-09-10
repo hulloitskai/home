@@ -3,7 +3,6 @@ use entities::Comparison;
 use http::{Response, StatusCode};
 use tracing_subscriber::fmt::init as init_tracer;
 
-use std::borrow::Cow;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
@@ -64,7 +63,7 @@ async fn main() -> Result<()> {
     // Read build info.
     let timestamp: DateTime<FixedOffset> =
         DateTime::parse_from_rfc3339(env!("BUILD_TIMESTAMP"))
-            .context("failed to parse BUILD_TIMESTAMP")?;
+            .context("failed to parse build timestamp")?;
     let version = match env!("BUILD_VERSION") {
         "" => None,
         version => Some(version.to_owned()),
@@ -74,11 +73,11 @@ async fn main() -> Result<()> {
     // Connect to database.
     let database_client = {
         let uri = env_var_or("MONGO_URI", "mongodb://localhost:27017")
-            .context("failed to read MONGO_URI")?;
+            .context("failed to read environment variable MONGO_URI")?;
         let options = {
             let mut options = MongoClientOptions::parse(uri)
                 .await
-                .context("failed to parse MONGO_URI")?;
+                .context("failed to parse MongoDB connection string")?;
             options.retry_writes = true.into();
             options
         };
@@ -89,7 +88,7 @@ async fn main() -> Result<()> {
     info!(target: "home-api", "connecting to MongoDB...");
     let database = {
         let database_name = env_var_or("MONGO_DATABASE", "home")
-            .context("failed to read MONGO_DATABASE")?;
+            .context("failed to read environment variable MONGO_DATABASE")?;
         let database = database_client.database(&database_name);
         database
             .run_command(doc! { "ping": 1 }, None)
@@ -107,9 +106,10 @@ async fn main() -> Result<()> {
     // Build settings.
     let settings = {
         let web_public_url = {
-            let url = env_var("HOME_WEB_PUBLIC_URL")
-                .context("failed to read HOME_WEB_PUBLIC_URL")?;
-            url.parse().context("failed to parse HOME_WEB_PUBLIC_URL")?
+            let url = env_var("HOME_WEB_PUBLIC_URL").context(
+                "failed to read environment variable HOME_WEB_PUBLIC_URL",
+            )?;
+            url.parse().context("failed to parse home-web public URL")?
         };
         Settings::builder().web_public_url(web_public_url).build()
     };
@@ -204,9 +204,9 @@ async fn main() -> Result<()> {
         .recover(recover);
 
     let host = env_var_or("HOME_API_HOST", "0.0.0.0")
-        .context("failed to get server host")?;
+        .context("failed to get environment variable HOME_API_HOST")?;
     let port = env_var_or("HOME_API_PORT", "3000")
-        .context("failed to get server port")?;
+        .context("failed to get environment variable HOME_API_PORT")?;
     let addr: SocketAddr = format!("{}:{}", host, port)
         .parse()
         .context("failed to parse server address")?;
@@ -218,32 +218,79 @@ async fn main() -> Result<()> {
 
 async fn recover(rejection: Rejection) -> Result<impl Reply, Infallible> {
     let (error, status_code) = if rejection.is_not_found() {
-        let error = ServerError::new("not found");
+        let error = ErrorRejection::new("not found");
         (error, StatusCode::NOT_FOUND)
     } else if let Some(error) = rejection.find::<ErrorRejection>() {
-        let ErrorRejection(error) = error;
-        let error = ServerError::new(format!("{:#}", error));
+        let error = error.to_owned();
         (error, StatusCode::INTERNAL_SERVER_ERROR)
     } else if let Some(error) = rejection.find::<BadWarpGraphQLRequest>() {
         let BadWarpGraphQLRequest(error) = error;
-        let error = ServerError::new(error.to_string());
+        let error = ErrorRejection::new(error.to_string());
         (error, StatusCode::BAD_REQUEST)
     } else if let Some(error) = rejection.find::<Error>() {
-        let error = ServerError::new(format!("{:#}", error));
+        let error = ErrorRejection::from(error);
         (error, StatusCode::INTERNAL_SERVER_ERROR)
     } else {
         error!(target: "home-api", "unhandled rejection: {:?}", &rejection);
-        let error = ServerError::new("internal server error");
+        let error = ErrorRejection::new("internal server error");
         (error, StatusCode::INTERNAL_SERVER_ERROR)
     };
 
-    let reply = ServerRejectionReply {
+    let reply = ErrorReply {
         errors: vec![error],
         status_code: status_code.as_u16(),
     };
     let reply = reply_json(&reply);
     let reply = reply_with_status(reply, status_code);
     Ok::<_, Infallible>(reply)
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ErrorReply {
+    errors: Vec<ErrorRejection>,
+    status_code: u16,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ErrorRejection {
+    message: Cow<'static, str>,
+}
+
+impl ErrorRejection {
+    pub fn new(msg: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            message: msg.into(),
+        }
+    }
+}
+
+impl Reject for ErrorRejection {}
+
+impl From<&Error> for ErrorRejection {
+    fn from(error: &Error) -> Self {
+        let msg = format!("{:#}", error);
+        Self::new(msg)
+    }
+}
+
+impl From<Error> for ErrorRejection {
+    fn from(error: Error) -> Self {
+        Self::from(&error)
+    }
+}
+
+fn trace_graphql_response(response: &GraphQLResponse) {
+    response
+        .errors
+        .iter()
+        .for_each(|error| match error.message.as_str() {
+            "PersistedQueryNotFound" => (),
+            _ => {
+                error!(target: "home-api", "GraphQL error: {:#}", error)
+            }
+        })
 }
 
 #[derive(Debug, Deserialize)]
@@ -324,41 +371,4 @@ async fn import_health_data(
         }
     }
     Ok(())
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ServerRejectionReply {
-    errors: Vec<ServerError>,
-    status_code: u16,
-}
-
-#[derive(Debug, Serialize)]
-struct ServerError {
-    message: Cow<'static, str>,
-}
-
-impl ServerError {
-    fn new(message: impl Into<Cow<'static, str>>) -> Self {
-        Self {
-            message: message.into(),
-        }
-    }
-}
-
-#[derive(Debug, From)]
-struct ErrorRejection(Error);
-
-impl Reject for ErrorRejection {}
-
-fn trace_graphql_response(response: &GraphQLResponse) {
-    response
-        .errors
-        .iter()
-        .for_each(|error| match error.message.as_str() {
-            "PersistedQueryNotFound" => (),
-            _ => {
-                error!(target: "home-api", "GraphQL error: {:#}", error)
-            }
-        })
 }
