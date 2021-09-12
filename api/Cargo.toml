@@ -13,8 +13,8 @@ bson = { version = "2.0.0-beta.3", features = ["u2i", "chrono-0_4"] }
 derives = { package = "derive_more", version = "^0.99.13" }
 dotenv = "^0.15.0"
 futures = { package = "futures-core", version = "^0.3.15" }
-geo = "^0.18.0"
-geojson = { version = "^0.22.2", features = ["geo-types"] }
+# geo = "^0.18.0"
+# geojson = { version = "^0.22.2", features = ["geo-types"] }
 http = "^0.2.4"
 lazy_static = "^1.4.0"
 macros = { path = "./macros" }

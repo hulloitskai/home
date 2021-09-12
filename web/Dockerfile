@@ -16,7 +16,7 @@ RUN apk add --update --no-cache curl
 
 WORKDIR /app
 COPY --from=builder /dist/web/next.config.js ./
-# COPY --from=builder /dist/web/public ./public
+COPY --from=builder /dist/web/public ./public
 COPY --from=builder /dist/web/.next/ .next/
 COPY --from=builder /dist/web/node_modules/ node_modules/
 COPY --from=builder /dist/web/package.json package.json

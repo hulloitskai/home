@@ -15,7 +15,7 @@ use warp::reject::custom as rejection;
 use warp::reject::Reject;
 use warp::reply::json as reply_json;
 use warp::reply::with_status as reply_with_status;
-use warp::{get, path, post, serve};
+use warp::{get, head, path, post, serve};
 use warp::{Filter, Rejection, Reply};
 
 use warp_graphql::graphql as warp_graphql;
@@ -156,8 +156,8 @@ async fn main() -> Result<()> {
     };
 
     // Build GraphQL playground filter.
-    let graphql_playground_filter = get()
-        .map(move || settings.clone())
+    let graphql_playground_filter = (get().or(head()))
+        .map(move |_| settings.clone())
         .and_then(|settings: Settings| async move {
             let endpoint = {
                 let mut endpoint = settings.api_public_url;
@@ -222,8 +222,7 @@ async fn main() -> Result<()> {
         path("webhook").and(path("health").and(health_webhook_filter));
 
     // Build root filter.
-    let filter = path_end()
-        .and(graphql_playground_filter)
+    let filter = (path_end().and(graphql_playground_filter))
         .or(graphql_filter)
         .or(webhook_filter)
         .recover(recover);
