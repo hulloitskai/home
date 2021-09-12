@@ -87,9 +87,9 @@ async fn main() -> Result<()> {
 
     info!(target: "home-api", "connecting to MongoDB...");
     let database = {
-        let database_name = env_var_or("MONGO_DATABASE", "home")
+        let name = env_var_or("MONGO_DATABASE", "home")
             .context("failed to read environment variable MONGO_DATABASE")?;
-        let database = database_client.database(&database_name);
+        let database = database_client.database(&name);
         database
             .run_command(doc! { "ping": 1 }, None)
             .await
@@ -104,18 +104,23 @@ async fn main() -> Result<()> {
         .build();
 
     // Build settings.
-    let settings = {
-        let web_public_url = {
+    let settings = Settings::builder()
+        .web_public_url({
             let url = env_var("HOME_WEB_PUBLIC_URL").context(
                 "failed to read environment variable HOME_WEB_PUBLIC_URL",
             )?;
             url.parse().context("failed to parse home-web public URL")?
-        };
-        Settings::builder().web_public_url(web_public_url).build()
-    };
+        })
+        .api_public_url({
+            let url = env_var("HOME_API_PUBLIC_URL").context(
+                "failed to read environment variable HOME_API_PUBLIC_URL",
+            )?;
+            url.parse().context("failed to parse home-api public URL")?
+        })
+        .build();
 
     // Build entity context.
-    let context = Context::new(services, settings);
+    let context = Context::new(services, settings.clone());
 
     // Build GraphQL schema.
     let graphql_schema = {
@@ -152,27 +157,47 @@ async fn main() -> Result<()> {
 
     // Build GraphQL playground filter.
     let graphql_playground_filter = get()
-        // .and(full_path())
-        // .and(header("X-Forwarded-Prefix"))
-        // .and(header("X-Envoy-Original-Path")) // TODO: Remove Envoy-specific logic.
-        .map(|/* path: FullPath
-     prefix: Option<String>,
-     envoy_original_path: Option<String> */| {
-        // let prefix = prefix.or(envoy_original_path);
-        // let endpoint = {
-        //     let prefix =
-        //         prefix.as_ref().map(String::as_str).unwrap_or("");
-        //     let path = path.as_str();
-        //     let root = Path::new(path).join(prefix);
-        //     let root = root.to_str().unwrap();
-        //     format!("{}graphql", root)
-        // };
-        let config = GraphQLPlaygroundConfig::new("graphql");
-        let source = graphql_playground_source(config);
-        Response::builder()
-            .header("content-type", "text/html")
-            .body(source)
-    });
+        .map(move || settings.clone())
+        .and_then(|settings: Settings| async move {
+            let endpoint = {
+                let mut endpoint = settings.api_public_url;
+                if !matches!(endpoint.scheme(), "http" | "https") {
+                    let error = ErrorRejection::new(
+                        "invalid GraphQL playground endpoint scheme",
+                    );
+                    return Err(rejection(error));
+                }
+                let path = endpoint.path();
+                if !path.ends_with('/') {
+                    let path = path.to_owned() + "/";
+                    endpoint.set_path(&path);
+                }
+                endpoint.join("graphql").unwrap()
+            };
+
+            let subscription_endpoint = {
+                let mut endpoint = endpoint.clone();
+                let scheme = match endpoint.scheme() {
+                    "http" => "ws",
+                    "https" => "wss",
+                    _ => {
+                        panic!("invalid GraphQL playground endpoint scheme")
+                    }
+                };
+                endpoint.set_scheme(scheme).unwrap();
+                endpoint
+            };
+
+            let config = GraphQLPlaygroundConfig::new(endpoint.as_str())
+                .subscription_endpoint(subscription_endpoint.as_str());
+            let source = graphql_playground_source(config);
+            Ok(source)
+        })
+        .map(|source: String| {
+            Response::builder()
+                .header("content-type", "text/html")
+                .body(source)
+        });
 
     // Build health webhook filter.
     let health_webhook_filter = post()

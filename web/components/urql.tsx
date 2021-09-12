@@ -20,7 +20,7 @@ import { useToast } from "components";
 
 import schema from "graphql-schema";
 
-import { HOME_API_PUBLIC_URL } from "consts";
+import { HOME_API_URL } from "consts";
 
 // type AuthState = {
 //   token: string;
@@ -92,7 +92,7 @@ const paginate = (
 const makeClientOptions = (ssrExchange: Exchange): ClientOptions => {
   const isClient = typeof window !== "undefined";
   return {
-    url: isClient ? "/api/graphql" : `${HOME_API_PUBLIC_URL}/graphql`,
+    url: isClient ? "/api/graphql" : `${HOME_API_URL}/graphql`,
     suspense: true,
     exchanges: [
       dedupExchange,

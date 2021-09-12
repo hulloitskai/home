@@ -42,29 +42,33 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
     }
   }, [interval]);
 
+  const transition = useMemo(() => {
+    if (interval && duration) {
+      return {
+        duration,
+        repeat: Infinity,
+        repeatDelay: interval - duration,
+      };
+    }
+  }, [interval, duration]);
+
   return (
     <Box pos="relative" {...otherProps}>
-      <Text
+      <MotionText
         fontSize="3xl"
         filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
-        _dark={{ opacity: 0.75 }}
+        initial={bpm ? undefined : false}
+        animate={{ scale: [1.02, 1, 1.02] }}
+        transition={transition}
       >
         ❤️
-      </Text>
+      </MotionText>
       <Center pos="absolute" inset={0}>
         <MotionText
           fontSize="3xl"
           initial={bpm ? undefined : false}
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={
-            interval && duration
-              ? {
-                  duration,
-                  repeat: Infinity,
-                  repeatDelay: interval - duration,
-                }
-              : undefined
-          }
+          animate={{ scale: [1, 1.12, 1] }}
+          transition={transition}
         >
           {bpm === null ? "💔" : "❤️"}
         </MotionText>
