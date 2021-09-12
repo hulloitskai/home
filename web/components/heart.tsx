@@ -8,10 +8,10 @@ import { DateTime } from "luxon";
 import { BoxProps, Box, VStack, Center } from "@chakra-ui/react";
 import { TextProps, Text } from "@chakra-ui/react";
 
-import { BeatingHeartRateFragment } from "graphql-types";
+import { HeartStatHeartRateFragment } from "graphql-types";
 
-export const BEATING_HEART_RATE_FRAGMENT = gql`
-  fragment BeatingHeartRate on HeartRate {
+export const HEART_STAT_HEART_RATE_FRAGMENT = gql`
+  fragment HeartStatHeartRate on HeartRate {
     id
     measurement
     timestamp
@@ -20,13 +20,13 @@ export const BEATING_HEART_RATE_FRAGMENT = gql`
 
 const MotionText = motion<Omit<TextProps, "transition">>(Text);
 
-export interface HeartProps extends BoxProps {
+export interface HeartBeatProps extends BoxProps {
   bpm: number | null | undefined;
 }
 
 const MAX_BEAT_DURATION = 0.5;
 
-export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
+export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
   const interval = useMemo(() => {
     if (bpm) {
       return 60 / bpm;
@@ -52,13 +52,32 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
     }
   }, [interval, duration]);
 
+  const intensity = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return window.devicePixelRatio;
+    }
+    return 1;
+  }, []);
+
+  const bgAnimate = useMemo(() => {
+    const initial = 1 + 0.075 * intensity;
+    const end = 1;
+    return { scale: [initial, end, initial] };
+  }, [intensity]);
+
+  const fgAnimate = useMemo(() => {
+    const initial = 1;
+    const end = 1 + 0.05 * intensity;
+    return { scale: [initial, end, initial] };
+  }, [intensity]);
+
   return (
     <Box pos="relative" {...otherProps}>
       <MotionText
         fontSize="3xl"
         filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
         initial={bpm ? undefined : false}
-        animate={{ scale: [1.02, 1, 1.02] }}
+        animate={bgAnimate}
         transition={transition}
       >
         ❤️
@@ -67,7 +86,7 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
         <MotionText
           fontSize="3xl"
           initial={bpm ? undefined : false}
-          animate={{ scale: [1, 1.12, 1] }}
+          animate={fgAnimate}
           transition={transition}
         >
           {bpm === null ? "💔" : "❤️"}
@@ -77,14 +96,11 @@ export const Heart: FC<HeartProps> = ({ bpm, ...otherProps }) => {
   );
 };
 
-export interface BeatingHeartProps extends BoxProps {
-  rate: BeatingHeartRateFragment | null | undefined;
+export interface HeartStatProps extends BoxProps {
+  rate: HeartStatHeartRateFragment | null | undefined;
 }
 
-export const BeatingHeart: FC<BeatingHeartProps> = ({
-  rate,
-  ...otherProps
-}) => {
+export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {
   const { measurement, timestamp: timestampISO } = rate ?? {};
 
   // Update last-measured description every 5 seconds.
@@ -124,7 +140,7 @@ export const BeatingHeart: FC<BeatingHeartProps> = ({
   return (
     <VStack {...otherProps}>
       <Box />
-      <Heart bpm={rate ? measurement : rate} />
+      <HeartBeat bpm={rate ? measurement : rate} />
       {rate && (
         <VStack spacing={0.5}>
           <Text color="gray.500" fontSize="sm" fontWeight="semibold">

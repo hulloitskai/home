@@ -1,6 +1,4 @@
 use bson::doc;
-use entities::Comparison;
-use http::{Response, StatusCode};
 use tracing_subscriber::fmt::init as init_tracer;
 
 use std::convert::Infallible;
@@ -8,6 +6,9 @@ use std::net::SocketAddr;
 
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
+
+use http::header::CONTENT_TYPE;
+use http::{Response, StatusCode};
 
 use warp::body::json as body_json;
 use warp::path::end as path_end;
@@ -48,6 +49,7 @@ use env::var_or as env_var_or;
 
 mod entities;
 use entities::BuildInfo;
+use entities::Comparison;
 use entities::{Context, Entity, Services, Settings};
 use entities::{HeartRate, HeartRateConditions};
 
@@ -120,7 +122,7 @@ async fn main() -> Result<()> {
         .build();
 
     // Build entity context.
-    let context = Context::new(services, settings.clone());
+    let context = Context::new(services, settings);
 
     // Build GraphQL schema.
     let graphql_schema = {
@@ -157,10 +159,13 @@ async fn main() -> Result<()> {
 
     // Build GraphQL playground filter.
     let graphql_playground_filter = (get().or(head()))
-        .map(move |_| settings.clone())
-        .and_then(|settings: Settings| async move {
+        .map({
+            let ctx = context.clone();
+            move |_| ctx.clone()
+        })
+        .and_then(|ctx: Context| async move {
             let endpoint = {
-                let mut endpoint = settings.api_public_url;
+                let mut endpoint = ctx.settings().api_public_url.clone();
                 if !matches!(endpoint.scheme(), "http" | "https") {
                     let error = ErrorRejection::new(
                         "invalid GraphQL playground endpoint scheme",
@@ -195,18 +200,21 @@ async fn main() -> Result<()> {
         })
         .map(|source: String| {
             Response::builder()
-                .header("content-type", "text/html")
+                .header(CONTENT_TYPE, "text/html")
                 .body(source)
         });
 
     // Build health webhook filter.
     let health_webhook_filter = post()
-        .map(move || context.clone())
+        .map({
+            let ctx = context.clone();
+            move || ctx.clone()
+        })
         .and(body_json())
         .and_then(|ctx: Context, payload: HealthExportPayload| async move {
-            if let Err(error) = import_health_data(ctx, payload).await {
+            if let Err(error) = import_health_data(&ctx, payload).await {
                 error!(
-                    target: "home-api",
+                    target: "home-api::webhook",
                     error = %format!("{:?}", error),
                     "failed to import health data",
                 );
@@ -346,7 +354,7 @@ struct HealthExportHeartRateMeasurement {
 }
 
 async fn import_health_data(
-    ctx: Context,
+    ctx: &Context,
     payload: HealthExportPayload,
 ) -> Result<()> {
     for metric in payload.data.metrics {
@@ -385,7 +393,7 @@ async fn import_health_data(
                     debug!(
                         target: "home-api",
                         %timestamp,
-                        "heart rate already recorded",
+                        "existing heart rate for timestamp",
                     )
                 }
                 Ok(())

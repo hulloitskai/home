@@ -38,7 +38,7 @@ export type Query = {
   heartRate?: Maybe<HeartRate>;
 };
 
-export type BeatingHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
+export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
 export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
 

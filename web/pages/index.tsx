@@ -1,16 +1,17 @@
 import React, { useEffect } from "react";
 import type { NextPage } from "next";
-import { getPageCookies } from "components";
 
 import { WithUrqlState } from "next-urql";
-import { withClient } from "components";
+import { withClient } from "components/urql";
 import { gql, useQuery } from "urql";
+
+import { ChakraProviderProps } from "components/chakra";
+import { getPageCookies } from "components/chakra";
 
 import { Container, Box, VStack, Center } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/react";
 
-import { BeatingHeart, BEATING_HEART_RATE_FRAGMENT } from "components";
-import { ChakraProviderProps } from "components";
+import { HeartStat, HEART_STAT_HEART_RATE_FRAGMENT } from "components/heart";
 
 import { HomePageQuery, HomePageQueryVariables } from "graphql-types";
 
@@ -18,11 +19,11 @@ const HOME_PAGE_QUERY = gql`
   query HomePage {
     heartRate {
       id
-      ...BeatingHeartRate
+      ...HeartStatHeartRate
     }
   }
 
-  ${BEATING_HEART_RATE_FRAGMENT}
+  ${HEART_STAT_HEART_RATE_FRAGMENT}
 `;
 
 interface HomePageProps extends WithUrqlState, ChakraProviderProps {}
@@ -62,7 +63,7 @@ const HomePage: NextPage<HomePageProps> = () => {
           </Text>
         </VStack>
         <VStack align="stretch" spacing={3} w={64}>
-          <BeatingHeart rate={error ? null : heartRate} />
+          <HeartStat rate={error ? null : heartRate} />
           <Box color="gray.500" fontSize="lg" fontWeight="semibold">
             {heartRate && (
               <Text>
