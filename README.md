@@ -2,7 +2,7 @@
 
 _My personal homepage and API._
 
-> Currently live at [itskai.me](https://itskai.me)!
+> Home is where the heart is.
 
 This is a place where you can learn more about me, whether or not I'm alive,
 and potentially how I might be doing! It's still very much a work-in-progress.
@@ -15,3 +15,5 @@ cover:_
 - [ ] How is this person doing today?
 - [ ] How do I meet this person?
 - [ ] What's this person been up to?
+
+> This site is currently live at [itskai.me](https://itskai.me)!
