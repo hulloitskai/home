@@ -16,6 +16,17 @@ module.exports = {
       },
     ];
   },
+  headers: async () => [
+    {
+      source: "/fonts/:font",
+      headers: [
+        {
+          key: "Access-Control-Allow-Origin",
+          value: "*",
+        },
+      ],
+    },
+  ],
   publicRuntimeConfig: {
     AUTH0_DOMAIN,
     AUTH0_CLIENT_ID,
