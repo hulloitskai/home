@@ -50,8 +50,11 @@ impl Context {
         let Self {
             services, settings, ..
         } = self;
-        let transaction = Transaction::new(services).await?;
-        let transaction = Arc::new(AsyncMutex::new(transaction));
+        let transaction = {
+            let transaction =
+                Transaction::new(&services.database_client).await?;
+            Arc::new(AsyncMutex::new(transaction))
+        };
         let ctx = Self {
             services: services.clone(),
             settings: settings.clone(),

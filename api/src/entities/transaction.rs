@@ -8,14 +8,13 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub(super) async fn new(backend: &Services) -> Result<Self> {
-        let mut database = backend
-            .database_client
+    pub(super) async fn new(client: &DatabaseClient) -> Result<Self> {
+        let mut session = client
             .start_session(None)
             .await
             .context("failed to start database session")?;
-        database.start_transaction(None).await?;
-        let transaction = Self { session: database };
+        session.start_transaction(None).await?;
+        let transaction = Self { session };
         Ok(transaction)
     }
 

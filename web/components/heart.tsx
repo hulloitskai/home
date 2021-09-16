@@ -59,13 +59,7 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
     return 1;
   }, []);
 
-  const bgAnimate = useMemo(() => {
-    const initial = 1 + 0.075 * intensity;
-    const end = 1;
-    return { scale: [initial, end, initial] };
-  }, [intensity]);
-
-  const fgAnimate = useMemo(() => {
+  const animate = useMemo(() => {
     const initial = 1;
     const end = 1 + 0.05 * intensity;
     return { scale: [initial, end, initial] };
@@ -77,7 +71,7 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
         fontSize="3xl"
         filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
         initial={bpm ? undefined : false}
-        animate={bgAnimate}
+        animate={{ scale: [1.05, 1, 1.05] }}
         transition={transition}
       >
         ❤️
@@ -86,7 +80,7 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
         <MotionText
           fontSize="3xl"
           initial={bpm ? undefined : false}
-          animate={fgAnimate}
+          animate={animate}
           transition={transition}
         >
           {bpm === null ? "💔" : "❤️"}
