@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useMemo, useState } from "react";
 import humanizeDuration from "humanize-duration";
 
-import { motion } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import { gql } from "urql";
 import { DateTime } from "luxon";
 
@@ -27,62 +27,61 @@ export interface HeartBeatProps extends BoxProps {
 const MAX_BEAT_DURATION = 0.5;
 
 export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
-  const interval = useMemo(() => {
-    if (bpm) {
-      return 60 / bpm;
-    }
-  }, [bpm]);
-
-  const duration = useMemo(() => {
-    if (interval) {
-      const halfInterval = interval / 2;
-      return halfInterval > MAX_BEAT_DURATION
-        ? MAX_BEAT_DURATION
-        : halfInterval;
-    }
-  }, [interval]);
+  const fgControls = useAnimation();
+  const bgControls = useAnimation();
 
   const transition = useMemo(() => {
-    if (interval && duration) {
+    if (bpm) {
+      const interval = 60 / bpm;
+      const duration = (() => {
+        const halfInterval = interval / 2;
+        return halfInterval > MAX_BEAT_DURATION
+          ? MAX_BEAT_DURATION
+          : halfInterval;
+      })();
       return {
         duration,
         repeat: Infinity,
         repeatDelay: interval - duration,
       };
     }
-  }, [interval, duration]);
+  }, [bpm]);
 
-  const intensity = useMemo(() => {
-    if (typeof window !== "undefined") {
-      return window.devicePixelRatio;
-    }
-    return 1;
-  }, []);
-
-  const animate = useMemo(() => {
-    const initial = 1;
-    const end = 1 + 0.05 * intensity;
-    return { scale: [initial, end, initial] };
-  }, [intensity]);
+  useEffect(
+    () => {
+      if (bpm) {
+        const intensity =
+          typeof window !== "undefined" ? window.devicePixelRatio : 1;
+        {
+          const initial = 1;
+          const end = 1 + 0.05 * intensity;
+          fgControls.start({ scale: [initial, end, initial] });
+        }
+        {
+          const initial = 1.05;
+          const end = 1;
+          bgControls.start({ scale: [initial, end, initial] });
+        }
+      } else {
+        fgControls.stop();
+        bgControls.stop();
+      }
+    },
+    [bpm], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <Box pos="relative" {...otherProps}>
       <MotionText
         fontSize="3xl"
         filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
-        initial={bpm ? undefined : false}
-        animate={{ scale: [1.05, 1, 1.05] }}
+        animate={bgControls}
         transition={transition}
       >
         ❤️
       </MotionText>
       <Center pos="absolute" inset={0}>
-        <MotionText
-          fontSize="3xl"
-          initial={bpm ? undefined : false}
-          animate={animate}
-          transition={transition}
-        >
+        <MotionText fontSize="3xl" animate={fgControls} transition={transition}>
           {bpm === null ? "💔" : "❤️"}
         </MotionText>
       </Center>
