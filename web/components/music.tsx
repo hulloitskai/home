@@ -194,7 +194,12 @@ const MusicLyrics: FC<MusicLyricsProps> = ({
       _dark={{ bg: "white", color: "black" }}
       {...otherProps}
     >
-      <Text as="blockquote" fontStyle="oblique" fontWeight="medium">
+      <Text
+        as="blockquote"
+        fontSize="sm"
+        fontStyle="oblique"
+        fontWeight="medium"
+      >
         {line}
       </Text>
     </Box>

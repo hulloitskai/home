@@ -14,7 +14,7 @@ import { refocusExchange as focusExchange } from "@urql/exchange-refocus";
 import { persistedFetchExchange } from "@urql/exchange-persisted-fetch";
 
 import { cacheExchange } from "@urql/exchange-graphcache";
-import { simplePagination } from "@urql/exchange-graphcache/extras";
+// import { simplePagination } from "@urql/exchange-graphcache/extras";
 
 import { useToast } from "components";
 
@@ -107,7 +107,7 @@ const makeClientOptions = (ssrExchange: Exchange): ClientOptions => {
           MusicAlbum: data => (data as MusicAlbum).spotifyId,
           MusicArtist: data => (data as MusicArtist).spotifyId,
           Lyrics: () => null,
-          LyricLines: () => null,
+          LyricLine: () => null,
         },
       }),
       // ...(isClient ? [authExchange(authConfig)] : []),
