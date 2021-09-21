@@ -30,10 +30,10 @@ impl HeartRateObject {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct HeartRateQueries;
+pub struct HeartQueries;
 
 #[Object]
-impl HeartRateQueries {
+impl HeartQueries {
     async fn heart_rate(
         &self,
         ctx: &Context<'_>,

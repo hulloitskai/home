@@ -53,6 +53,12 @@ use entities::Comparison;
 use entities::{Context, Entity, Services, Settings};
 use entities::{HeartRate, HeartRateConditions};
 
+mod spotify;
+use spotify::Client as SpotifyClient;
+
+mod lyricly;
+use lyricly::Client as LyriclyClient;
+
 mod graph;
 use graph::Query;
 
@@ -99,10 +105,27 @@ async fn main() -> Result<()> {
         database
     };
 
+    // Build Spotify client.
+    let spotify = {
+        let client_id = env_var("SPOTIFY_CLIENT_ID")
+            .context("failed to read environment variable SPOTIFY_CLIENT_ID")?;
+        let client_secret = env_var("SPOTIFY_CLIENT_SECRET").context(
+            "failed to read environment variable SPOTIFY_CLIENT_SECRET",
+        )?;
+        let token = env_var("SPOTIFY_TOKEN")
+            .context("failed to read environment variable SPOTIFY_TOKEN")?;
+        SpotifyClient::new(&client_id, &client_secret, &token)
+    };
+
+    // Build Lyricly client.
+    let lyricly = LyriclyClient::new();
+
     // Build services.
     let services = Services::builder()
         .database_client(database_client)
         .database(database)
+        .spotify(spotify)
+        .lyricly(lyricly)
         .build();
 
     // Build settings.

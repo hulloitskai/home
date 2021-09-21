@@ -6,33 +6,34 @@ edition = "2018"
 
 
 [dependencies]
-anyhow = "^1.0.43"
-async_trait = { package = "async-trait", version = "^0.1.50" }
+anyhow = "^1.0.44"
+async_trait = { package = "async-trait", version = "^0.1.51" }
 base64 = "^0.13.0"
-bson = { version = "2.0.0-beta.3", features = ["u2i", "chrono-0_4"] }
-derives = { package = "derive_more", version = "^0.99.13" }
+bson = { version = "^2.0.0", features = ["chrono-0_4"] }
+derives = { package = "derive_more", version = "^0.99.16" }
 dotenv = "^0.15.0"
-futures = { package = "futures-core", version = "^0.3.15" }
-# geo = "^0.18.0"
-# geojson = { version = "^0.22.2", features = ["geo-types"] }
+futures = { package = "futures-core", version = "^0.3.17" }
 http = "^0.2.4"
+# FIXME: Temporary workaround for https://github.com/tkaitchuck/aHash/issues/95
+indexmap = "~1.6.2"
 lazy_static = "^1.4.0"
 macros = { path = "./macros" }
 mailchecker = "^4.0.7"
 mime = "^0.3.16"
-mongodb = { version = "^2.0.0-beta.3", features = ["bson-u2i"] }
+mongodb = "^2.0.0"
 nanoid = "^0.4.0"
 phonenumber = "^0.3.1"
 pin_project = { package = "pin-project", version = "^1.0.7" }
 regex = "^1.5.4"
-serde = { version = "^1.0.129", features = ["derive"] }
-serde_json = "^1.0.64"
-tokio = { version = "^1.10.1", features = ["rt-multi-thread", "macros"] }
-tracing = "^0.1.26"
-typed_builder = { package = "typed-builder", version = "^0.9.0" }
+serde = { version = "^1.0.130", features = ["derive"] }
+serde_json = "^1.0.68"
+tokio = { version = "^1.11.0", features = ["rt-multi-thread", "macros"] }
+tracing = "^0.1.28"
+typed_builder = { package = "typed-builder", version = "^0.9.1" }
 url = { version = "^2.2.2", features = ["serde"] }
 warp = { version = "^0.3.1", default-features = false, features = ["websocket"] }
-warp_graphql = { package = "async-graphql-warp", version = "^2.9.12" }
+warp_graphql = { package = "async-graphql-warp", version = "^2.10.0" }
+oauth2 = "^4.1.0"
 
 [dependencies.chrono]
 version = "^0.4.19"
@@ -41,14 +42,14 @@ features = ["std", "clock", "serde"]
 
 [dependencies.futures_util]
 package = "futures-util"
-version = "^0.3.15"
+version = "^0.3.17"
 default-features = false
 features = ["std"]
 
 [dependencies.graphql]
 package = "async-graphql"
-version = "^2.9.12"
-features = ["chrono", "url", "apollo_persisted_queries"]
+version = "^2.10.0"
+features = ["chrono","url","apollo_persisted_queries"]
 
 [dependencies.request]
 package = "reqwest"
@@ -56,18 +57,11 @@ version = "^0.11.4"
 default-features = false
 features = ["json", "rustls-tls"]
 
-[dependencies.s3]
-package = "rust-s3"
-version = "0.27.0-rc4"
-default-features = false
-features = ['tokio-rustls-tls']
-
 [dependencies.tracing_subscriber]
 package = "tracing-subscriber"
 version = "^0.2.18"
 default-features = false
 features = ["env-filter", "fmt", "ansi", "chrono", "tracing-log", "json"]
-
 
 
 [build-dependencies]

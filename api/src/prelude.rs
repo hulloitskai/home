@@ -11,14 +11,14 @@ pub use derives::{AsRef, Deref};
 pub use derives::{Constructor, Display};
 pub use derives::{From, FromStr, Into, TryInto};
 
+pub use http::HeaderMap as HttpHeaderMap;
+pub use http::HeaderValue as HttpHeaderValue;
+pub use http::Method as HttpMethod;
+
 pub use request::Client as HttpClient;
 pub use request::Request as HttpRequest;
 pub use request::RequestBuilder as HttpRequestBuilder;
 pub use request::Response as HttpResponse;
-
-pub use http::HeaderMap as HttpHeaderMap;
-pub use http::HeaderValue as HttpHeaderValue;
-pub use http::Method as HttpMethod;
 
 pub use tokio::sync::Mutex as AsyncMutex;
 pub use tokio::sync::MutexGuard as AsyncMutexGuard;

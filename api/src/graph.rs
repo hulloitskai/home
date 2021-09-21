@@ -3,14 +3,16 @@ mod prelude;
 
 mod build;
 mod date;
-mod heart_rate;
+mod heart;
 mod id;
+mod music;
 mod mutation;
 mod query;
 
 pub use build::*;
 pub use date::*;
-pub use heart_rate::*;
+pub use heart::*;
 pub use id::*;
+pub use music::*;
 pub use mutation::*;
 pub use query::*;

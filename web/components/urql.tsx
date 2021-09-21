@@ -19,6 +19,7 @@ import { simplePagination } from "@urql/exchange-graphcache/extras";
 import { useToast } from "components";
 
 import schema from "graphql-schema";
+import { MusicTrack, MusicAlbum, MusicArtist } from "graphql-types";
 
 import { HOME_API_URL } from "consts";
 
@@ -78,16 +79,16 @@ import { HOME_API_URL } from "consts";
 //   willAuthError: () => true,
 // };
 
-const paginate = (
-  ...args: Parameters<typeof simplePagination>
-): ReturnType<typeof simplePagination> => {
-  const [params] = args;
-  return simplePagination({
-    limitArgument: "take",
-    offsetArgument: "skip",
-    ...params,
-  });
-};
+// const paginate = (
+//   ...args: Parameters<typeof simplePagination>
+// ): ReturnType<typeof simplePagination> => {
+//   const [params] = args;
+//   return simplePagination({
+//     limitArgument: "take",
+//     offsetArgument: "skip",
+//     ...params,
+//   });
+// };
 
 const makeClientOptions = (ssrExchange: Exchange): ClientOptions => {
   const isClient = typeof window !== "undefined";
@@ -100,6 +101,14 @@ const makeClientOptions = (ssrExchange: Exchange): ClientOptions => {
       cacheExchange({
         // @ts-ignore
         schema,
+        keys: {
+          MusicInfo: () => null,
+          MusicTrack: data => (data as MusicTrack).spotifyId,
+          MusicAlbum: data => (data as MusicAlbum).spotifyId,
+          MusicArtist: data => (data as MusicArtist).spotifyId,
+          Lyrics: () => null,
+          LyricLines: () => null,
+        },
       }),
       // ...(isClient ? [authExchange(authConfig)] : []),
       ssrExchange,

@@ -1,10 +1,10 @@
 use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, MergedObject)]
-pub struct Query(BuildQueries, HeartRateQueries);
+pub struct Query(BuildQueries, HeartQueries, MusicQueries);
 
 impl Query {
     pub fn new() -> Self {
-        Self(BuildQueries, HeartRateQueries)
+        Self(BuildQueries, HeartQueries, MusicQueries)
     }
 }

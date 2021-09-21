@@ -32,18 +32,78 @@ export type HeartRate = {
   timestamp: Scalars['DateTime'];
 };
 
+export type LyricLine = {
+  __typename?: 'LyricLine';
+  text: Scalars['String'];
+  position: Scalars['Int'];
+};
+
+export type Lyrics = {
+  __typename?: 'Lyrics';
+  lines: Array<LyricLine>;
+};
+
+export type MusicAlbum = {
+  __typename?: 'MusicAlbum';
+  spotifyId: Scalars['String'];
+  spotifyUrl: Scalars['String'];
+  name: Scalars['String'];
+  imageUrl: Scalars['String'];
+};
+
+export type MusicArtist = {
+  __typename?: 'MusicArtist';
+  spotifyId: Scalars['String'];
+  spotifyUrl: Scalars['String'];
+  name: Scalars['String'];
+};
+
+export type MusicInfo = {
+  __typename?: 'MusicInfo';
+  isPlaying: Scalars['Boolean'];
+  track: MusicTrack;
+  progress: Scalars['Int'];
+};
+
+export type MusicTrack = {
+  __typename?: 'MusicTrack';
+  spotifyId: Scalars['String'];
+  spotifyUrl: Scalars['String'];
+  name: Scalars['String'];
+  duration: Scalars['Int'];
+  album: MusicAlbum;
+  artists: Array<MusicArtist>;
+  lyrics?: Maybe<Lyrics>;
+};
+
 export type Query = {
   __typename?: 'Query';
   buildInfo: BuildInfo;
   heartRate?: Maybe<HeartRate>;
+  musicInfo?: Maybe<MusicInfo>;
 };
 
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
-export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
+export type HeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type HomePageQuery = { __typename?: 'Query', heartRate?: Maybe<{ __typename?: 'HeartRate', id: string, measurement: number, timestamp: any }> };
+export type HeartSectionQuery = { __typename?: 'Query', heartRate?: Maybe<{ __typename?: 'HeartRate', id: string, measurement: number, timestamp: any }> };
+
+export type MusicSectionQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MusicSectionQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string, spotifyUrl: string, name: string, duration: number, album: { __typename?: 'MusicAlbum', spotifyId: string, spotifyUrl: string, name: string }, artists: Array<{ __typename?: 'MusicArtist', spotifyId: string, spotifyUrl: string, name: string }> } }> };
+
+export type MusicSectionHeartbeatQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MusicSectionHeartbeatQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string } }> };
+
+export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: Maybe<{ __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> }> } }> };
 
 import { IntrospectionQuery } from 'graphql';
 export default {
@@ -144,6 +204,282 @@ export default {
       },
       {
         "kind": "OBJECT",
+        "name": "LyricLine",
+        "fields": [
+          {
+            "name": "text",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "position",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "Lyrics",
+        "fields": [
+          {
+            "name": "lines",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "LyricLine",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "MusicAlbum",
+        "fields": [
+          {
+            "name": "spotifyId",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "spotifyUrl",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "imageUrl",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "MusicArtist",
+        "fields": [
+          {
+            "name": "spotifyId",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "spotifyUrl",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "MusicInfo",
+        "fields": [
+          {
+            "name": "isPlaying",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "track",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "MusicTrack",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "progress",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "MusicTrack",
+        "fields": [
+          {
+            "name": "spotifyId",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "spotifyUrl",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "duration",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "album",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "MusicAlbum",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "artists",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "MusicArtist",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "lyrics",
+            "type": {
+              "kind": "OBJECT",
+              "name": "Lyrics",
+              "ofType": null
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
         "name": "Query",
         "fields": [
           {
@@ -163,6 +499,15 @@ export default {
             "type": {
               "kind": "OBJECT",
               "name": "HeartRate",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "musicInfo",
+            "type": {
+              "kind": "OBJECT",
+              "name": "MusicInfo",
               "ofType": null
             },
             "args": []
