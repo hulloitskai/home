@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useMemo } from "react";
 import first from "lodash/first";
-import reverse from "lodash/reverse";
 
 import { useClient, gql } from "urql";
 import { useQuery } from "urql";
@@ -164,23 +163,18 @@ const MusicLyrics: FC<MusicLyricsProps> = ({
     [trackSpotifyId], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const reversedLines = useMemo(() => {
-    const { lines } = data?.musicInfo?.track?.lyrics ?? {};
-    if (lines) {
-      return reverse(lines);
-    }
-  }, [data]);
-
   const line = useMemo(() => {
-    if (reversedLines && typeof progress === "number") {
-      for (const { position, text } of reversedLines) {
-        if (progress >= position) {
-          return text;
+    const { lines } = data?.musicInfo?.track?.lyrics ?? {};
+    if (lines && typeof progress === "number") {
+      for (let i = 1; i < lines.length; i++) {
+        const { position } = lines[i];
+        if (position > progress) {
+          return lines[i - 1].text;
         }
       }
     }
     return null;
-  }, [progress, reversedLines]);
+  }, [data, progress]);
 
   if (!line) {
     return null;
