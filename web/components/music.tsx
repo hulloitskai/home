@@ -166,13 +166,16 @@ const MusicLyrics: FC<MusicLyricsProps> = ({
   const line = useMemo(() => {
     const { lines } = data?.musicInfo?.track?.lyrics ?? {};
     if (lines && typeof progress === "number") {
-      for (let i = 1; i < lines.length; i++) {
-        const { position, text } = lines[i];
-        if (position > progress) {
-          return lines[i - 1].text;
-        }
-        if (i === lines.length - 1) {
-          return text;
+      const firstLine = first(lines);
+      if (firstLine && progress >= firstLine.position) {
+        for (let i = 1; i < lines.length; i++) {
+          const { position, text } = lines[i];
+          if (position > progress) {
+            return lines[i - 1].text;
+          }
+          if (i === lines.length - 1) {
+            return text;
+          }
         }
       }
     }
