@@ -51,7 +51,7 @@ impl Client {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Lyrics {
     #[serde(alias = "synced")]
-    pub lines: Vec<LyricLine>,
+    pub lines: Option<Vec<LyricLine>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

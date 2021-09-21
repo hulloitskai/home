@@ -62,7 +62,23 @@ impl MusicTrack {
             .get_lyrics(&self.name, &artist.name)
             .await
             .into_field_result()?;
-        let lyrics = lyrics.map(Lyrics::try_from).transpose()?;
+        let lyrics = lyrics
+            .map(|lyrics| {
+                let LyriclyLyrics { lines } = lyrics;
+                let lines = match lines {
+                    Some(lines) => lines,
+                    None => return Ok::<_, Error>(None),
+                };
+                let lines = lines
+                    .into_iter()
+                    .map(LyricLine::try_from)
+                    .collect::<Result<Vec<_>>>()
+                    .context("invalid line")?;
+                let lyrics = Lyrics { lines };
+                Ok(Some(lyrics))
+            })
+            .transpose()?;
+        let lyrics = lyrics.flatten();
         Ok(lyrics)
     }
 }
@@ -148,21 +164,6 @@ impl From<SpotifyArtist> for MusicArtist {
 #[derive(Debug, Clone, SimpleObject)]
 pub struct Lyrics {
     lines: Vec<LyricLine>,
-}
-
-impl TryFrom<LyriclyLyrics> for Lyrics {
-    type Error = Error;
-
-    fn try_from(lyrics: LyriclyLyrics) -> Result<Self, Self::Error> {
-        let LyriclyLyrics { lines } = lyrics;
-        let lines = lines
-            .into_iter()
-            .map(LyricLine::try_from)
-            .collect::<Result<Vec<_>>>()
-            .context("invalid lines")?;
-        let lyrics = Lyrics { lines };
-        Ok(lyrics)
-    }
 }
 
 #[derive(Debug, Clone, SimpleObject)]
