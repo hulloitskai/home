@@ -1,6 +1,8 @@
 pub use crate::util::*;
 
 pub use async_trait::async_trait;
+pub use cache::LruCache as Cache;
+pub use derivative::Derivative;
 pub use lazy_static::lazy_static;
 pub use pin_project::pin_project;
 pub use regex::Regex;
@@ -22,6 +24,7 @@ pub use request::Response as HttpResponse;
 
 pub use tokio::sync::Mutex as AsyncMutex;
 pub use tokio::sync::MutexGuard as AsyncMutexGuard;
+pub use tokio::sync::RwLock as AsyncRwLock;
 pub use tokio::task::{spawn, spawn_blocking};
 pub use tokio::task::{JoinError, JoinHandle};
 
@@ -39,6 +42,7 @@ pub use std::collections::HashMap as Map;
 pub use std::collections::HashSet as Set;
 
 pub use std::sync::Arc;
+pub use std::sync::RwLock;
 pub use std::sync::{Mutex, MutexGuard};
 
 pub use std::task::Context as TaskContext;

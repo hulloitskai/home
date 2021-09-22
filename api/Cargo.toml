@@ -10,7 +10,9 @@ anyhow = "^1.0.44"
 async_trait = { package = "async-trait", version = "^0.1.51" }
 base64 = "^0.13.0"
 bson = { version = "^2.0.0", features = ["chrono-0_4"] }
+cache = { package = "lru_time_cache", version = "^0.11.11" }
 derives = { package = "derive_more", version = "^0.99.16" }
+derivative = "^2.2.0"
 dotenv = "^0.15.0"
 futures = { package = "futures-core", version = "^0.3.17" }
 http = "^0.2.4"

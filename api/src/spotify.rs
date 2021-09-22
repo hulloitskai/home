@@ -8,12 +8,19 @@ use oauth2::{AuthUrl, TokenUrl};
 use oauth2::{ClientId, ClientSecret};
 use oauth2::{RefreshToken, TokenResponse};
 
-#[derive(Debug, Clone)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct Client {
     http: HttpClient,
     auth: AuthClient,
     token: String,
+
+    #[derivative(Debug = "ignore")]
+    cache: AsyncMutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
 }
+
+#[derive(Debug, Clone, Copy, Hash, PartialOrd, Ord, PartialEq, Eq)]
+pub struct CurrentlyPlayingKey;
 
 impl Client {
     pub fn new(client_id: &str, client_secret: &str, token: &str) -> Self {
@@ -39,6 +46,11 @@ impl Client {
             http: default(),
             auth,
             token: token.to_owned(),
+            cache: {
+                let ttl = Duration::milliseconds(500).to_std().unwrap();
+                let cache = Cache::with_expiry_duration(ttl);
+                cache.into()
+            },
         }
     }
 }
@@ -47,6 +59,30 @@ impl Client {
     pub async fn get_currently_playing(
         &self,
     ) -> Result<Option<CurrentlyPlaying>> {
+        let mut cache = self.cache.lock().await;
+
+        // Try to load currently playing from cache.
+        if let Some(currently_playing) = cache.get(&CurrentlyPlayingKey) {
+            let (artist_name, track_name) = match currently_playing {
+                Some(CurrentlyPlaying { track, .. }) => {
+                    let artist = track.artists.first();
+                    (
+                        artist.map(|artist| artist.name.as_str()),
+                        Some(track.name.as_str()),
+                    )
+                }
+                None => (None, None),
+            };
+            trace!(
+                target: "home-api::spotify",
+                artist = %artist_name.unwrap_or_default(),
+                track = %track_name.unwrap_or_default(),
+                "got existing currently-playing from cache",
+            );
+            return Ok(currently_playing.to_owned());
+        }
+
+        // Fetch new currently playing data.
         let url = {
             let url = format!(
                 "https://api.spotify.com/v1/me/player/currently-playing"
@@ -74,12 +110,35 @@ impl Client {
             let response = request.send().await.context("request failed")?;
             response.error_for_status().context("bad status")?
         };
-        let currently_playing = match response.status() {
-            StatusCode::NO_CONTENT => None,
-            _ => response
-                .json()
-                .await
-                .context("failed to decode JSON response")?,
+        let currently_playing = {
+            let currently_playing = match response.status() {
+                StatusCode::NO_CONTENT => None,
+                _ => {
+                    let current_playing: CurrentlyPlaying = response
+                        .json()
+                        .await
+                        .context("failed to decode JSON response")?;
+                    Some(current_playing)
+                }
+            };
+            let (artist_name, track_name) = match &currently_playing {
+                Some(CurrentlyPlaying { track, .. }) => {
+                    let artist = track.artists.first();
+                    (
+                        artist.map(|artist| artist.name.as_str()),
+                        Some(track.name.as_str()),
+                    )
+                }
+                None => (None, None),
+            };
+            trace!(
+                target: "home-api::spotify",
+                artist = %artist_name.unwrap_or_default(),
+                track = %track_name.unwrap_or_default(),
+                "fetched new currently-playing",
+            );
+            cache.insert(CurrentlyPlayingKey, currently_playing.clone());
+            currently_playing
         };
         Ok(currently_playing)
     }

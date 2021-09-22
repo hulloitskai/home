@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Builder)]
 pub struct Services {
     pub database: Database,
     pub database_client: DatabaseClient,
