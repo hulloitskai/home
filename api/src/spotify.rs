@@ -2,11 +2,8 @@ use super::prelude::*;
 
 use http::StatusCode;
 
-use oauth2::basic::BasicClient as AuthClient;
-use oauth2::reqwest::async_http_client;
-use oauth2::{AuthUrl, TokenUrl};
-use oauth2::{ClientId, ClientSecret};
-use oauth2::{RefreshToken, TokenResponse};
+use oauth2::{Client as AuthClient, Token};
+use oauth2::{RefreshToken, StandardToken};
 
 #[derive(Derivative)]
 #[derivative(Debug)]
@@ -25,22 +22,13 @@ pub struct CurrentlyPlayingKey;
 impl Client {
     pub fn new(client_id: &str, client_secret: &str, token: &str) -> Self {
         let auth = {
-            let client_id = ClientId::new(client_id.to_owned());
-            let client_secret = ClientSecret::new(client_secret.to_owned());
-            let auth_url = AuthUrl::new(
-                "https://accounts.spotify.com/authorize".to_owned(),
-            )
-            .unwrap();
-            let token_url = TokenUrl::new(
-                "https://accounts.spotify.com/api/token".to_owned(),
-            )
-            .unwrap();
-            AuthClient::new(
+            let mut client = AuthClient::new(
                 client_id,
-                client_secret.into(),
-                auth_url,
-                token_url.into(),
-            )
+                "https://accounts.spotify.com/authorize".parse().unwrap(),
+                "https://accounts.spotify.com/api/token".parse().unwrap(),
+            );
+            client.set_client_secret(client_secret);
+            client
         };
         Self {
             http: default(),
@@ -96,14 +84,15 @@ impl Client {
         };
         let request = {
             let token_response = {
-                let refresh_token = RefreshToken::new(self.token.clone());
+                let refresh_token: RefreshToken = self.token.clone().into();
                 self.auth
                     .exchange_refresh_token(&refresh_token)
-                    .request_async(async_http_client)
+                    .with_client(&self.http)
+                    .execute::<StandardToken>()
                     .await
                     .context("failed to exchange refresh token")?
             };
-            let token = token_response.access_token().secret();
+            let token = token_response.access_token().to_string();
             self.http.get(url).bearer_auth(token)
         };
         let response = {

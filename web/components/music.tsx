@@ -170,7 +170,7 @@ const MUSIC_LYRICS_QUERY = gql`
   }
 `;
 
-const MUSIC_LYRICS_DELAY = 1250;
+const MUSIC_LYRICS_DELAY = 1000; // 1 second of estimated latency
 
 interface MusicLyricsProps extends BoxProps {
   trackSpotifyId: string | undefined | null;
