@@ -1,5 +1,6 @@
-import React, { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import first from "lodash/first";
+import { DateTime } from "luxon";
 
 import { useClient, gql } from "urql";
 import { useQuery } from "urql";
@@ -63,6 +64,12 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
   useQueryErrorToast(error, "Failed to load music info");
   const { musicInfo } = data ?? {};
 
+  // Record data timestamp.
+  const dataTimestamp = useMemo(
+    () => DateTime.now(),
+    [data], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   // Send heartbeat signal every second.
   const client = useClient();
   useEffect(() => {
@@ -76,48 +83,73 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
     return () => clearInterval(interval);
   }, [client]);
 
-  if (!musicInfo?.track) {
-    return null;
-  }
-
-  const { isPlaying, track, progress } = musicInfo;
-  const { artists } = track;
-  const artist = first(artists);
-  return (
-    <Section {...otherProps}>
-      {/* <MusicStat rate={error ? null : musicRate} /> */}
-      <VStack spacing={1}>
-        <Text fontSize="3xl">🎤</Text>
-        {isPlaying && (
-          <MusicLyrics trackSpotifyId={track.spotifyId} progress={progress} />
-        )}
-      </VStack>
-      <SectionText>
-        I&apos;m currently listening to{" "}
-        <ExternalLink
-          href={track.spotifyUrl}
-          color="gray.800"
-          _dark={{ color: "gray.200" }}
-        >
-          {track.name}
-        </ExternalLink>
-        {artist && (
-          <>
-            {" "}
-            by{" "}
-            <ExternalLink
-              href={track.spotifyUrl}
-              color="gray.800"
-              _dark={{ color: "gray.200" }}
-            >
-              {artist.name}
-            </ExternalLink>
-            .
-          </>
-        )}
-      </SectionText>
-    </Section>
+  const [interpolatedProgress, setInterpolatedProgress] = useState<number>();
+  useEffect(
+    () => {
+      if (musicInfo) {
+        const { progress } = musicInfo;
+        const interval = setInterval(() => {
+          if (progress) {
+            const elapsed = dataTimestamp.diffNow().milliseconds;
+            setInterpolatedProgress(progress - elapsed);
+          } else {
+            setInterpolatedProgress(undefined);
+          }
+        }, 100);
+        return () => {
+          clearInterval(interval);
+        };
+      } else {
+        setInterpolatedProgress(undefined);
+      }
+    },
+    [musicInfo], // eslint-disable-line react-hooks/exhaustive-deps
   );
+
+  const render = (info: NonNullable<MusicSectionQuery["musicInfo"]>) => {
+    const { isPlaying, track } = info;
+    const { artists } = track;
+    const artist = first(artists);
+    return (
+      <Section {...otherProps}>
+        <VStack spacing={1}>
+          <Text fontSize="3xl">🎤</Text>
+          {isPlaying && (
+            <MusicLyrics
+              trackSpotifyId={track.spotifyId}
+              progress={interpolatedProgress}
+            />
+          )}
+        </VStack>
+        <SectionText>
+          I&apos;m currently listening to{" "}
+          <ExternalLink
+            href={track.spotifyUrl}
+            color="gray.800"
+            _dark={{ color: "gray.200" }}
+          >
+            {track.name}
+          </ExternalLink>
+          {artist && (
+            <>
+              {" "}
+              by{" "}
+              <ExternalLink
+                href={track.spotifyUrl}
+                color="gray.800"
+                _dark={{ color: "gray.200" }}
+              >
+                {artist.name}
+              </ExternalLink>
+              .
+            </>
+          )}
+        </SectionText>
+      </Section>
+    );
+  };
+
+  return musicInfo ? render(musicInfo) : null;
 };
 
 const MUSIC_LYRICS_QUERY = gql`
@@ -135,6 +167,8 @@ const MUSIC_LYRICS_QUERY = gql`
     }
   }
 `;
+
+const MUSIC_LYRICS_DELAY = 1250;
 
 interface MusicLyricsProps extends BoxProps {
   trackSpotifyId: string | undefined | null;
@@ -166,14 +200,14 @@ const MusicLyrics: FC<MusicLyricsProps> = ({
   const line = useMemo(() => {
     const { lines } = data?.musicInfo?.track?.lyrics ?? {};
     if (lines && typeof progress === "number") {
-      const firstLine = first(lines);
-      if (firstLine && progress >= firstLine.position) {
-        for (let i = 1; i < lines.length; i++) {
-          const { position, text } = lines[i];
-          if (position > progress) {
-            return lines[i - 1].text;
-          }
+      const estimatedProgress = progress - MUSIC_LYRICS_DELAY;
+      for (let i = 0; i < lines.length; i++) {
+        const { position, text } = lines[i];
+        if (position <= estimatedProgress) {
           if (i === lines.length - 1) {
+            return text;
+          }
+          if (estimatedProgress < lines[i + 1].position) {
             return text;
           }
         }
