@@ -83,6 +83,8 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
     return () => clearInterval(interval);
   }, [client]);
 
+  // An interpolated progress accounts for the time since the last progress
+  // check (heartbeat).
   const [interpolatedProgress, setInterpolatedProgress] = useState<number>();
   useEffect(
     () => {
@@ -113,7 +115,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
     return (
       <Section {...otherProps}>
         <VStack spacing={1}>
-          <Text fontSize="3xl">🎤</Text>
+          <Text fontSize="3xl">{isPlaying ? "🔊" : "🔈"}</Text>
           {isPlaying && (
             <MusicLyrics
               trackSpotifyId={track.spotifyId}
@@ -223,6 +225,7 @@ const MusicLyrics: FC<MusicLyricsProps> = ({
     <Box
       bg="black"
       color="white"
+      rounded="sm"
       px={2}
       py={1.5}
       _dark={{ bg: "white", color: "black" }}
