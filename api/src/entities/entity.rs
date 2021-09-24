@@ -61,14 +61,12 @@ pub trait Entity: Object {
     }
 
     fn get_many(keys: Vec<ObjectKey<Self::Type>>) -> FindQuery<Self> {
-        let ids: Vec<_> = keys
-            .into_iter()
-            .map(|key| {
-                let ObjectKey { id, .. } = key;
-                id
-            })
-            .collect();
-        let filter = doc! { "_id": { "$in": ids } };
+        let ids: Vec<_> = keys.into_iter().map(|key| key.id).collect();
+        let filter = doc! {
+            "_id": {
+                "$in": ids
+            }
+        };
         FindQuery::new_untyped(filter)
     }
 
@@ -243,7 +241,8 @@ struct FindOneQueryInner<T: Entity> {
 
 impl<T: Entity> FindOneQueryInner<T> {
     pub fn new(conditions: T::Conditions) -> Self {
-        Self::new_untyped(conditions.into())
+        let filter: Document = conditions.into();
+        Self::new_untyped(filter)
     }
 
     fn new_untyped(filter: Document) -> Self {
@@ -258,14 +257,41 @@ impl<T: Entity> FindOneQueryInner<T> {
         let Self {
             filter, options, ..
         } = self;
-
         let collection = T::collection(ctx);
+
         let doc = if let Some(mut transaction) = ctx.lock_transaction().await {
             let session = transaction.session();
+            {
+                let options = {
+                    let options = FindOptions::from(options.clone());
+                    to_document(&options).unwrap()
+                };
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    session = %session.id(),
+                    %filter,
+                    %options,
+                    "finding document"
+                );
+            }
             collection
                 .find_one_with_session(filter, options, session)
                 .await?
         } else {
+            {
+                let options = {
+                    let options = FindOptions::from(options.clone());
+                    to_document(&options).unwrap()
+                };
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    %filter,
+                    %options,
+                    "finding one document"
+                );
+            }
             collection.find_one(filter, options).await?
         };
 
@@ -292,14 +318,47 @@ pub struct FindQuery<T: Entity> {
     phantom: PhantomData<T>,
 }
 
+fn filter_has_operator(filter: &Document, operator: &str) -> bool {
+    for (key, value) in filter {
+        if key.starts_with('$') {
+            if key == operator {
+                return true;
+            }
+            if dbg!(filter_value_has_operator(value, operator)) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn filter_value_has_operator(value: &Bson, operator: &str) -> bool {
+    use Bson::*;
+    match value {
+        Document(filter) => dbg!(filter_has_operator(filter, operator)),
+        Array(array) => dbg!(filter_array_has_operator(array, operator)),
+        _ => false,
+    }
+}
+
+fn filter_array_has_operator(array: &Vec<Bson>, operator: &str) -> bool {
+    for entry in array {
+        if filter_value_has_operator(entry, operator) {
+            return true;
+        }
+    }
+    false
+}
+
 impl<T: Entity> FindQuery<T> {
     pub fn new(conditions: T::Conditions) -> Self {
-        Self::new_untyped(conditions.into())
+        let filter: Document = conditions.into();
+        Self::new_untyped(filter)
     }
 
     fn new_untyped(filter: Document) -> Self {
         let mut options = FindOptions::default();
-        if filter.get("$text").is_some() {
+        if filter_has_operator(&filter, "$text") {
             let sort = doc! { "score": { "$meta": "textScore" } };
             options.sort = Some(sort);
         }
@@ -325,18 +384,20 @@ impl<T: Entity> FindQuery<T> {
     pub fn sort(mut self, sorting: impl Into<Option<T::Sorting>>) -> Self {
         let existing = self.options.sort.take();
         let incoming: Option<_> = sorting.into();
-        self.options.sort = incoming.map(|incoming| {
-            let incoming: Document = incoming.into();
-            match existing {
-                Some(mut existing) => {
-                    for (key, value) in incoming {
-                        existing.insert(key, value);
+        self.options.sort = match incoming {
+            Some(incoming) => {
+                let incoming: Document = incoming.into();
+                let combined = match existing {
+                    Some(mut existing) => {
+                        existing.extend(incoming);
+                        existing
                     }
-                    existing
-                }
-                None => incoming,
+                    None => incoming,
+                };
+                Some(combined)
             }
-        });
+            None => existing,
+        };
         self
     }
 
@@ -347,14 +408,22 @@ impl<T: Entity> FindQuery<T> {
         let Self {
             filter, options, ..
         } = self;
-
         let collection = T::collection(ctx);
+
         let cursor: Box<
             dyn Stream<Item = DatabaseResult<Document>> + Send + Unpin,
         > = if let Some(transaction) = ctx.transaction() {
             let cursor = {
                 let mut transaction = transaction.lock().await;
                 let session = transaction.session();
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    session = %session.id(),
+                    %filter,
+                    options = %to_document(&options).unwrap(),
+                    "finding documents"
+                );
                 collection
                     .find_with_session(filter, options, session)
                     .await?
@@ -362,6 +431,13 @@ impl<T: Entity> FindQuery<T> {
             let cursor = TransactionCursor::new(cursor, transaction);
             Box::new(cursor)
         } else {
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                %filter,
+                options = %to_document(&options).unwrap(),
+                "finding documents"
+            );
             let cursor = collection.find(filter, options).await?;
             Box::new(cursor)
         };
@@ -455,8 +531,8 @@ impl<T: Object> AggregateOneQueryInner<T> {
     pub async fn load(self, ctx: &Context) -> Result<Option<T>> {
         let Self {
             collection,
-            mut pipeline,
             options,
+            mut pipeline,
             ..
         } = self;
 
@@ -472,6 +548,13 @@ impl<T: Object> AggregateOneQueryInner<T> {
             let cursor = {
                 let mut transaction = transaction.lock().await;
                 let session = transaction.session();
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    session = %session.id(),
+                    pipeline = %bson!(pipeline.clone()),
+                    "aggregating documents"
+                );
                 collection
                     .aggregate_with_session(pipeline, options, session)
                     .await?
@@ -479,6 +562,12 @@ impl<T: Object> AggregateOneQueryInner<T> {
             let cursor = TransactionCursor::new(cursor, transaction);
             Box::new(cursor)
         } else {
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                pipeline = %bson!(pipeline.clone()),
+                "aggregating documents"
+            );
             let cursor = collection.aggregate(pipeline, options).await?;
             Box::new(cursor)
         };
@@ -563,6 +652,14 @@ impl<T: Object> AggregateQuery<T> {
             let cursor = {
                 let mut transaction = transaction.lock().await;
                 let session = transaction.session();
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    session = %session.id(),
+                    pipeline = %bson!(pipeline.clone()),
+                    ?options,
+                    "aggregating documents"
+                );
                 collection
                     .aggregate_with_session(pipeline, options, session)
                     .await?
@@ -570,6 +667,13 @@ impl<T: Object> AggregateQuery<T> {
             let cursor = TransactionCursor::new(cursor, transaction);
             Box::new(cursor)
         } else {
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                pipeline = %bson!(pipeline.clone()),
+                ?options,
+                "aggregating documents"
+            );
             let cursor = collection.aggregate(pipeline, options).await?;
             Box::new(cursor)
         };
