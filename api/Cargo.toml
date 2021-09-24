@@ -3,6 +3,7 @@ name = "home-api"
 version = "0.1.0"
 authors = ["Steven Xie <dev@stevenxie.me>"]
 edition = "2018"
+resolver = "2"
 
 
 [dependencies]
@@ -15,26 +16,26 @@ derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
 futures = { package = "futures-core", version = "^0.3.17" }
-http = "^0.2.4"
+http = "^0.2.5"
 # FIXME: Temporary workaround for https://github.com/tkaitchuck/aHash/issues/95
 indexmap = "~1.6.2"
 lazy_static = "^1.4.0"
 macros = { path = "./macros" }
-mailchecker = "^4.0.7"
+mailchecker = "^4.0.12"
 mime = "^0.3.16"
 mongodb = "^2.0.0"
 nanoid = "^0.4.0"
 phonenumber = "^0.3.1"
-pin_project = { package = "pin-project", version = "^1.0.7" }
+pin_project = { package = "pin-project", version = "^1.0.8" }
 regex = "^1.5.4"
 serde = { version = "^1.0.130", features = ["derive"] }
 serde_json = "^1.0.68"
-tokio = { version = "^1.11.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "^1.12.0", features = ["rt-multi-thread", "macros"] }
 tracing = "^0.1.28"
 typed_builder = { package = "typed-builder", version = "^0.9.1" }
 url = { version = "^2.2.2", features = ["serde"] }
 warp = { version = "^0.3.1", default-features = false, features = ["websocket"] }
-warp_graphql = { package = "async-graphql-warp", version = "^2.10.0" }
+warp_graphql = { package = "async-graphql-warp", version = "^2.10.1" }
 oauth2 = { package = "async-oauth2", version = "^0.3.0" }
 
 [dependencies.chrono]
@@ -50,8 +51,8 @@ features = ["std"]
 
 [dependencies.graphql]
 package = "async-graphql"
-version = "^2.10.0"
-features = ["chrono","url","apollo_persisted_queries"]
+version = "^2.10.1"
+features = ["chrono", "url", "apollo_persisted_queries"]
 
 [dependencies.request]
 package = "reqwest"
@@ -61,15 +62,15 @@ features = ["json", "rustls-tls"]
 
 [dependencies.tracing_subscriber]
 package = "tracing-subscriber"
-version = "^0.2.18"
+version = "^0.2.24"
 default-features = false
 features = ["env-filter", "fmt", "ansi", "chrono", "tracing-log", "json"]
 
 
 [build-dependencies]
-anyhow = "^1.0.40"
-chrono = { version = "^0.4.19", default-features = false }
-git = { package = "git2", version = "^0.13.21", default-features = false }
+anyhow = "^1.0.44"
+chrono = { version = "^0.4.19", default-features = false, features = ["clock"] }
+git = { package = "git2", version = "^0.13.22", default-features = false }
 semver = { version = "^1.0.4", default-features = false }
 
 

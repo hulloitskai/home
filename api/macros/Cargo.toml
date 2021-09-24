@@ -14,7 +14,7 @@ proc-macro2 = "^1.0.29"
 quote = "^1.0.9"
 
 [dependencies.syn]
-version = "^1.0.76"
+version = "^1.0.77"
 default-features = false
 features = ["derive", "proc-macro"]
 
