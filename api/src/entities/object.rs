@@ -27,7 +27,7 @@ where
             if let Bson::String(created_at) = created_at {
                 let created_at: DateTime = created_at
                     .parse()
-                    .context("failed to parse created-at timestamp")?;
+                    .context("failed to parse `created_at` field")?;
                 doc.insert("created_at", created_at);
             }
         };
@@ -37,7 +37,7 @@ where
             if let Bson::String(updated_at) = updated_at {
                 let updated_at: DateTime = updated_at
                     .parse()
-                    .context("failed to parse updated-at timestamp")?;
+                    .context("failed to parse `updated_at` field")?;
                 doc.insert("updated_at", updated_at);
             }
         };
@@ -47,16 +47,16 @@ where
             if let Bson::String(removed_at) = removed_at {
                 let removed_at: DateTime = removed_at
                     .parse()
-                    .context("failed to parse removed-at timestamp")?;
+                    .context("failed to parse `removed_at` field")?;
                 doc.insert("removed_at", removed_at);
             }
         };
 
-        // Remove null values.
-        let doc: Document = doc
-            .into_iter()
-            .filter(|(_, value)| !matches!(value, Bson::Null))
-            .collect();
+        // // Remove null values.
+        // let doc: Document = doc
+        //     .into_iter()
+        //     .filter(|(_, value)| !matches!(value, Bson::Null))
+        //     .collect();
 
         Ok(doc)
     }
