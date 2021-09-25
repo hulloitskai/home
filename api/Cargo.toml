@@ -36,7 +36,7 @@ typed_builder = { package = "typed-builder", version = "^0.9.1" }
 url = { version = "^2.2.2", features = ["serde"] }
 warp = { version = "^0.3.1", default-features = false, features = ["websocket"] }
 warp_graphql = { package = "async-graphql-warp", version = "^2.10.1" }
-oauth2 = { package = "async-oauth2", version = "^0.3.0" }
+oauth2 = "^4.1.0"
 
 [dependencies.chrono]
 version = "^0.4.19"

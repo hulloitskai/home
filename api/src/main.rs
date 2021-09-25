@@ -53,8 +53,11 @@ use entities::Comparison;
 use entities::{Context, Entity, Services, Settings};
 use entities::{HeartRate, HeartRateConditions};
 
+mod auth;
+
 mod spotify;
 use spotify::Client as SpotifyClient;
+use spotify::ClientConfig as SpotifyClientConfig;
 
 mod lyricly;
 use lyricly::Client as LyriclyClient;
@@ -112,9 +115,15 @@ async fn main() -> Result<()> {
         let client_secret = env_var("SPOTIFY_CLIENT_SECRET").context(
             "failed to read environment variable SPOTIFY_CLIENT_SECRET",
         )?;
-        let token = env_var("SPOTIFY_TOKEN")
-            .context("failed to read environment variable SPOTIFY_TOKEN")?;
-        SpotifyClient::new(&client_id, &client_secret, &token)
+        let refresh_token = env_var("SPOTIFY_REFRESH_TOKEN").context(
+            "failed to read environment variable SPOTIFY_REFRESH_TOKEN",
+        )?;
+        let config = SpotifyClientConfig::builder()
+            .client_id(client_id)
+            .client_secret(client_secret)
+            .refresh_token(refresh_token)
+            .build();
+        SpotifyClient::new(config)
     };
 
     // Build Lyricly client.

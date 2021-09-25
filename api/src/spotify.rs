@@ -1,39 +1,51 @@
 use super::prelude::*;
 
-use http::StatusCode;
+use crate::auth::AccessToken;
+use crate::auth::{Authenticator, AuthenticatorConfig};
 
-use oauth2::{Client as AuthClient, Token};
-use oauth2::{RefreshToken, StandardToken};
+use http::StatusCode;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Client {
     http: HttpClient,
-    auth: AuthClient,
-    token: String,
+    auth: Authenticator,
 
     #[derivative(Debug = "ignore")]
     cache: AsyncMutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
+pub struct ClientConfig {
+    pub client_id: String,
+    pub client_secret: String,
+    pub refresh_token: String,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct CurrentlyPlayingKey;
 
 impl Client {
-    pub fn new(client_id: &str, client_secret: &str, token: &str) -> Self {
+    pub fn new(config: ClientConfig) -> Self {
         let auth = {
-            let mut client = AuthClient::new(
+            let ClientConfig {
                 client_id,
-                "https://accounts.spotify.com/authorize".parse().unwrap(),
-                "https://accounts.spotify.com/api/token".parse().unwrap(),
-            );
-            client.set_client_secret(client_secret);
-            client
+                client_secret,
+                refresh_token,
+            } = config;
+            let token_endpoint: Url =
+                "https://accounts.spotify.com/api/token".parse().unwrap();
+            let config = AuthenticatorConfig::builder()
+                .client_id(client_id)
+                .client_secret(client_secret)
+                .token_endpoint(token_endpoint)
+                .refresh_token(refresh_token)
+                .build();
+            Authenticator::new(config)
         };
         Self {
             http: default(),
             auth,
-            token: token.to_owned(),
             cache: {
                 let ttl = Duration::milliseconds(500).to_std().unwrap();
                 let cache = Cache::with_expiry_duration(ttl);
@@ -83,16 +95,11 @@ impl Client {
             url
         };
         let request = {
-            let token_response = {
-                let refresh_token: RefreshToken = self.token.clone().into();
-                self.auth
-                    .exchange_refresh_token(&refresh_token)
-                    .with_client(&self.http)
-                    .execute::<StandardToken>()
-                    .await
-                    .context("failed to exchange refresh token")?
-            };
-            let token = token_response.access_token().to_string();
+            let AccessToken { token,.. } = self
+                .auth
+                .access_token()
+                .await
+                .context("failed to get access token")?;
             self.http.get(url).bearer_auth(token)
         };
         let response = {

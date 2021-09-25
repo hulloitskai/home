@@ -2,9 +2,7 @@
 FROM rust:1.54-alpine as builder
 
 # Install system dependencies.
-#
-# NOTE: openssl-dev is required to build oauth2 library.
-RUN apk add --update --no-cache musl-dev openssl-dev
+RUN apk add --update --no-cache musl-dev
 
 ARG BUILD_VERSION
 ENV BUILD_VERSION=${BUILD_VERSION}
@@ -33,7 +31,6 @@ RUN apk add --update --no-cache ca-certificates curl
 WORKDIR /app
 COPY --from=builder /dist/api ./
 
-RUN apk add --update --no-cache openssl
 RUN addgroup -g 1001 -S docker && \
     adduser -u 1001 -S docker && \
     chown -R docker:docker /app/api
