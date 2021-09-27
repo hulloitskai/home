@@ -7,7 +7,7 @@ use oauth2::{RefreshToken, TokenResponse};
 
 use oauth2::reqwest::async_http_client;
 
-lazy_static! {
+lazy! {
     static ref CLOCK_SKEW_LEEWAY: Duration = Duration::seconds(60);
 }
 
@@ -23,7 +23,7 @@ pub struct AuthenticatorConfig {
 pub struct Authenticator {
     client: Client,
     refresh_token: String,
-    current_access_token: AsyncMutex<Option<AccessToken>>,
+    current_access_token: Mutex<Option<AccessToken>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

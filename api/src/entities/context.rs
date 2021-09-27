@@ -4,7 +4,7 @@ use super::prelude::*;
 pub struct Context {
     services: Arc<Services>,
     settings: Arc<Settings>,
-    current_transaction: Option<Arc<AsyncMutex<Transaction>>>,
+    transaction: Option<Arc<Mutex<Transaction>>>,
 }
 
 impl Context {
@@ -12,7 +12,7 @@ impl Context {
         Self {
             settings: settings.into(),
             services: services.into(),
-            current_transaction: None,
+            transaction: None,
         }
     }
 }
@@ -28,52 +28,57 @@ impl Context {
 }
 
 impl Context {
-    pub(super) fn transaction(&self) -> Option<Arc<AsyncMutex<Transaction>>> {
-        self.current_transaction.clone()
+    pub(super) fn transaction(&self) -> Option<Arc<Mutex<Transaction>>> {
+        self.transaction.clone()
     }
 
-    pub(super) async fn lock_transaction(
-        &self,
-    ) -> Option<AsyncMutexGuard<'_, Transaction>> {
-        match &self.current_transaction {
-            Some(transaction) => Some(transaction.lock().await),
-            None => None,
-        }
-    }
-
-    async fn with_transaction(
-        &self,
-    ) -> Result<Option<(Self, Arc<AsyncMutex<Transaction>>)>> {
-        if self.current_transaction.is_some() {
-            return Ok(None);
-        }
-        let Self {
-            services, settings, ..
-        } = self;
-        let transaction = {
-            let transaction =
-                Transaction::new(&services.database_client).await?;
-            Arc::new(AsyncMutex::new(transaction))
+    async fn init_transaction(&self) -> Result<TransactionState> {
+        let state = match self.transaction() {
+            Some(transaction) => TransactionState {
+                ctx: self.to_owned(),
+                transaction: transaction.to_owned(),
+                is_root: false,
+            },
+            None => {
+                let Self {
+                    services, settings, ..
+                } = self;
+                let transaction = {
+                    let transaction =
+                        Transaction::new(&services.database_client).await?;
+                    Arc::new(Mutex::new(transaction))
+                };
+                let ctx = Self {
+                    services: services.clone(),
+                    settings: settings.clone(),
+                    transaction: transaction.clone().into(),
+                };
+                TransactionState {
+                    ctx,
+                    transaction,
+                    is_root: true,
+                }
+            }
         };
-        let ctx = Self {
-            services: services.clone(),
-            settings: settings.clone(),
-            current_transaction: transaction.clone().into(),
-        };
-        Ok(Some((ctx, transaction)))
+        Ok(state)
     }
 
-    pub async fn transact<F, T, U>(&self, f: F) -> Result<T>
+    pub(super) async fn with_transaction<F, T, U>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(Self) -> U,
+        F: FnOnce(Self, Arc<Mutex<Transaction>>) -> U,
         U: Future<Output = Result<T>>,
     {
-        let transaction = self
-            .with_transaction()
+        let TransactionState {
+            ctx,
+            transaction,
+            is_root,
+        } = self
+            .init_transaction()
             .await
             .context("failed to begin transaction")?;
-        if let Some((ctx, transaction)) = transaction {
-            match f(ctx).await {
+
+        if is_root {
+            match f(ctx, transaction.clone()).await {
                 Ok(value) => {
                     let mut transaction = transaction.lock().await;
                     transaction.commit().await?;
@@ -86,8 +91,24 @@ impl Context {
                 }
             }
         } else {
-            let ctx = self.clone();
-            f(ctx).await
+            f(ctx, transaction).await
         }
     }
+}
+
+impl Context {
+    pub async fn transact<F, T, U>(&self, f: F) -> Result<T>
+    where
+        F: FnOnce(Self) -> U,
+        U: Future<Output = Result<T>>,
+    {
+        self.with_transaction(|ctx, _| f(ctx)).await
+    }
+}
+
+#[derive(Debug)]
+struct TransactionState {
+    ctx: Context,
+    transaction: Arc<Mutex<Transaction>>,
+    is_root: bool,
 }

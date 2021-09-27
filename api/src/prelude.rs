@@ -1,12 +1,13 @@
 pub use crate::util::*;
 
-pub use async_trait::async_trait;
+pub use async_trait::async_trait as asyncify;
+pub use lazy_static::lazy_static as lazy;
+pub use pin_project::pin_project as project;
+pub use typed_builder::TypedBuilder as Builder;
+
 pub use cache::LruCache as Cache;
 pub use derivative::Derivative;
-pub use lazy_static::lazy_static;
-pub use pin_project::pin_project;
 pub use regex::Regex;
-pub use typed_builder::TypedBuilder as Builder;
 pub use url::Url;
 
 pub use derives::{AsRef, Deref};
@@ -22,34 +23,27 @@ pub use request::Request as HttpRequest;
 pub use request::RequestBuilder as HttpRequestBuilder;
 pub use request::Response as HttpResponse;
 
-pub use tokio::sync::Mutex as AsyncMutex;
-pub use tokio::sync::MutexGuard as AsyncMutexGuard;
-pub use tokio::sync::RwLock as AsyncRwLock;
+pub use tokio::sync::{Mutex, RwLock};
 pub use tokio::task::{spawn, spawn_blocking};
 pub use tokio::task::{JoinError, JoinHandle};
 
 pub use std::borrow::{Borrow, BorrowMut, Cow};
+pub use std::collections::HashMap as Map;
+pub use std::collections::HashSet as Set;
 pub use std::convert::{TryFrom, TryInto};
 pub use std::error::Error as StdError;
+pub use std::fmt::Result as FmtResult;
+pub use std::fmt::{Debug, Display, Formatter};
+pub use std::iter::once;
 pub use std::iter::FromIterator;
 pub use std::marker::PhantomData;
 pub use std::ops::Deref;
 pub use std::pin::Pin;
 pub use std::str::FromStr;
-pub use std::time::Duration as StdDuration;
-
-pub use std::collections::HashMap as Map;
-pub use std::collections::HashSet as Set;
-
 pub use std::sync::Arc;
-pub use std::sync::RwLock;
-pub use std::sync::{Mutex, MutexGuard};
-
 pub use std::task::Context as TaskContext;
 pub use std::task::Poll as TaskPoll;
-
-pub use std::fmt::Result as FmtResult;
-pub use std::fmt::{Debug, Display, Formatter};
+pub use std::time::Duration as StdDuration;
 
 pub use serde::de::DeserializeOwned;
 pub use serde::de::Error as DeserializeError;

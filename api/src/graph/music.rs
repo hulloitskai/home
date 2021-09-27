@@ -96,7 +96,7 @@ impl TryFrom<SpotifyTrack> for MusicTrack {
             artists,
         } = track;
         let album: MusicAlbum = album.try_into().context("invalid album")?;
-        let artists = artists.into_iter().map(Into::into).collect();
+        let artists = artists.into_iter().map(MusicArtist::from).collect();
         let track = Self {
             spotify_id,
             spotify_url: external_urls.spotify,

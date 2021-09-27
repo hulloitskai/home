@@ -3,7 +3,7 @@ use super::prelude::*;
 use mongodb::ClientSession as DatabaseSession;
 
 #[derive(Debug)]
-pub struct Transaction {
+pub(super) struct Transaction {
     session: DatabaseSession,
 }
 

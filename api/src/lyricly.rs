@@ -8,7 +8,7 @@ pub struct Client {
     http: HttpClient,
 
     #[derivative(Debug = "ignore")]
-    cache: AsyncMutex<Cache<LyricsKey, Lyrics>>,
+    cache: Mutex<Cache<LyricsKey, Lyrics>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]

@@ -42,7 +42,7 @@ impl From<EntitySorting> for Document {
     }
 }
 
-#[async_trait]
+#[asyncify]
 pub trait Entity: Object {
     const COLLECTION_NAME: &'static str;
 
@@ -109,7 +109,7 @@ pub trait Entity: Object {
 
     async fn save(&mut self, ctx: &Context) -> Result<()> {
         self.validate()?;
-        ctx.transact(|ctx| async move {
+        ctx.with_transaction(|ctx, transaction| async move {
             self.before_save(&ctx).await?;
 
             let replacement = {
@@ -120,14 +120,18 @@ pub trait Entity: Object {
                 doc
             };
             let query = doc! { "_id": self.id() };
+            let collection = Self::collection(&ctx);
             let options = ReplaceOptions::builder().upsert(true).build();
 
-            let collection = Self::collection(&ctx);
-            let mut transaction = ctx
-                .lock_transaction()
-                .await
-                .expect("transaction should have started");
+            let mut transaction = transaction.lock().await;
             let session = transaction.session();
+
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                %query,
+                "saving document"
+            );
             collection
                 .replace_one_with_session(query, replacement, options, session)
                 .await?;
@@ -147,16 +151,21 @@ pub trait Entity: Object {
     }
 
     async fn delete(&mut self, ctx: &Context) -> Result<()> {
-        ctx.transact(|ctx| async move {
+        ctx.with_transaction(|ctx, transaction| async move {
             self.before_delete(&ctx).await?;
 
             let query = doc! { "_id": self.id() };
             let collection = Self::collection(&ctx);
-            let mut transaction = ctx
-                .lock_transaction()
-                .await
-                .expect("transaction should have started");
+
+            let mut transaction = transaction.lock().await;
             let session = transaction.session();
+
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                %query,
+                "deleting document"
+            );
             collection
                 .delete_one_with_session(query, None, session)
                 .await?;
@@ -259,7 +268,8 @@ impl<T: Entity> FindOneQueryInner<T> {
         } = self;
         let collection = T::collection(ctx);
 
-        let doc = if let Some(mut transaction) = ctx.lock_transaction().await {
+        let doc = if let Some(transaction) = ctx.transaction() {
+            let mut transaction = transaction.lock().await;
             let session = transaction.session();
             {
                 let options = {
@@ -289,7 +299,7 @@ impl<T: Entity> FindOneQueryInner<T> {
                     collection = collection.name(),
                     %filter,
                     %options,
-                    "finding one document"
+                    "finding document"
                 );
             }
             collection.find_one(filter, options).await?
@@ -519,7 +529,7 @@ impl<T: Object> AggregateOneQueryInner<T> {
         pipeline: impl IntoIterator<Item = Document>,
     ) -> Self {
         let options = AggregateOptions::default();
-        let pipeline: Vec<_> = pipeline.into_iter().collect();
+        let pipeline = Vec::from_iter(pipeline);
         Self {
             collection: collection.to_owned(),
             pipeline,
@@ -599,7 +609,7 @@ impl<T: Object> AggregateQuery<T> {
         pipeline: impl IntoIterator<Item = Document>,
     ) -> Self {
         let options = AggregateOptions::default();
-        let pipeline: Vec<_> = pipeline.into_iter().collect();
+        let pipeline = Vec::from_iter(pipeline);
         Self {
             collection: collection.to_owned(),
             pipeline,
@@ -734,7 +744,7 @@ impl<T: Object> AggregateQuery<T> {
     }
 }
 
-#[pin_project]
+#[project]
 #[derive(Debug)]
 struct TransactionCursor<T>
 where
@@ -742,7 +752,7 @@ where
     T: Send + Sync,
 {
     cursor: SessionCursor<T>,
-    transaction: Arc<AsyncMutex<Transaction>>,
+    transaction: Arc<Mutex<Transaction>>,
 }
 
 impl<T> TransactionCursor<T>
@@ -752,7 +762,7 @@ where
 {
     fn new(
         cursor: SessionCursor<T>,
-        transaction: Arc<AsyncMutex<Transaction>>,
+        transaction: Arc<Mutex<Transaction>>,
     ) -> Self {
         Self {
             cursor,

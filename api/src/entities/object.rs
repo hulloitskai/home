@@ -52,12 +52,6 @@ where
             }
         };
 
-        // // Remove null values.
-        // let doc: Document = doc
-        //     .into_iter()
-        //     .filter(|(_, value)| !matches!(value, Bson::Null))
-        //     .collect();
-
         Ok(doc)
     }
 

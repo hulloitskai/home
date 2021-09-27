@@ -12,7 +12,7 @@ pub struct Client {
     auth: Authenticator,
 
     #[derivative(Debug = "ignore")]
-    cache: AsyncMutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
+    cache: Mutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
@@ -95,7 +95,7 @@ impl Client {
             url
         };
         let request = {
-            let AccessToken { token,.. } = self
+            let AccessToken { token, .. } = self
                 .auth
                 .access_token()
                 .await
