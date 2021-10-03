@@ -117,22 +117,22 @@ impl Client {
                     Some(current_playing)
                 }
             };
-            let (artist_name, track_name) = match &currently_playing {
-                Some(CurrentlyPlaying { track, .. }) => {
-                    let artist = track.artists.first();
-                    (
-                        artist.map(|artist| artist.name.as_str()),
-                        Some(track.name.as_str()),
-                    )
-                }
-                None => (None, None),
-            };
-            trace!(
-                target: "home-api::spotify",
-                artist = %artist_name.unwrap_or_default(),
-                track = %track_name.unwrap_or_default(),
-                "fetched new currently-playing",
-            );
+            if let Some(CurrentlyPlaying { track, .. }) = &currently_playing {
+                let artist = track.artists.first();
+                if let Some(artist) = artist {
+                    trace!(
+                        target: "home-api::spotify",
+                        artist = %artist.name,
+                        track = %track.name,
+                        "found currently-playing track",
+                    );
+                };
+            } else {
+                trace!(
+                    target: "home-api::spotify",
+                    "no currently-playing track found",
+                );
+            }
             cache.insert(CurrentlyPlayingKey, currently_playing.clone());
             currently_playing
         };
