@@ -1,13 +1,14 @@
 import React, { FC, useEffect, useMemo, useState } from "react";
 import first from "lodash/first";
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 
 import { useClient, gql } from "urql";
 import { useQuery } from "urql";
 import { useQueryErrorToast } from "components/urql";
 
-import { BoxProps, Box, VStack } from "@chakra-ui/react";
+import { BoxProps, Box, VStack, HStack } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/react";
+import { Progress } from "@chakra-ui/react";
 import { ExternalLink } from "components";
 
 import { SectionProps, Section, SectionText } from "components/section";
@@ -70,7 +71,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
     [data], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  // Send heartbeat signal every second.
+  // Send heartbeat signal every 2.5 seconds.
   const client = useClient();
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,7 +80,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
           requestPolicy: "network-only",
         })
         .toPromise();
-    }, 1000);
+    }, 2500);
     return () => clearInterval(interval);
   }, [client]);
 
@@ -110,7 +111,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
 
   const render = (info: NonNullable<MusicSectionQuery["musicInfo"]>) => {
     const { isPlaying, track } = info;
-    const { artists } = track;
+    const { duration, artists } = track;
     const artist = first(artists);
     return (
       <Section {...otherProps}>
@@ -120,6 +121,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
             <MusicLyrics
               trackSpotifyId={track.spotifyId}
               progress={interpolatedProgress}
+              duration={duration}
             />
           )}
         </VStack>
@@ -175,11 +177,13 @@ const MUSIC_LYRICS_DELAY = 1000; // 1 second of estimated latency
 interface MusicLyricsProps extends BoxProps {
   trackSpotifyId: string | undefined | null;
   progress: number | undefined | null;
+  duration: number;
 }
 
 const MusicLyrics: FC<MusicLyricsProps> = ({
   trackSpotifyId,
   progress,
+  duration,
   ...otherProps
 }) => {
   const [{ data, error }, executeQuery] = useQuery<
@@ -218,27 +222,69 @@ const MusicLyrics: FC<MusicLyricsProps> = ({
     return null;
   }, [data, progress]);
 
-  if (!line) {
+  const progressDescription = useMemo(() => {
+    if (progress) {
+      const duration = Duration.fromMillis(progress);
+      return duration.toFormat("m:ss");
+    }
+  }, [progress]);
+
+  const progressPercent = useMemo<number | null | undefined>(() => {
+    if (typeof progress === "number") {
+      return (progress * 100) / duration;
+    }
+    return progress;
+  }, [progress, duration]);
+
+  const durationDescription = useMemo(
+    () => Duration.fromMillis(duration).toFormat("m:ss"),
+    [duration],
+  );
+
+  if (progress === null && !line) {
     return null;
   }
   return (
-    <Box
-      bg="black"
-      color="white"
-      rounded="sm"
-      px={2}
-      py={1.5}
-      _dark={{ bg: "white", color: "black" }}
-      {...otherProps}
-    >
-      <Text
-        as="blockquote"
-        fontSize="sm"
-        fontStyle="oblique"
-        fontWeight="medium"
-      >
-        {line}
-      </Text>
-    </Box>
+    <VStack {...otherProps}>
+      {!!line && (
+        <Box
+          bg="black"
+          color="white"
+          rounded="sm"
+          px={2}
+          py={1.5}
+          _dark={{ bg: "white", color: "black" }}
+          {...otherProps}
+        >
+          <Text
+            as="blockquote"
+            fontSize="sm"
+            fontStyle="oblique"
+            fontWeight="medium"
+          >
+            {line}
+          </Text>
+        </Box>
+      )}
+      {progressPercent !== null && (
+        <HStack
+          w={40}
+          color="gray.400"
+          fontSize="xs"
+          _dark={{ color: "gray.600" }}
+        >
+          <Text>({progressDescription}</Text>
+          <Progress
+            value={progressPercent}
+            colorScheme="red"
+            size="xs"
+            rounded="full"
+            isIndeterminate={progressPercent === undefined}
+            flex={1}
+          />
+          <Text>{durationDescription})</Text>
+        </HStack>
+      )}
+    </VStack>
   );
 };
