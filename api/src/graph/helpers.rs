@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-#[asyncify]
+#[async_trait]
 pub(super) trait ContextExt {
     fn entity(&self) -> &EntityContext;
 

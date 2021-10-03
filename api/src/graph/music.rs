@@ -177,9 +177,6 @@ impl TryFrom<LyriclyLyricLine> for LyricLine {
 
     fn try_from(line: LyriclyLyricLine) -> Result<Self, Self::Error> {
         let LyriclyLyricLine { text, position } = line;
-        let position: u32 = position
-            .parse()
-            .context("failed to parse position as number")?;
         let line = Self { text, position };
         Ok(line)
     }

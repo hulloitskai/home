@@ -113,5 +113,5 @@ pub struct LyricLine {
     pub text: String,
 
     #[serde(alias = "milliseconds")]
-    pub position: String,
+    pub position: u32,
 }

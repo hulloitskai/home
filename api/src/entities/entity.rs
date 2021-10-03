@@ -4,6 +4,7 @@ use mongodb::error::Result as DatabaseResult;
 use mongodb::SessionCursor;
 
 use mongodb::options::AggregateOptions;
+use mongodb::options::CountOptions;
 use mongodb::options::FindOneOptions;
 use mongodb::options::FindOptions;
 use mongodb::options::ReplaceOptions;
@@ -42,7 +43,7 @@ impl From<EntitySorting> for Document {
     }
 }
 
-#[asyncify]
+#[async_trait]
 pub trait Entity: Object {
     const COLLECTION_NAME: &'static str;
 
@@ -57,7 +58,7 @@ pub trait Entity: Object {
     fn get(key: ObjectKey<Self::Type>) -> FindOneQuery<Self> {
         let ObjectKey { id, .. } = key;
         let filter = doc! { "_id": id };
-        FindOneQuery::new_untyped(filter)
+        FindOneQuery::with_filter(filter)
     }
 
     fn get_many(keys: Vec<ObjectKey<Self::Type>>) -> FindQuery<Self> {
@@ -67,25 +68,22 @@ pub trait Entity: Object {
                 "$in": ids
             }
         };
-        FindQuery::new_untyped(filter)
+        FindQuery::with_filter(filter)
     }
 
     fn all() -> FindQuery<Self> {
-        let filter = Document::new();
-        FindQuery::new_untyped(filter)
+        Self::find(None)
     }
 
-    async fn count(ctx: &Context) -> Result<u64> {
-        let collection = Self::collection(ctx);
-        let count = collection.estimated_document_count(None).await?;
-        Ok(count)
-    }
-
-    fn find(conditions: Self::Conditions) -> FindQuery<Self> {
+    fn find(
+        conditions: impl Into<Option<Self::Conditions>>,
+    ) -> FindQuery<Self> {
         FindQuery::new(conditions)
     }
 
-    fn find_one(conditions: Self::Conditions) -> FindOneQuery<Self> {
+    fn find_one(
+        conditions: impl Into<Option<Self::Conditions>>,
+    ) -> FindOneQuery<Self> {
         FindOneQuery::new(conditions)
     }
 
@@ -101,6 +99,12 @@ pub trait Entity: Object {
     ) -> AggregateOneQuery<T> {
         let collection = Self::COLLECTION_NAME;
         AggregateOneQuery::new(collection, pipeline)
+    }
+
+    async fn count(ctx: &Context) -> Result<u64> {
+        let collection = Self::collection(ctx);
+        let count = collection.estimated_document_count(None).await?;
+        Ok(count)
     }
 
     fn validate(&self) -> Result<()> {
@@ -189,13 +193,13 @@ pub trait Entity: Object {
 pub struct FindOneQuery<T: Entity>(FindOneQueryInner<T>);
 
 impl<T: Entity> FindOneQuery<T> {
-    pub fn new(conditions: T::Conditions) -> Self {
+    pub fn new(conditions: impl Into<Option<T::Conditions>>) -> Self {
         let inner = FindOneQueryInner::new(conditions);
         Self(inner)
     }
 
-    fn new_untyped(filter: Document) -> Self {
-        let inner = FindOneQueryInner::new_untyped(filter);
+    fn with_filter(filter: impl Into<Option<Document>>) -> Self {
+        let inner = FindOneQueryInner::with_filter(filter);
         Self(inner)
     }
 
@@ -217,13 +221,13 @@ impl<T: Entity> FindOneQuery<T> {
 pub struct MaybeFindOneQuery<T: Entity>(FindOneQueryInner<T>);
 
 impl<T: Entity> MaybeFindOneQuery<T> {
-    pub fn new(conditions: T::Conditions) -> Self {
+    pub fn new(conditions: impl Into<Option<T::Conditions>>) -> Self {
         let inner = FindOneQueryInner::new(conditions);
         Self(inner)
     }
 
-    fn new_untyped(filter: Document) -> Self {
-        let inner = FindOneQueryInner::new_untyped(filter);
+    fn with_filter(filter: impl Into<Option<Document>>) -> Self {
+        let inner = FindOneQueryInner::with_filter(filter);
         Self(inner)
     }
 
@@ -243,22 +247,23 @@ impl<T: Entity> MaybeFindOneQuery<T> {
 
 #[derive(Debug, Clone)]
 struct FindOneQueryInner<T: Entity> {
-    filter: Document,
+    filter: Option<Document>,
     options: FindOneOptions,
     phantom: PhantomData<T>,
 }
 
 impl<T: Entity> FindOneQueryInner<T> {
-    pub fn new(conditions: T::Conditions) -> Self {
-        let filter: Document = conditions.into();
-        Self::new_untyped(filter)
+    pub fn new(conditions: impl Into<Option<T::Conditions>>) -> Self {
+        let conditions: Option<_> = conditions.into();
+        let filter: Option<Document> = conditions.map(Into::into);
+        Self::with_filter(filter)
     }
 
-    fn new_untyped(filter: Document) -> Self {
+    fn with_filter(filter: impl Into<Option<Document>>) -> Self {
         Self {
-            filter,
-            options: FindOneOptions::default(),
-            phantom: PhantomData,
+            filter: filter.into(),
+            options: default(),
+            phantom: default(),
         }
     }
 
@@ -276,14 +281,24 @@ impl<T: Entity> FindOneQueryInner<T> {
                     let options = FindOptions::from(options.clone());
                     to_document(&options).unwrap()
                 };
-                trace!(
-                    target: "oyster-api::entities",
-                    collection = collection.name(),
-                    session = %session.id(),
-                    %filter,
-                    %options,
-                    "finding document"
-                );
+                if let Some(filter) = &filter {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        session = %session.id(),
+                        %filter,
+                        %options,
+                        "finding document"
+                    );
+                } else {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        session = %session.id(),
+                        %options,
+                        "finding a document"
+                    );
+                }
             }
             collection
                 .find_one_with_session(filter, options, session)
@@ -294,13 +309,22 @@ impl<T: Entity> FindOneQueryInner<T> {
                     let options = FindOptions::from(options.clone());
                     to_document(&options).unwrap()
                 };
-                trace!(
-                    target: "oyster-api::entities",
-                    collection = collection.name(),
-                    %filter,
-                    %options,
-                    "finding document"
-                );
+                if let Some(filter) = &filter {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        %filter,
+                        %options,
+                        "finding document"
+                    );
+                } else {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        %options,
+                        "finding a document"
+                    );
+                }
             }
             collection.find_one(filter, options).await?
         };
@@ -323,7 +347,7 @@ impl<T: Entity> FindOneQueryInner<T> {
 }
 
 pub struct FindQuery<T: Entity> {
-    filter: Document,
+    filter: Option<Document>,
     options: FindOptions,
     phantom: PhantomData<T>,
 }
@@ -361,22 +385,46 @@ fn filter_array_has_operator(array: &Vec<Bson>, operator: &str) -> bool {
 }
 
 impl<T: Entity> FindQuery<T> {
-    pub fn new(conditions: T::Conditions) -> Self {
-        let filter: Document = conditions.into();
-        Self::new_untyped(filter)
+    pub fn new(conditions: impl Into<Option<T::Conditions>>) -> Self {
+        let conditions: Option<_> = conditions.into();
+        let filter: Option<Document> = conditions.map(Into::into);
+        Self::with_filter(filter)
     }
 
-    fn new_untyped(filter: Document) -> Self {
-        let mut options = FindOptions::default();
-        if filter_has_operator(&filter, "$text") {
-            let sort = doc! { "score": { "$meta": "textScore" } };
-            options.sort = Some(sort);
-        }
+    fn with_filter(filter: impl Into<Option<Document>>) -> Self {
+        let filter: Option<_> = filter.into();
+        let options = {
+            let mut options = FindOptions::default();
+            if let Some(filter) = &filter {
+                if filter_has_operator(filter, "$text") {
+                    let sort = doc! { "score": { "$meta": "textScore" } };
+                    options.sort = Some(sort);
+                }
+            }
+            options
+        };
         Self {
             filter,
             options,
             phantom: default(),
         }
+    }
+
+    pub fn and(mut self, conditions: impl Into<Option<T::Conditions>>) -> Self {
+        let conditions: Option<_> = conditions.into();
+        let incoming: Option<Document> = conditions.map(Into::into);
+        if let Some(incoming) = incoming {
+            let filter = match self.filter {
+                Some(existing) => {
+                    doc! {
+                        "$and": [existing, incoming],
+                    }
+                }
+                None => incoming,
+            };
+            self.filter = Some(filter);
+        }
+        self
     }
 
     pub fn skip(mut self, n: impl Into<Option<u32>>) -> Self {
@@ -426,14 +474,24 @@ impl<T: Entity> FindQuery<T> {
             let cursor = {
                 let mut transaction = transaction.lock().await;
                 let session = transaction.session();
-                trace!(
-                    target: "oyster-api::entities",
-                    collection = collection.name(),
-                    session = %session.id(),
-                    %filter,
-                    options = %to_document(&options).unwrap(),
-                    "finding documents"
-                );
+                if let Some(filter) = &filter {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        session = %session.id(),
+                        %filter,
+                        options = %to_document(&options).unwrap(),
+                        "finding documents"
+                    );
+                } else {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        session = %session.id(),
+                        options = %to_document(&options).unwrap(),
+                        "finding all documents"
+                    );
+                }
                 collection
                     .find_with_session(filter, options, session)
                     .await?
@@ -441,13 +499,22 @@ impl<T: Entity> FindQuery<T> {
             let cursor = TransactionCursor::new(cursor, transaction);
             Box::new(cursor)
         } else {
-            trace!(
-                target: "oyster-api::entities",
-                collection = collection.name(),
-                %filter,
-                options = %to_document(&options).unwrap(),
-                "finding documents"
-            );
+            if let Some(filter) = &filter {
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    %filter,
+                    options = %to_document(&options).unwrap(),
+                    "finding documents"
+                );
+            } else {
+                trace!(
+                    target: "oyster-api::entities",
+                    collection = collection.name(),
+                    options = %to_document(&options).unwrap(),
+                    "finding all documents"
+                );
+            }
             let cursor = collection.find(filter, options).await?;
             Box::new(cursor)
         };
@@ -464,9 +531,76 @@ impl<T: Entity> FindQuery<T> {
     }
 
     pub async fn count(self, ctx: &Context) -> Result<u64> {
-        let Self { filter, .. } = self;
+        let Self {
+            filter,
+            options: find_options,
+            ..
+        } = self;
         let collection = T::collection(ctx);
-        let count = collection.count_documents(filter, None).await?;
+        let options = {
+            let FindOptions {
+                limit,
+                skip,
+                collation,
+                ..
+            } = find_options.clone();
+            CountOptions::builder()
+                .limit(limit.map(|limit| limit as u64))
+                .skip(skip)
+                .collation(collation)
+                .build()
+        };
+
+        let count = if let Some(transaction) = ctx.transaction() {
+            let mut transaction = transaction.lock().await;
+            let session = transaction.session();
+            {
+                let options = to_document(&find_options).unwrap();
+                if let Some(filter) = &filter {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        session = %session.id(),
+                        %filter,
+                        %options,
+                        "counting documents"
+                    );
+                } else {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        session = %session.id(),
+                        %options,
+                        "counting documents"
+                    );
+                }
+            }
+            collection
+                .count_documents_with_session(filter, options, session)
+                .await?
+        } else {
+            {
+                let options = to_document(&find_options).unwrap();
+                if let Some(filter) = &filter {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        %filter,
+                        %options,
+                        "counting documents"
+                    );
+                } else {
+                    trace!(
+                        target: "oyster-api::entities",
+                        collection = collection.name(),
+                        %options,
+                        "counting documents"
+                    );
+                }
+            }
+            collection.count_documents(filter, None).await?
+        };
+
         Ok(count)
     }
 }
@@ -725,15 +859,31 @@ impl<T: Object> AggregateQuery<T> {
 
         let collection: Collection<Document> =
             ctx.services().database.collection(&collection);
-
         let result: Document = if let Some(transaction) = ctx.transaction() {
             let mut transaction = transaction.lock().await;
             let session = transaction.session();
-            let mut cursor = collection
-                .aggregate_with_session(pipeline, options, session)
-                .await?;
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                session = %session.id(),
+                pipeline = %bson!(pipeline.clone()),
+                ?options,
+                "counting aggregated documents"
+            );
+            let mut cursor = {
+                collection
+                    .aggregate_with_session(pipeline, options, session)
+                    .await?
+            };
             cursor.next(session).await.unwrap()?
         } else {
+            trace!(
+                target: "oyster-api::entities",
+                collection = collection.name(),
+                pipeline = %bson!(pipeline.clone()),
+                ?options,
+                "counting aggregated documents"
+            );
             let mut cursor = collection.aggregate(pipeline, options).await?;
             cursor.next().await.unwrap()?
         };
@@ -744,7 +894,7 @@ impl<T: Object> AggregateQuery<T> {
     }
 }
 
-#[project]
+#[pin_project]
 #[derive(Debug)]
 struct TransactionCursor<T>
 where

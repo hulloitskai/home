@@ -7,7 +7,7 @@ use oauth2::{RefreshToken, TokenResponse};
 
 use oauth2::reqwest::async_http_client;
 
-lazy! {
+lazy_static! {
     static ref CLOCK_SKEW_LEEWAY: Duration = Duration::seconds(60);
 }
 

@@ -1,10 +1,10 @@
 pub use crate::util::*;
 
-pub use async_trait::async_trait as asyncify;
-pub use lazy_static::lazy_static as lazy;
-pub use pin_project::pin_project as project;
-pub use typed_builder::TypedBuilder as Builder;
+pub use async_trait::async_trait;
+pub use lazy_static::lazy_static;
+pub use pin_project::pin_project;
 
+pub use typed_builder::TypedBuilder as Builder;
 pub use cache::LruCache as Cache;
 pub use derivative::Derivative;
 pub use regex::Regex;
