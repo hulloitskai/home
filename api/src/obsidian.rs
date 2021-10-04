@@ -77,11 +77,6 @@ impl VaultScanner {
     }
 }
 
-lazy_static! {
-    static ref BACKLINK_REGEX: Regex =
-        Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
-}
-
 impl VaultScanner {
     fn scan(&self) -> Result<Vault> {
         scan_vault(&self.path)
@@ -165,9 +160,13 @@ fn scan_vault(path: &str) -> Result<Vault> {
 
         // Parse links.
         {
+            lazy_static! {
+                static ref REGEX: Regex =
+                    Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
+            }
             let text =
                 read_to_string(entry_path).context("failed to read entry")?;
-            let links = BACKLINK_REGEX
+            let links = REGEX
                 .captures_iter(&text)
                 .map(|m| m.get(1).unwrap().as_str().to_owned())
                 .collect::<Set<_>>();

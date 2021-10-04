@@ -35,6 +35,12 @@ export type HeartRate = {
 export type KnowledgeGraph = {
   __typename?: 'KnowledgeGraph';
   entries: Array<KnowledgeGraphEntry>;
+  entry?: Maybe<KnowledgeGraphEntry>;
+};
+
+
+export type KnowledgeGraphEntryArgs = {
+  id: Scalars['String'];
 };
 
 export type KnowledgeGraphEntry = {
@@ -109,6 +115,8 @@ export type HeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type HeartSectionQuery = { __typename?: 'Query', heartRate?: Maybe<{ __typename?: 'HeartRate', id: string, measurement: number, timestamp: any }> };
 
+export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeGraphEntry', id: string, links: { __typename?: 'KnowledgeGraphLinks', incoming: Array<string>, outgoing: Array<string> } };
+
 export type MusicSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -124,10 +132,17 @@ export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: Maybe<{ __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> }> } }> };
 
+export type HomeQueryVariables = Exact<{
+  dailyNoteId: Scalars['String'];
+}>;
+
+
+export type HomeQuery = { __typename?: 'Query', knowledge: { __typename?: 'KnowledgeGraph', dailyEntry?: Maybe<{ __typename?: 'KnowledgeGraphEntry', id: string, links: { __typename?: 'KnowledgeGraphLinks', outgoing: Array<string>, incoming: Array<string> } }> } };
+
 export type KnowledgeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type KnowledgeQuery = { __typename?: 'Query', knowledge: { __typename?: 'KnowledgeGraph', entries: Array<{ __typename?: 'KnowledgeGraphEntry', id: string, names: Array<string>, links: { __typename?: 'KnowledgeGraphLinks', incoming: Array<string>, outgoing: Array<string> } }> } };
+export type KnowledgeQuery = { __typename?: 'Query', knowledge: { __typename?: 'KnowledgeGraph', entries: Array<{ __typename?: 'KnowledgeGraphEntry', id: string, links: { __typename?: 'KnowledgeGraphLinks', incoming: Array<string>, outgoing: Array<string> } }> } };
 
 import { IntrospectionQuery } from 'graphql';
 export default {
@@ -247,6 +262,26 @@ export default {
               }
             },
             "args": []
+          },
+          {
+            "name": "entry",
+            "type": {
+              "kind": "OBJECT",
+              "name": "KnowledgeGraphEntry",
+              "ofType": null
+            },
+            "args": [
+              {
+                "name": "id",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
           }
         ],
         "interfaces": []

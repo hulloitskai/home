@@ -7,10 +7,6 @@ use oauth2::{RefreshToken, TokenResponse};
 
 use oauth2::reqwest::async_http_client;
 
-lazy_static! {
-    static ref CLOCK_SKEW_LEEWAY: Duration = Duration::seconds(60);
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct AuthenticatorConfig {
     pub client_id: String,
@@ -24,6 +20,7 @@ pub struct Authenticator {
     client: Client,
     refresh_token: String,
     current_access_token: Mutex<Option<AccessToken>>,
+    clock_skew_leeway: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,6 +51,7 @@ impl Authenticator {
             client,
             refresh_token,
             current_access_token: default(),
+            clock_skew_leeway: Duration::seconds(60),
         }
     }
 
@@ -64,7 +62,7 @@ impl Authenticator {
             let AccessToken { expires_at, .. } = token;
             let is_valid = match expires_at {
                 Some(expires_at) => {
-                    let expires_at = (*expires_at) - (*CLOCK_SKEW_LEEWAY);
+                    let expires_at = (*expires_at) - self.clock_skew_leeway;
                     Utc::now() < expires_at
                 }
                 None => true,
