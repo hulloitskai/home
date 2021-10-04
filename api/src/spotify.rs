@@ -124,13 +124,13 @@ impl Client {
                         target: "home-api::spotify",
                         artist = %artist.name,
                         track = %track.name,
-                        "found currently-playing",
+                        "found currently playing track info",
                     );
                 };
             } else {
                 trace!(
                     target: "home-api::spotify",
-                    "nothing currently-playing",
+                    "nothing currently playing",
                 );
             }
             cache.insert(CurrentlyPlayingKey, currently_playing.clone());

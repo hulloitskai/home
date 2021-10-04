@@ -59,6 +59,9 @@ mod spotify;
 use spotify::Client as SpotifyClient;
 use spotify::ClientConfig as SpotifyClientConfig;
 
+mod obsidian;
+use obsidian::Client as ObsidianClient;
+
 mod lyricly;
 use lyricly::Client as LyriclyClient;
 
@@ -96,7 +99,8 @@ async fn main() -> Result<()> {
             .context("failed to build MongoDB client")?
     };
 
-    info!(target: "home-api", "connecting to MongoDB...");
+    // Connect to MongoDB
+    info!(target: "home-api", "connecting to database");
     let database = {
         let name = env_var_or("MONGO_DATABASE", "home")
             .context("failed to read environment variable MONGO_DATABASE")?;
@@ -106,6 +110,17 @@ async fn main() -> Result<()> {
             .await
             .context("failed to connect to MongoDB")?;
         database
+    };
+
+    info!(target: "home-api", "initializing services");
+
+    // Build Obsidian client.
+    let obsidian = {
+        let vault_path = env_var("OBSIDIAN_VAULT_PATH").context(
+            "failed to read environment variable OBSIDIAN_VAULT_PATH",
+        )?;
+        ObsidianClient::new(&vault_path)
+            .context("failed to initialize Obsidian client")?
     };
 
     // Build Spotify client.
@@ -133,6 +148,7 @@ async fn main() -> Result<()> {
     let services = Services::builder()
         .database_client(database_client)
         .database(database)
+        .obsidian(obsidian)
         .spotify(spotify)
         .lyricly(lyricly)
         .build();

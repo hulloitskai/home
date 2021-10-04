@@ -32,6 +32,24 @@ export type HeartRate = {
   timestamp: Scalars['DateTime'];
 };
 
+export type KnowledgeGraph = {
+  __typename?: 'KnowledgeGraph';
+  entries: Array<KnowledgeGraphEntry>;
+};
+
+export type KnowledgeGraphEntry = {
+  __typename?: 'KnowledgeGraphEntry';
+  id: Scalars['String'];
+  names: Array<Scalars['String']>;
+  links: KnowledgeGraphLinks;
+};
+
+export type KnowledgeGraphLinks = {
+  __typename?: 'KnowledgeGraphLinks';
+  outgoing: Array<Scalars['String']>;
+  incoming: Array<Scalars['String']>;
+};
+
 export type LyricLine = {
   __typename?: 'LyricLine';
   text: Scalars['String'];
@@ -79,6 +97,7 @@ export type MusicTrack = {
 export type Query = {
   __typename?: 'Query';
   buildInfo: BuildInfo;
+  knowledge: KnowledgeGraph;
   heartRate?: Maybe<HeartRate>;
   musicInfo?: Maybe<MusicInfo>;
 };
@@ -104,6 +123,11 @@ export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: Maybe<{ __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> }> } }> };
+
+export type KnowledgeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type KnowledgeQuery = { __typename?: 'Query', knowledge: { __typename?: 'KnowledgeGraph', entries: Array<{ __typename?: 'KnowledgeGraphEntry', id: string, names: Array<string>, links: { __typename?: 'KnowledgeGraphLinks', incoming: Array<string>, outgoing: Array<string> } }> } };
 
 import { IntrospectionQuery } from 'graphql';
 export default {
@@ -195,6 +219,119 @@ export default {
               "ofType": {
                 "kind": "SCALAR",
                 "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "KnowledgeGraph",
+        "fields": [
+          {
+            "name": "entries",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "KnowledgeGraphEntry",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "KnowledgeGraphEntry",
+        "fields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "names",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "links",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "KnowledgeGraphLinks",
+                "ofType": null
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "KnowledgeGraphLinks",
+        "fields": [
+          {
+            "name": "outgoing",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "incoming",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
               }
             },
             "args": []
@@ -489,6 +626,18 @@ export default {
               "ofType": {
                 "kind": "OBJECT",
                 "name": "BuildInfo",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "knowledge",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "KnowledgeGraph",
                 "ofType": null
               }
             },

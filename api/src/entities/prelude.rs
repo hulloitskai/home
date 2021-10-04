@@ -3,6 +3,7 @@ pub use super::super::prelude::*;
 pub use super::*;
 
 pub use crate::lyricly::Client as LyriclyClient;
+pub use crate::obsidian::Client as ObsidianClient;
 pub use crate::spotify::Client as SpotifyClient;
 
 pub use macros::IntoBson;
