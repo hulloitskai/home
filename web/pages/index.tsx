@@ -109,7 +109,7 @@ const HomePage: NextPage<HomePageProps> = () => {
               <Badge colorScheme="yellow">Knowledge Graph</Badge>
               <Spacer />
               <Link href="/knowledge" _hover={{ textDecor: "none" }}>
-                <Tooltip title="Open Full Graph">
+                <Tooltip label="Open Full Graph">
                   <IconButton
                     icon={<Icon as={HiOutlineArrowsExpand} />}
                     aria-label="Open Full Graph"

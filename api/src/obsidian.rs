@@ -68,7 +68,6 @@ impl VaultScanner {
 
         let parser = Self {
             path,
-            // vault_file
             data,
             sync_interval: Duration::minutes(1),
             sync_timestamp: default(),
