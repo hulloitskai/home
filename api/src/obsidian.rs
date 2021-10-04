@@ -70,7 +70,7 @@ impl VaultScanner {
             path,
             // vault_file
             data,
-            sync_interval: Duration::minutes(5),
+            sync_interval: Duration::minutes(1),
             sync_timestamp: default(),
         };
         Ok(parser)
