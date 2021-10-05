@@ -102,8 +102,7 @@ const makeClientOptions = (ssrExchange: Exchange): ClientOptions => {
         // @ts-ignore
         schema,
         keys: {
-          KnowledgeGraph: () => null,
-          KnowledgeGraphLinks: () => null,
+          KnowledgeEntryLinks: () => null,
           MusicInfo: () => null,
           MusicTrack: data => (data as MusicTrack).spotifyId,
           MusicAlbum: data => (data as MusicAlbum).spotifyId,

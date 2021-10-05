@@ -25,7 +25,11 @@ import { MusicSection } from "components/music";
 
 import { KNOWLEDGE_GRAPH_ENTRY_FRAGMENT } from "components/knowledge";
 
-import { HomeQuery, HomeQueryVariables } from "graphql-types";
+import {
+  HomeQuery,
+  HomeQueryVariables,
+  KnowledgeGraphEntryFragment,
+} from "graphql-types";
 
 const KnowledgeGraph = dynamic(
   async () => {
@@ -37,11 +41,19 @@ const KnowledgeGraph = dynamic(
 
 const HOME_QUERY = gql`
   query Home($dailyNoteId: String!) {
-    knowledge {
-      dailyEntry: entry(id: $dailyNoteId) {
-        id
-        ...KnowledgeGraphEntry
+    dailyEntry: knowledgeEntry(id: $dailyNoteId) {
+      id
+      links {
+        incoming {
+          id
+          ...KnowledgeGraphEntry
+        }
+        outgoing {
+          id
+          ...KnowledgeGraphEntry
+        }
       }
+      ...KnowledgeGraphEntry
     }
   }
 
@@ -59,7 +71,14 @@ const HomePage: NextPage<HomePageProps> = () => {
       dailyNoteId,
     },
   });
-  const { dailyEntry } = data?.knowledge ?? {};
+
+  const { dailyEntry } = data ?? {};
+  const entries = useMemo<KnowledgeGraphEntryFragment[] | undefined>(() => {
+    if (dailyEntry) {
+      const { incoming, outgoing } = dailyEntry.links;
+      return [dailyEntry, ...incoming, ...outgoing];
+    }
+  }, [dailyEntry]);
 
   return (
     <VStack align="stretch">
@@ -93,14 +112,14 @@ const HomePage: NextPage<HomePageProps> = () => {
         </Section> */}
         </VStack>
       </Container>
-      {dailyEntry && (
+      {dailyEntry && entries && (
         <DarkMode>
           <Box pos="relative">
             <KnowledgeGraph
-              entries={[dailyEntry]}
+              entries={entries}
               highlightedEntryId={dailyEntry.id}
               linkForce={0.1}
-              bodyForce={-100}
+              bodyForce={-75}
               h={96}
               bg="gray.900"
             />
@@ -123,8 +142,6 @@ const HomePage: NextPage<HomePageProps> = () => {
                   />
                 </Tooltip>
               </Link>
-              {/* <NextLink href="/knowledge" passHref> */}
-              {/* </NextLink> */}
             </HStack>
           </Box>
         </DarkMode>

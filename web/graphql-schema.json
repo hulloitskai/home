@@ -178,71 +178,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "KnowledgeGraph",
-        "description": null,
-        "fields": [
-          {
-            "name": "entries",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "OBJECT",
-                    "name": "KnowledgeGraphEntry",
-                    "ofType": null
-                  }
-                }
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "entry",
-            "description": null,
-            "args": [
-              {
-                "name": "id",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              }
-            ],
-            "type": {
-              "kind": "OBJECT",
-              "name": "KnowledgeGraphEntry",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "KnowledgeGraphEntry",
+        "name": "KnowledgeEntry",
         "description": null,
         "fields": [
           {
@@ -294,7 +230,7 @@
               "name": null,
               "ofType": {
                 "kind": "OBJECT",
-                "name": "KnowledgeGraphLinks",
+                "name": "KnowledgeEntryLinks",
                 "ofType": null
               }
             },
@@ -309,7 +245,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "KnowledgeGraphLinks",
+        "name": "KnowledgeEntryLinks",
         "description": null,
         "fields": [
           {
@@ -326,8 +262,8 @@
                   "kind": "NON_NULL",
                   "name": null,
                   "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
+                    "kind": "OBJECT",
+                    "name": "KnowledgeEntry",
                     "ofType": null
                   }
                 }
@@ -350,8 +286,8 @@
                   "kind": "NON_NULL",
                   "name": null,
                   "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
+                    "kind": "OBJECT",
+                    "name": "KnowledgeEntry",
                     "ofType": null
                   }
                 }
@@ -796,17 +732,54 @@
             "deprecationReason": null
           },
           {
-            "name": "knowledge",
+            "name": "knowledgeEntries",
             "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "KnowledgeGraph",
-                "ofType": null
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "KnowledgeEntry",
+                    "ofType": null
+                  }
+                }
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "knowledgeEntry",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "KnowledgeEntry",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

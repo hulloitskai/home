@@ -27,11 +27,9 @@ const KnowledgeGraph = dynamic(
 
 const KNOWLEDGE_QUERY = gql`
   query Knowledge {
-    knowledge {
-      entries {
-        id
-        ...KnowledgeGraphEntry
-      }
+    entries: knowledgeEntries {
+      id
+      ...KnowledgeGraphEntry
     }
   }
 
@@ -44,7 +42,7 @@ const KnowledgePage: NextPage<KnowledgePageProps> = () => {
   const [{ data }] = useQuery<KnowledgeQuery, KnowledgeQueryVariables>({
     query: KNOWLEDGE_QUERY,
   });
-  const { entries } = data?.knowledge ?? {};
+  const { entries } = data ?? {};
 
   return (
     <Center w="100vw" h="100vh">

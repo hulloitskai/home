@@ -1,39 +1,101 @@
 use super::prelude::*;
 
+use crate::obsidian::Note as ObsidianNote;
+use crate::obsidian::NoteLinks as ObsidianNoteLinks;
+use crate::obsidian::NoteRef as ObsidianNoteRef;
 use crate::obsidian::Vault as ObsidianVault;
 
-use std::collections::hash_map::Entry as MapEntry;
-
 #[derive(Debug, Clone)]
-pub struct KnowledgeGraph {
-    pub entries: Map<String, KnowledgeGraphEntry>,
+pub struct KnowledgeGraph;
+
+#[derive(Debug, Clone, From)]
+pub struct KnowledgeEntry {
+    note: ObsidianNote,
 }
 
 #[Object]
-impl KnowledgeGraph {
-    async fn entries(&self) -> Vec<KnowledgeGraphEntry> {
-        let mut entries = self.entries.values().cloned().collect::<Vec<_>>();
-        entries.sort_by_cached_key(|entry| entry.id.clone());
+impl KnowledgeEntry {
+    async fn id(&self) -> &String {
+        &self.note.id
+    }
+
+    async fn names(&self) -> &Set<String> {
+        &self.note.names
+    }
+
+    async fn links(&self) -> KnowledgeEntryLinks {
+        self.note.clone().into()
+    }
+}
+
+#[derive(Debug, Clone, From)]
+pub struct KnowledgeEntryLinks {
+    note: ObsidianNote,
+}
+
+#[Object]
+impl KnowledgeEntryLinks {
+    async fn outgoing(&self, ctx: &Context<'_>) -> Vec<KnowledgeEntry> {
+        let Services { obsidian, .. } = ctx.entity().services();
+        let ObsidianVault { mut notes } = obsidian.get_vault();
+
+        let ObsidianNote { id, links, .. } = &self.note;
+        let notes = links
+            .outgoing
+            .iter()
+            .map(|linked| {
+                notes.remove(&linked.id).unwrap_or_else(|| ObsidianNote {
+                    id: linked.id.clone(),
+                    names: Set::from_iter([linked.id.clone()]),
+                    links: ObsidianNoteLinks {
+                        outgoing: default(),
+                        incoming: {
+                            let r#ref = ObsidianNoteRef { id: id.to_owned() };
+                            Set::from_iter([r#ref])
+                        },
+                    },
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let mut entries = notes
+            .into_iter()
+            .map(KnowledgeEntry::from)
+            .collect::<Vec<_>>();
+        entries.sort_by_cached_key(|entry| entry.note.id.clone());
         entries
     }
 
-    async fn entry(&self, id: String) -> Option<KnowledgeGraphEntry> {
-        let entry = self.entries.get(&id);
-        entry.map(ToOwned::to_owned)
+    async fn incoming(&self, ctx: &Context<'_>) -> Vec<KnowledgeEntry> {
+        let Services { obsidian, .. } = ctx.entity().services();
+        let ObsidianVault { mut notes } = obsidian.get_vault();
+
+        let ObsidianNote { id, links, .. } = &self.note;
+        let notes = links
+            .incoming
+            .iter()
+            .map(|linked| {
+                notes.remove(&linked.id).unwrap_or_else(|| ObsidianNote {
+                    id: linked.id.clone(),
+                    names: Set::from_iter([linked.id.clone()]),
+                    links: ObsidianNoteLinks {
+                        outgoing: default(),
+                        incoming: {
+                            let r#ref = ObsidianNoteRef { id: id.to_owned() };
+                            Set::from_iter([r#ref])
+                        },
+                    },
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let mut entries = notes
+            .into_iter()
+            .map(KnowledgeEntry::from)
+            .collect::<Vec<_>>();
+        entries.sort_by_cached_key(|entry| entry.note.id.clone());
+        entries
     }
-}
-
-#[derive(Debug, Clone, SimpleObject)]
-pub struct KnowledgeGraphEntry {
-    pub id: String,
-    pub names: Set<String>,
-    pub links: KnowledgeGraphLinks,
-}
-
-#[derive(Debug, Clone, SimpleObject)]
-pub struct KnowledgeGraphLinks {
-    pub outgoing: Set<String>,
-    pub incoming: Set<String>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -41,45 +103,30 @@ pub struct KnowledgeQueries;
 
 #[Object]
 impl KnowledgeQueries {
-    async fn knowledge(&self, ctx: &Context<'_>) -> KnowledgeGraph {
+    async fn knowledge_entries(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Vec<KnowledgeEntry> {
         let Services { obsidian, .. } = ctx.entity().services();
-        let ObsidianVault { names, graph } = obsidian.get_vault();
-        let backlinks = {
-            let mut backlinks = Map::<String, Set<String>>::new();
-            for (name, links) in &graph {
-                for link in links {
-                    use MapEntry::*;
-                    let backlinks = match backlinks.entry(link.to_owned()) {
-                        Occupied(entry) => entry.into_mut(),
-                        Vacant(entry) => entry.insert(Set::new()),
-                    };
-                    backlinks.insert(name.to_owned());
-                }
-            }
-            backlinks
-        };
-        let entries = names
-            .into_iter()
-            .map(|(key, names)| {
-                let links = {
-                    let outgoing = graph
-                        .get(&key)
-                        .map(ToOwned::to_owned)
-                        .unwrap_or_default();
-                    let incoming = backlinks
-                        .get(&key)
-                        .map(ToOwned::to_owned)
-                        .unwrap_or_default();
-                    KnowledgeGraphLinks { outgoing, incoming }
-                };
-                let entry = KnowledgeGraphEntry {
-                    id: key.clone(),
-                    names,
-                    links,
-                };
-                (key, entry)
-            })
-            .collect::<Map<_, _>>();
-        KnowledgeGraph { entries }
+        let ObsidianVault { notes } = obsidian.get_vault();
+
+        let mut entries = notes
+            .into_values()
+            .map(KnowledgeEntry::from)
+            .collect::<Vec<_>>();
+        entries.sort_by_cached_key(|entry| entry.note.id.clone());
+        entries
+    }
+
+    async fn knowledge_entry(
+        &self,
+        ctx: &Context<'_>,
+        id: String,
+    ) -> Option<KnowledgeEntry> {
+        let Services { obsidian, .. } = ctx.entity().services();
+        let ObsidianVault { mut notes } = obsidian.get_vault();
+
+        let entry = notes.remove(&id);
+        entry.map(KnowledgeEntry::from)
     }
 }

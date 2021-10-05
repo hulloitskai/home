@@ -20,11 +20,15 @@ import { KnowledgeGraphEntryFragment } from "graphql-types";
 import { useColorModeValue } from "@chakra-ui/color-mode";
 
 export const KNOWLEDGE_GRAPH_ENTRY_FRAGMENT = gql`
-  fragment KnowledgeGraphEntry on KnowledgeGraphEntry {
+  fragment KnowledgeGraphEntry on KnowledgeEntry {
     id
     links {
-      incoming
-      outgoing
+      incoming {
+        id
+      }
+      outgoing {
+        id
+      }
     }
   }
 `;
@@ -34,6 +38,7 @@ export interface KnowledgeGraphProps extends BoxProps {
   highlightedEntryId?: string;
   linkForce?: number;
   bodyForce?: number;
+  showOrphans?: boolean;
 }
 
 export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
@@ -41,6 +46,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
   highlightedEntryId,
   linkForce = 0.01,
   bodyForce = -50,
+  showOrphans,
   ...otherProps
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,7 +63,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
           string,
           {
             id: string;
-            links: { incoming: string[]; outgoing: string[] };
+            links: { incoming: { id: string }[]; outgoing: { id: string }[] };
             radius: number;
           }
         > = {};
@@ -69,30 +75,36 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
         {
           const nodeRadius = (entry?: KnowledgeGraphEntryFragment): number => {
             const { incoming, outgoing } = entry?.links ?? {};
-            return (
+            const radius =
               (incoming && outgoing ? incoming.length + outgoing.length : 0) *
                 0.25 +
-              4
-            );
+              4;
+            if (highlightedEntryId && entry) {
+              if (highlightedEntryId === entry.id && radius < 10) {
+                return 12;
+              }
+            }
+            return radius;
           };
 
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          for (const { __typename, ...entry } of entries) {
+          for (const entry of entries) {
             nodesById[entry.id] = { ...entry, radius: nodeRadius(entry) };
           }
 
           for (const entry of entries) {
-            for (const linkedEntryId of entry.links.outgoing) {
-              links.push({
-                source: entry.id,
-                target: linkedEntryId,
-              });
-              if (!nodesById[linkedEntryId]) {
-                nodesById[linkedEntryId] = {
-                  id: linkedEntryId,
+            for (const linked of entry.links.outgoing) {
+              if (!nodesById[linked.id] && showOrphans) {
+                nodesById[linked.id] = {
+                  id: linked.id,
                   links: { incoming: [], outgoing: [] },
                   radius: nodeRadius(),
                 };
+              }
+              if (nodesById[linked.id]) {
+                links.push({
+                  source: entry.id,
+                  target: linked.id,
+                });
               }
             }
           }
@@ -133,10 +145,10 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
                 "faded",
                 u =>
                   u.id !== d.id &&
-                  !u.links.incoming.includes(d.id) &&
-                  !u.links.outgoing.includes(d.id) &&
-                  !d.links.incoming.includes(u.id) &&
-                  !d.links.outgoing.includes(u.id),
+                  !u.links.incoming.find(({ id }) => id === d.id) &&
+                  !u.links.outgoing.find(({ id }) => id === d.id) &&
+                  !d.links.incoming.find(({ id }) => id === d.id) &&
+                  !d.links.outgoing.find(({ id }) => id === d.id),
               );
               link.classed(
                 "faded",
@@ -158,7 +170,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
           .append("text")
           .text(d => d.id)
           .attr("text-anchor", "middle")
-          .attr("dy", d => d.radius + 12);
+          .attr("dy", d => d.radius + 15);
 
         const simulation = forceSimulation(nodes as any)
           .force(
@@ -222,7 +234,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
     [svgEl, entries], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const nodeCircleFill = useColorModeValue("gray.700", "gray.400");
+  const nodeCircleFill = useColorModeValue("gray.700", "gray.300");
   const nodeCircleFocusedFill = useColorModeValue("purple.500", "purple.300");
   const nodeLabelFill = useColorModeValue("gray.600", "gray.400");
   const nodeLabelFocusedFill = useColorModeValue("gray.800", "gray.200");

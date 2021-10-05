@@ -32,28 +32,17 @@ export type HeartRate = {
   timestamp: Scalars['DateTime'];
 };
 
-export type KnowledgeGraph = {
-  __typename?: 'KnowledgeGraph';
-  entries: Array<KnowledgeGraphEntry>;
-  entry?: Maybe<KnowledgeGraphEntry>;
-};
-
-
-export type KnowledgeGraphEntryArgs = {
-  id: Scalars['String'];
-};
-
-export type KnowledgeGraphEntry = {
-  __typename?: 'KnowledgeGraphEntry';
+export type KnowledgeEntry = {
+  __typename?: 'KnowledgeEntry';
   id: Scalars['String'];
   names: Array<Scalars['String']>;
-  links: KnowledgeGraphLinks;
+  links: KnowledgeEntryLinks;
 };
 
-export type KnowledgeGraphLinks = {
-  __typename?: 'KnowledgeGraphLinks';
-  outgoing: Array<Scalars['String']>;
-  incoming: Array<Scalars['String']>;
+export type KnowledgeEntryLinks = {
+  __typename?: 'KnowledgeEntryLinks';
+  outgoing: Array<KnowledgeEntry>;
+  incoming: Array<KnowledgeEntry>;
 };
 
 export type LyricLine = {
@@ -103,9 +92,15 @@ export type MusicTrack = {
 export type Query = {
   __typename?: 'Query';
   buildInfo: BuildInfo;
-  knowledge: KnowledgeGraph;
+  knowledgeEntries: Array<KnowledgeEntry>;
+  knowledgeEntry?: Maybe<KnowledgeEntry>;
   heartRate?: Maybe<HeartRate>;
   musicInfo?: Maybe<MusicInfo>;
+};
+
+
+export type QueryKnowledgeEntryArgs = {
+  id: Scalars['String'];
 };
 
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
@@ -115,7 +110,7 @@ export type HeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type HeartSectionQuery = { __typename?: 'Query', heartRate?: Maybe<{ __typename?: 'HeartRate', id: string, measurement: number, timestamp: any }> };
 
-export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeGraphEntry', id: string, links: { __typename?: 'KnowledgeGraphLinks', incoming: Array<string>, outgoing: Array<string> } };
+export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
 
 export type MusicSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -137,12 +132,12 @@ export type HomeQueryVariables = Exact<{
 }>;
 
 
-export type HomeQuery = { __typename?: 'Query', knowledge: { __typename?: 'KnowledgeGraph', dailyEntry?: Maybe<{ __typename?: 'KnowledgeGraphEntry', id: string, links: { __typename?: 'KnowledgeGraphLinks', outgoing: Array<string>, incoming: Array<string> } }> } };
+export type HomeQuery = { __typename?: 'Query', dailyEntry?: Maybe<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> } }> };
 
 export type KnowledgeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type KnowledgeQuery = { __typename?: 'Query', knowledge: { __typename?: 'KnowledgeGraph', entries: Array<{ __typename?: 'KnowledgeGraphEntry', id: string, links: { __typename?: 'KnowledgeGraphLinks', incoming: Array<string>, outgoing: Array<string> } }> } };
+export type KnowledgeQuery = { __typename?: 'Query', entries: Array<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> };
 
 import { IntrospectionQuery } from 'graphql';
 export default {
@@ -243,52 +238,7 @@ export default {
       },
       {
         "kind": "OBJECT",
-        "name": "KnowledgeGraph",
-        "fields": [
-          {
-            "name": "entries",
-            "type": {
-              "kind": "NON_NULL",
-              "ofType": {
-                "kind": "LIST",
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "OBJECT",
-                    "name": "KnowledgeGraphEntry",
-                    "ofType": null
-                  }
-                }
-              }
-            },
-            "args": []
-          },
-          {
-            "name": "entry",
-            "type": {
-              "kind": "OBJECT",
-              "name": "KnowledgeGraphEntry",
-              "ofType": null
-            },
-            "args": [
-              {
-                "name": "id",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "interfaces": []
-      },
-      {
-        "kind": "OBJECT",
-        "name": "KnowledgeGraphEntry",
+        "name": "KnowledgeEntry",
         "fields": [
           {
             "name": "id",
@@ -324,7 +274,7 @@ export default {
               "kind": "NON_NULL",
               "ofType": {
                 "kind": "OBJECT",
-                "name": "KnowledgeGraphLinks",
+                "name": "KnowledgeEntryLinks",
                 "ofType": null
               }
             },
@@ -335,7 +285,7 @@ export default {
       },
       {
         "kind": "OBJECT",
-        "name": "KnowledgeGraphLinks",
+        "name": "KnowledgeEntryLinks",
         "fields": [
           {
             "name": "outgoing",
@@ -346,8 +296,9 @@ export default {
                 "ofType": {
                   "kind": "NON_NULL",
                   "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
+                    "kind": "OBJECT",
+                    "name": "KnowledgeEntry",
+                    "ofType": null
                   }
                 }
               }
@@ -363,8 +314,9 @@ export default {
                 "ofType": {
                   "kind": "NON_NULL",
                   "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
+                    "kind": "OBJECT",
+                    "name": "KnowledgeEntry",
+                    "ofType": null
                   }
                 }
               }
@@ -667,16 +619,42 @@ export default {
             "args": []
           },
           {
-            "name": "knowledge",
+            "name": "knowledgeEntries",
             "type": {
               "kind": "NON_NULL",
               "ofType": {
-                "kind": "OBJECT",
-                "name": "KnowledgeGraph",
-                "ofType": null
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "KnowledgeEntry",
+                    "ofType": null
+                  }
+                }
               }
             },
             "args": []
+          },
+          {
+            "name": "knowledgeEntry",
+            "type": {
+              "kind": "OBJECT",
+              "name": "KnowledgeEntry",
+              "ofType": null
+            },
+            "args": [
+              {
+                "name": "id",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
           },
           {
             "name": "heartRate",
