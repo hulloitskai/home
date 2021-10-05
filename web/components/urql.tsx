@@ -94,7 +94,7 @@ const makeClientOptions = (ssrExchange: Exchange): ClientOptions => {
   const isClient = typeof window !== "undefined";
   return {
     url: isClient ? "/api/graphql" : `${HOME_API_URL}/graphql`,
-    suspense: true,
+    suspense: false,
     exchanges: [
       dedupExchange,
       ...(isClient ? [focusExchange()] : []),
@@ -126,9 +126,7 @@ export type WithClientOptions = WithUrqlClientOptions;
 export const withClient = (
   options?: WithClientOptions,
 ): ReturnType<typeof withUrqlClient> => {
-  return withUrqlClient(ssrExchange => {
-    return makeClientOptions(ssrExchange);
-  }, options);
+  return withUrqlClient(ssrExchange => makeClientOptions(ssrExchange), options);
 };
 
 type SSRExchange = ReturnType<typeof ssrExchange>;

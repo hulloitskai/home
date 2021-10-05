@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import type { NextPage } from "next";
-// import NextLink from "next/link";
-import NoSSR from "react-no-ssr";
+import dynamic from "next/dynamic";
 import { DateTime } from "luxon";
 
 import { HiOutlineArrowsExpand } from "react-icons/hi";
@@ -24,21 +23,29 @@ import { DarkMode } from "@chakra-ui/react";
 import { HeartSection } from "components/heart";
 import { MusicSection } from "components/music";
 
+import { KNOWLEDGE_GRAPH_ENTRY_FRAGMENT } from "components/knowledge";
+
 import { HomeQuery, HomeQueryVariables } from "graphql-types";
-import { KnowledgeGraph } from "components/knowledge";
+
+const KnowledgeGraph = dynamic(
+  async () => {
+    const { KnowledgeGraph } = await import("components/knowledge");
+    return KnowledgeGraph;
+  },
+  { ssr: false },
+);
 
 const HOME_QUERY = gql`
   query Home($dailyNoteId: String!) {
     knowledge {
       dailyEntry: entry(id: $dailyNoteId) {
         id
-        links {
-          outgoing
-          incoming
-        }
+        ...KnowledgeGraphEntry
       }
     }
   }
+
+  ${KNOWLEDGE_GRAPH_ENTRY_FRAGMENT}
 `;
 
 interface HomePageProps extends WithUrqlState, ChakraProviderProps {}
@@ -88,17 +95,15 @@ const HomePage: NextPage<HomePageProps> = () => {
       </Container>
       {dailyEntry && (
         <DarkMode>
-          <Box h={56} pos="relative">
-            <NoSSR>
-              <KnowledgeGraph
-                entries={[dailyEntry]}
-                highlightedEntryId={dailyEntry.id}
-                linkForce={0.1}
-                bodyForce={-100}
-                h={96}
-                bg="gray.900"
-              />
-            </NoSSR>
+          <Box pos="relative">
+            <KnowledgeGraph
+              entries={[dailyEntry]}
+              highlightedEntryId={dailyEntry.id}
+              linkForce={0.1}
+              bodyForce={-100}
+              h={96}
+              bg="gray.900"
+            />
             <HStack
               align="start"
               spacing={1}
@@ -106,7 +111,7 @@ const HomePage: NextPage<HomePageProps> = () => {
               inset={4}
               bottom="unset"
             >
-              <Badge colorScheme="yellow">Knowledge Graph</Badge>
+              <Badge colorScheme="yellow">Day Graph</Badge>
               <Spacer />
               <Link href="/knowledge" _hover={{ textDecor: "none" }}>
                 <Tooltip label="Open Full Graph">
