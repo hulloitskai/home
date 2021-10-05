@@ -1,6 +1,6 @@
 import React from "react";
 import type { NextPage } from "next";
-import NoSSR from "react-no-ssr";
+import dynamic from "next/dynamic";
 
 import { gql } from "urql";
 import { useQuery } from "urql";
@@ -13,12 +13,17 @@ import { getPageCookies } from "components/chakra";
 
 import { Center, Spinner } from "@chakra-ui/react";
 
-import {
-  KnowledgeGraph,
-  KNOWLEDGE_GRAPH_ENTRY_FRAGMENT,
-} from "components/knowledge";
+import { KNOWLEDGE_GRAPH_ENTRY_FRAGMENT } from "components/knowledge";
 
 import { KnowledgeQuery, KnowledgeQueryVariables } from "graphql-types";
+
+const KnowledgeGraph = dynamic(
+  async () => {
+    const { KnowledgeGraph } = await import("components/knowledge");
+    return KnowledgeGraph;
+  },
+  { ssr: false },
+);
 
 const KNOWLEDGE_QUERY = gql`
   query Knowledge {
@@ -43,13 +48,11 @@ const KnowledgePage: NextPage<KnowledgePageProps> = () => {
 
   return (
     <Center w="100vw" h="100vh">
-      <NoSSR>
-        {entries ? (
-          <KnowledgeGraph entries={entries} boxSize="full" />
-        ) : (
-          <Spinner color="gray.800" />
-        )}
-      </NoSSR>
+      {entries ? (
+        <KnowledgeGraph entries={entries} boxSize="full" />
+      ) : (
+        <Spinner color="gray.800" />
+      )}
     </Center>
   );
 };
