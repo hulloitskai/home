@@ -93,7 +93,8 @@ const HomePage: NextPage<HomePageProps> = () => {
               <Text as="span" color="gray.800" _dark={{ color: "gray.300" }}>
                 Kai
               </Text>
-              , your favorite NPC.
+              , your favorite{" "}
+              <Tooltip label="(Non-Playable Character)">NPC</Tooltip>.
             </Text>
           </VStack>
           <MusicSection />
@@ -118,7 +119,7 @@ const HomePage: NextPage<HomePageProps> = () => {
             <KnowledgeGraph
               entries={entries}
               highlightedEntryId={dailyEntry.id}
-              linkForce={0.1}
+              linkForce={0.05}
               bodyForce={-75}
               h={96}
               bg="gray.900"
