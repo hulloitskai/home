@@ -25,6 +25,7 @@ mailchecker = "^4.0.12"
 mime = "^0.3.16"
 mongodb = "^2.0.0"
 nanoid = "^0.4.0"
+oauth2 = "^4.1.0"
 phonenumber = "^0.3.1"
 pin_project = { package = "pin-project", version = "^1.0.8" }
 regex = "^1.5.4"
@@ -37,7 +38,8 @@ url = { version = "^2.2.2", features = ["serde"] }
 walkdir = "^2.3.2"
 warp = { version = "^0.3.1", default-features = false, features = ["websocket"] }
 warp_graphql = { package = "async-graphql-warp", version = "^2.10.1" }
-oauth2 = "^4.1.0"
+yaml = { package = "yaml-rust", version = "^0.4.5" }
+yaml_front_matter = { package = "frontmatter", version = "^0.4.0" }
 
 [dependencies.chrono]
 version = "^0.4.19"

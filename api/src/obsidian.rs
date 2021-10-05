@@ -5,6 +5,9 @@ use std::fs::read_to_string;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
+use yaml::Yaml;
+use yaml_front_matter::parse as parse_front_matter;
+
 use walkdir::WalkDir;
 
 #[derive(Debug)]
@@ -99,6 +102,7 @@ fn scan_vault(path: &str) -> Result<Vault> {
 
     let mut notes_names = Map::<String, Set<String>>::new();
     let mut notes_links = Map::<String, Set<String>>::new();
+    let mut notes_tags = Map::<String, Set<String>>::new();
 
     let dir = WalkDir::new(path);
     for entry in dir {
@@ -159,14 +163,43 @@ fn scan_vault(path: &str) -> Result<Vault> {
             id
         };
 
-        // Resolve note links.
+        // Parse note links and tags.
         {
             lazy_static! {
                 static ref REGEX: Regex =
                     Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
             }
             let text =
-                read_to_string(note_path).context("failed to read entry")?;
+                read_to_string(note_path).context("failed to read note")?;
+
+            let tags = {
+                let matter = parse_front_matter(&text)
+                    .context("failed to read note front matter")?;
+                matter
+                    .map(Yaml::into_hash)
+                    .flatten()
+                    .map(|mut hash| {
+                        let key = Yaml::String("tags".to_owned());
+                        hash.remove(&key)
+                    })
+                    .flatten()
+                    .map(|tags| {
+                        use Yaml::*;
+                        let tags = match tags {
+                            String(tag) => Set::from_iter([tag]),
+                            Array(tags) => tags
+                                .into_iter()
+                                .filter_map(Yaml::into_string)
+                                .collect::<Set<_>>(),
+                            _ => return None,
+                        };
+                        Some(tags)
+                    })
+                    .flatten()
+                    .unwrap_or_default()
+            };
+            notes_tags.insert(note_id.clone(), tags);
+
             let links = REGEX
                 .captures_iter(&text)
                 .map(|m| m.get(1).unwrap().as_str().to_owned())
@@ -238,13 +271,18 @@ fn scan_vault(path: &str) -> Result<Vault> {
                     .into_iter()
                     .map(NoteRef::new)
                     .collect::<Set<_>>();
-                NoteLinks { outgoing, incoming }
+                NoteLinks::builder()
+                    .outgoing(outgoing)
+                    .incoming(incoming)
+                    .build()
             };
-            let note = Note {
-                id: id.clone(),
-                names,
-                links,
-            };
+            let tags = notes_tags.remove(&id).unwrap_or_default();
+            let note = Note::builder()
+                .id(id.clone())
+                .names(names)
+                .links(links)
+                .tags(tags)
+                .build();
             (id, note)
         })
         .collect::<Map<_, _>>();
@@ -258,16 +296,22 @@ pub struct Vault {
     pub notes: Map<String, Note>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct Note {
     pub id: String,
     pub names: Set<String>,
     pub links: NoteLinks,
+
+    #[builder(default)]
+    pub tags: Set<String>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Builder)]
 pub struct NoteLinks {
+    #[builder(default)]
     pub incoming: Set<NoteRef>,
+
+    #[builder(default)]
     pub outgoing: Set<NoteRef>,
 }
 

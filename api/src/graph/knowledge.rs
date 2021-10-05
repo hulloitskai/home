@@ -26,6 +26,10 @@ impl KnowledgeEntry {
     async fn links(&self) -> KnowledgeEntryLinks {
         self.note.clone().into()
     }
+
+    async fn tags(&self) -> &Set<String> {
+        &self.note.tags
+    }
 }
 
 #[derive(Debug, Clone, From)]
@@ -39,24 +43,31 @@ impl KnowledgeEntryLinks {
         let Services { obsidian, .. } = ctx.entity().services();
         let ObsidianVault { mut notes } = obsidian.get_vault();
 
-        let ObsidianNote { id, links, .. } = &self.note;
-        let notes = links
-            .outgoing
-            .iter()
-            .map(|linked| {
-                notes.remove(&linked.id).unwrap_or_else(|| ObsidianNote {
-                    id: linked.id.clone(),
-                    names: Set::from_iter([linked.id.clone()]),
-                    links: ObsidianNoteLinks {
-                        outgoing: default(),
-                        incoming: {
-                            let r#ref = ObsidianNoteRef { id: id.to_owned() };
-                            Set::from_iter([r#ref])
-                        },
-                    },
+        let notes = {
+            let ObsidianNote { id, links, .. } = &self.note;
+            links
+                .outgoing
+                .iter()
+                .map(|linked| {
+                    notes.remove(&linked.id).unwrap_or_else(|| {
+                        ObsidianNote::builder()
+                            .id(linked.id.clone())
+                            .names(Set::from_iter([linked.id.clone()]))
+                            .links(
+                                ObsidianNoteLinks::builder()
+                                    .incoming({
+                                        let r#ref = ObsidianNoteRef {
+                                            id: id.to_owned(),
+                                        };
+                                        Set::from_iter([r#ref])
+                                    })
+                                    .build(),
+                            )
+                            .build()
+                    })
                 })
-            })
-            .collect::<Vec<_>>();
+                .collect::<Vec<_>>()
+        };
 
         let mut entries = notes
             .into_iter()
@@ -70,24 +81,31 @@ impl KnowledgeEntryLinks {
         let Services { obsidian, .. } = ctx.entity().services();
         let ObsidianVault { mut notes } = obsidian.get_vault();
 
-        let ObsidianNote { id, links, .. } = &self.note;
-        let notes = links
-            .incoming
-            .iter()
-            .map(|linked| {
-                notes.remove(&linked.id).unwrap_or_else(|| ObsidianNote {
-                    id: linked.id.clone(),
-                    names: Set::from_iter([linked.id.clone()]),
-                    links: ObsidianNoteLinks {
-                        outgoing: default(),
-                        incoming: {
-                            let r#ref = ObsidianNoteRef { id: id.to_owned() };
-                            Set::from_iter([r#ref])
-                        },
-                    },
+        let notes = {
+            let ObsidianNote { id, links, .. } = &self.note;
+            links
+                .incoming
+                .iter()
+                .map(|linked| {
+                    notes.remove(&linked.id).unwrap_or_else(|| {
+                        ObsidianNote::builder()
+                            .id(linked.id.clone())
+                            .names(Set::from_iter([linked.id.clone()]))
+                            .links(
+                                ObsidianNoteLinks::builder()
+                                    .incoming({
+                                        let r#ref = ObsidianNoteRef {
+                                            id: id.to_owned(),
+                                        };
+                                        Set::from_iter([r#ref])
+                                    })
+                                    .build(),
+                            )
+                            .build()
+                    })
                 })
-            })
-            .collect::<Vec<_>>();
+                .collect::<Vec<_>>()
+        };
 
         let mut entries = notes
             .into_iter()
