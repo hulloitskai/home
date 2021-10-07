@@ -1,5 +1,4 @@
 import React, { FC, useMemo } from "react";
-import { NextPageContext } from "next";
 
 import {
   gray,
@@ -121,25 +120,15 @@ export const ChakraProvider: FC<ChakraProviderProps> = ({
   cookies,
   children,
 }) => {
-  const colorModeManager = useMemo(() => {
-    return cookieStorageManager(cookies);
-  }, [cookies]);
+  const colorModeManager = useMemo(
+    () => cookieStorageManager(cookies),
+    [cookies],
+  );
   return (
     <Provider theme={ChakraTheme} colorModeManager={colorModeManager}>
       {children}
     </Provider>
   );
-};
-
-export const getPageCookies = ({
-  req,
-}: NextPageContext): string | undefined => {
-  const { cookie } = req?.headers ?? {};
-  return cookie
-    ? Array.isArray(cookie)
-      ? cookie.join("; ")
-      : cookie
-    : undefined;
 };
 
 export const useTransparentize = (color: string, opacity: number): string => {

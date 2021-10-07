@@ -1,7 +1,7 @@
 use super::prelude::*;
 
-use phonenumber::parse as parse_phone;
-use phonenumber::country::CA;
+use phones::country::CA;
+use phones::parse as parse_phone;
 
 /// A `Phone` is a structrually valid phone number.
 #[derive(Debug, Display, Clone, Hash, Into, Serialize, Deserialize, AsRef)]
@@ -36,6 +36,7 @@ impl FromStr for Phone {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let phone = parse_phone(CA.into(), s)?;
+        ensure!(phone.is_valid(), "invalid phone number");
         let phone = phone.format();
         let phone = Self(phone.to_string());
         Ok(phone)

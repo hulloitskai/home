@@ -5,9 +5,6 @@ use crate::obsidian::NoteLinks as ObsidianNoteLinks;
 use crate::obsidian::NoteRef as ObsidianNoteRef;
 use crate::obsidian::Vault as ObsidianVault;
 
-#[derive(Debug, Clone)]
-pub struct KnowledgeGraph;
-
 #[derive(Debug, Clone, From)]
 pub struct KnowledgeEntry {
     note: ObsidianNote,

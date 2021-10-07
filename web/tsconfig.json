@@ -6,10 +6,9 @@
       "utils": ["./utils"],
       "config": ["./config"],
       "assets": ["./assets"],
+      "apollo": ["./apollo"],
       "consts": ["./consts.ts"],
-      "components": ["./components"],
-      "graphql-types": ["./graphql-types.ts"],
-      "graphql-schema": ["./graphql-schema.json"]
+      "components": ["./components"]
     },
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],

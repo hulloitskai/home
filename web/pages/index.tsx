@@ -1,18 +1,9 @@
 import React, { useMemo } from "react";
-import type { NextPage } from "next";
-import dynamic from "next/dynamic";
 import { DateTime } from "luxon";
 
+import type { NextPage } from "next";
+
 import { HiOutlineArrowsExpand } from "react-icons/hi";
-
-import { gql } from "urql";
-import { useQuery } from "urql";
-
-import { WithUrqlState } from "next-urql";
-import { withClient } from "components/urql";
-
-import { ChakraProviderProps } from "components/chakra";
-import { getPageCookies } from "components/chakra";
 
 import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
 import { Text, Link, Badge } from "@chakra-ui/react";
@@ -20,27 +11,19 @@ import { IconButton, Icon } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
 
-import { HeartSection } from "components/heart";
+import { HeartSection } from "components/heart-section";
 import { MusicSection } from "components/music";
 
-import { KNOWLEDGE_GRAPH_ENTRY_FRAGMENT } from "components/knowledge";
+import { KnowledgeGraph } from "components/knowledge";
+import { KnowledgeGraphEntryFragment } from "apollo";
+import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
-import {
-  HomeQuery,
-  HomeQueryVariables,
-  KnowledgeGraphEntryFragment,
-} from "graphql-types";
+import { gql } from "@apollo/client";
+import { useHandleQueryError } from "components/apollo";
+import { useHomePageQuery } from "apollo";
 
-const KnowledgeGraph = dynamic(
-  async () => {
-    const { KnowledgeGraph } = await import("components/knowledge");
-    return KnowledgeGraph;
-  },
-  { ssr: false },
-);
-
-const HOME_QUERY = gql`
-  query Home($dailyNoteId: String!) {
+gql`
+  query HomePage($dailyNoteId: String!) {
     dailyEntry: knowledgeEntry(id: $dailyNoteId) {
       id
       links {
@@ -57,19 +40,18 @@ const HOME_QUERY = gql`
     }
   }
 
-  ${KNOWLEDGE_GRAPH_ENTRY_FRAGMENT}
+  ${KnowledgeGraphEntryFragmentDoc}
 `;
 
-interface HomePageProps extends WithUrqlState, ChakraProviderProps {}
-
-const HomePage: NextPage<HomePageProps> = () => {
+const HomePage: NextPage = () => {
   const dailyNoteId = useMemo(() => DateTime.now().toFormat("yyyy-LL-dd"), []);
 
-  const [{ data }] = useQuery<HomeQuery, HomeQueryVariables>({
-    query: HOME_QUERY,
+  const handleQueryError = useHandleQueryError();
+  const { data } = useHomePageQuery({
     variables: {
       dailyNoteId,
     },
+    onError: handleQueryError,
   });
 
   const { dailyEntry } = data ?? {};
@@ -110,7 +92,7 @@ const HomePage: NextPage<HomePageProps> = () => {
             <br />
             Come back again later!
           </Text>
-        </Section> */}
+          </Section> */}
         </VStack>
       </Container>
       {dailyEntry && entries && (
@@ -133,7 +115,11 @@ const HomePage: NextPage<HomePageProps> = () => {
             >
               <Badge colorScheme="yellow">Day Graph</Badge>
               <Spacer />
-              <Link href="/knowledge" _hover={{ textDecor: "none" }}>
+              <Link
+                href="/knowledge"
+                target="_blank"
+                _hover={{ textDecor: "none" }}
+              >
                 <Tooltip label="Open Full Graph">
                   <IconButton
                     icon={<Icon as={HiOutlineArrowsExpand} />}
@@ -151,10 +137,4 @@ const HomePage: NextPage<HomePageProps> = () => {
   );
 };
 
-HomePage.getInitialProps = ctx => {
-  return {
-    cookies: getPageCookies(ctx),
-  };
-};
-
-export default withClient({ ssr: true })(HomePage);
+export default HomePage;

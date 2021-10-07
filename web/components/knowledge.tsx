@@ -1,7 +1,6 @@
-import React, { FC, useLayoutEffect, useRef } from "react";
+import React, { FC, useRef } from "react";
+import { useIsomorphicLayoutEffect } from "components/ssr";
 import useComponentSize from "@rehooks/component-size";
-
-import { gql } from "urql";
 
 import { select } from "d3-selection";
 import { drag, D3DragEvent } from "d3-drag";
@@ -14,12 +13,13 @@ import {
   forceSimulation,
 } from "d3-force";
 
-import { BoxProps, Box } from "@chakra-ui/layout";
+import { BoxProps, Box } from "@chakra-ui/react";
+import { useColorModeValue } from "@chakra-ui/react";
 
-import { KnowledgeGraphEntryFragment } from "graphql-types";
-import { useColorModeValue } from "@chakra-ui/color-mode";
+import { gql } from "@apollo/client";
+import type { KnowledgeGraphEntryFragment } from "apollo";
 
-export const KNOWLEDGE_GRAPH_ENTRY_FRAGMENT = gql`
+gql`
   fragment KnowledgeGraphEntry on KnowledgeEntry {
     id
     links {
@@ -54,7 +54,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const svgEl = svgRef.current;
 
-  useLayoutEffect(
+  useIsomorphicLayoutEffect(
     () => {
       if (svgEl && !svgEl.children.length && entries) {
         let isDragging = false;
