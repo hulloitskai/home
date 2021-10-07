@@ -1,47 +1,27 @@
 import React from "react";
 import type { NextPage } from "next";
-import dynamic from "next/dynamic";
-
-import { gql } from "urql";
-import { useQuery } from "urql";
-
-import { WithUrqlState } from "next-urql";
-import { withClient } from "components/urql";
-
-import { ChakraProviderProps } from "components/chakra";
-import { getPageCookies } from "components/chakra";
 
 import { Center, Spinner } from "@chakra-ui/react";
 
-import { KNOWLEDGE_GRAPH_ENTRY_FRAGMENT } from "components/knowledge";
+import { KnowledgeGraph } from "components/knowledge";
+import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
-import { KnowledgeQuery, KnowledgeQueryVariables } from "graphql-types";
+import { gql } from "@apollo/client";
+import { useKnowledgePageQuery } from "apollo";
 
-const KnowledgeGraph = dynamic(
-  async () => {
-    const { KnowledgeGraph } = await import("components/knowledge");
-    return KnowledgeGraph;
-  },
-  { ssr: false },
-);
-
-const KNOWLEDGE_QUERY = gql`
-  query Knowledge {
+gql`
+  query KnowledgePage {
     entries: knowledgeEntries {
       id
       ...KnowledgeGraphEntry
     }
   }
 
-  ${KNOWLEDGE_GRAPH_ENTRY_FRAGMENT}
+  ${KnowledgeGraphEntryFragmentDoc}
 `;
 
-interface KnowledgePageProps extends WithUrqlState, ChakraProviderProps {}
-
-const KnowledgePage: NextPage<KnowledgePageProps> = () => {
-  const [{ data }] = useQuery<KnowledgeQuery, KnowledgeQueryVariables>({
-    query: KNOWLEDGE_QUERY,
-  });
+const KnowledgePage: NextPage = () => {
+  const { data } = useKnowledgePageQuery();
   const { entries } = data ?? {};
 
   return (
@@ -55,10 +35,4 @@ const KnowledgePage: NextPage<KnowledgePageProps> = () => {
   );
 };
 
-KnowledgePage.getInitialProps = ctx => {
-  return {
-    cookies: getPageCookies(ctx),
-  };
-};
-
-export default withClient({ ssr: true })(KnowledgePage);
+export default KnowledgePage;

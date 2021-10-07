@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-use mailchecker::is_valid as is_valid_email;
+use emails::is_valid as is_valid_email;
 
 // An `Email` is a structurally valid email address.
 #[derive(Debug, Display, Clone, Hash, Into, Serialize, Deserialize, AsRef)]

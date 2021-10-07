@@ -4,5 +4,4 @@ yarn.lock
 /dist/
 /.next/
 /public/
-graphql-schema.json
-graphql-types.ts
+/apollo/
