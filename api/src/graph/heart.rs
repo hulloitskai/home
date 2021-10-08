@@ -1,30 +1,32 @@
 use super::prelude::*;
 
-#[derive(Debug, Clone, From, Deref)]
-pub struct HeartRateObject(HeartRate);
+#[derive(Debug, Clone, From)]
+pub struct HeartRateObject {
+    inner: HeartRate,
+}
 
 #[Object(name = "HeartRate")]
 impl HeartRateObject {
-    async fn id(&self) -> Id<HeartRateType> {
-        self.key().into()
+    async fn id(&self) -> Id<Self> {
+        self.inner.id().into()
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        let created_at = self.created_at.clone();
+        let created_at = self.inner.created_at.clone();
         created_at.into()
     }
 
     async fn updated_at(&self) -> DateTimeScalar {
-        let updated_at = self.updated_at.clone();
+        let updated_at = self.inner.updated_at.clone();
         updated_at.into()
     }
 
     async fn measurement(&self) -> u16 {
-        self.measurement
+        self.inner.measurement
     }
 
     async fn timestamp(&self) -> DateTimeScalar {
-        let timestamp = self.timestamp.clone();
+        let timestamp = self.inner.timestamp.clone();
         timestamp.into()
     }
 }

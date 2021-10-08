@@ -1,4 +1,4 @@
-# Build app:
+# Builder:
 FROM node:14-alpine3.13 AS builder
 
 WORKDIR /workspace/web
@@ -10,7 +10,7 @@ RUN yarn build
 RUN mkdir -p /dist && cd .. && mv web/ /dist/
 
 
-# Build image:
+# Runner:
 FROM node:14-alpine3.13 AS runner
 RUN apk add --update --no-cache curl
 

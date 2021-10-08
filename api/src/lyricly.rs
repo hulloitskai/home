@@ -8,7 +8,7 @@ pub struct Client {
     http: HttpClient,
 
     #[derivative(Debug = "ignore")]
-    cache: Mutex<Cache<LyricsKey, Lyrics>>,
+    lyrics_cache: AsyncMutex<Cache<LyricsKey, Lyrics>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
@@ -21,7 +21,7 @@ impl Client {
     pub fn new() -> Self {
         Self {
             http: default(),
-            cache: {
+            lyrics_cache: {
                 let capacity = 1000;
                 let ttl = Duration::hours(1).to_std().unwrap();
                 let cache =
@@ -44,7 +44,7 @@ impl Client {
         track_name: &str,
         artist_name: &str,
     ) -> Result<Option<Lyrics>> {
-        let mut cache = self.cache.lock().await;
+        let mut cache = self.lyrics_cache.lock().await;
 
         // Try to load lyrics from cache.
         let key = LyricsKey {
@@ -56,7 +56,7 @@ impl Client {
                 target: "home-api::lyricly",
                 artist = artist_name,
                 track = track_name,
-                "got existing lyrics from cache",
+                "got lyrics from cache",
             );
             return Ok(Some(lyrics.to_owned()));
         }
@@ -88,11 +88,11 @@ impl Client {
                 .json()
                 .await
                 .context("failed to decode JSON response")?;
-            trace!(
+            debug!(
                 target: "home-api::lyricly",
                 artist = artist_name,
                 track = track_name,
-                "fetched new lyrics",
+                "got lyrics",
             );
             cache.insert(key, lyrics.clone());
             lyrics

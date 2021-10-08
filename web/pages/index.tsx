@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
-import { DateTime } from "luxon";
-
 import type { NextPage } from "next";
+import { DateTime } from "luxon";
 
 import { HiOutlineArrowsExpand } from "react-icons/hi";
 

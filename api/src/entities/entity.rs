@@ -18,7 +18,6 @@ pub struct EntityConditions {
 impl From<EntityConditions> for Document {
     fn from(conditions: EntityConditions) -> Self {
         let EntityConditions { id } = conditions;
-
         let mut doc = Document::new();
         if let Some(id) = id {
             doc.insert("_id", id);
@@ -55,19 +54,14 @@ pub trait Entity: Object {
         ctx.services().database.collection(name)
     }
 
-    fn get(key: ObjectKey<Self::Type>) -> FindOneQuery<Self> {
-        let ObjectKey { id, .. } = key;
+    fn get(id: ObjectId) -> FindOneQuery<Self> {
         let filter = doc! { "_id": id };
         FindOneQuery::with_filter(filter)
     }
 
-    fn get_many(keys: Vec<ObjectKey<Self::Type>>) -> FindQuery<Self> {
-        let ids: Vec<_> = keys.into_iter().map(|key| key.id).collect();
-        let filter = doc! {
-            "_id": {
-                "$in": ids
-            }
-        };
+    fn get_many(ids: impl IntoIterator<Item = ObjectId>) -> FindQuery<Self> {
+        let ids = Bson::from_iter(ids);
+        let filter = doc! { "_id": { "$in": ids } };
         FindQuery::with_filter(filter)
     }
 
@@ -902,7 +896,7 @@ where
     T: Send + Sync,
 {
     cursor: SessionCursor<T>,
-    transaction: Arc<Mutex<Transaction>>,
+    transaction: Arc<AsyncMutex<Transaction>>,
 }
 
 impl<T> TransactionCursor<T>
@@ -912,7 +906,7 @@ where
 {
     fn new(
         cursor: SessionCursor<T>,
-        transaction: Arc<Mutex<Transaction>>,
+        transaction: Arc<AsyncMutex<Transaction>>,
     ) -> Self {
         Self {
             cursor,

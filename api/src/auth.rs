@@ -19,7 +19,7 @@ pub struct AuthenticatorConfig {
 pub struct Authenticator {
     client: Client,
     refresh_token: String,
-    current_access_token: Mutex<Option<AccessToken>>,
+    current_access_token: AsyncMutex<Option<AccessToken>>,
     clock_skew_leeway: Duration,
 }
 

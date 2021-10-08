@@ -1,9 +1,6 @@
 use super::prelude::*;
 
 use crate::obsidian::Note as ObsidianNote;
-use crate::obsidian::NoteLinks as ObsidianNoteLinks;
-use crate::obsidian::NoteRef as ObsidianNoteRef;
-use crate::obsidian::Vault as ObsidianVault;
 
 #[derive(Debug, Clone, From)]
 pub struct KnowledgeEntry {
@@ -36,80 +33,38 @@ pub struct KnowledgeEntryLinks {
 
 #[Object]
 impl KnowledgeEntryLinks {
-    async fn outgoing(&self, ctx: &Context<'_>) -> Vec<KnowledgeEntry> {
+    async fn outgoing(
+        &self,
+        ctx: &Context<'_>,
+    ) -> FieldResult<Vec<KnowledgeEntry>> {
         let Services { obsidian, .. } = ctx.entity().services();
-        let ObsidianVault { mut notes } = obsidian.get_vault();
-
-        let notes = {
-            let ObsidianNote { id, links, .. } = &self.note;
-            links
-                .outgoing
-                .iter()
-                .map(|linked| {
-                    notes.remove(&linked.id).unwrap_or_else(|| {
-                        ObsidianNote::builder()
-                            .id(linked.id.clone())
-                            .names(Set::from_iter([linked.id.clone()]))
-                            .links(
-                                ObsidianNoteLinks::builder()
-                                    .incoming({
-                                        let r#ref = ObsidianNoteRef {
-                                            id: id.to_owned(),
-                                        };
-                                        Set::from_iter([r#ref])
-                                    })
-                                    .build(),
-                            )
-                            .build()
-                    })
-                })
-                .collect::<Vec<_>>()
-        };
-
+        let notes = obsidian
+            .get_note_outgoing_references(&self.note.id)
+            .await
+            .into_field_result()?;
         let mut entries = notes
             .into_iter()
             .map(KnowledgeEntry::from)
             .collect::<Vec<_>>();
         entries.sort_by_cached_key(|entry| entry.note.id.clone());
-        entries
+        Ok(entries)
     }
 
-    async fn incoming(&self, ctx: &Context<'_>) -> Vec<KnowledgeEntry> {
+    async fn incoming(
+        &self,
+        ctx: &Context<'_>,
+    ) -> FieldResult<Vec<KnowledgeEntry>> {
         let Services { obsidian, .. } = ctx.entity().services();
-        let ObsidianVault { mut notes } = obsidian.get_vault();
-
-        let notes = {
-            let ObsidianNote { id, links, .. } = &self.note;
-            links
-                .incoming
-                .iter()
-                .map(|linked| {
-                    notes.remove(&linked.id).unwrap_or_else(|| {
-                        ObsidianNote::builder()
-                            .id(linked.id.clone())
-                            .names(Set::from_iter([linked.id.clone()]))
-                            .links(
-                                ObsidianNoteLinks::builder()
-                                    .incoming({
-                                        let r#ref = ObsidianNoteRef {
-                                            id: id.to_owned(),
-                                        };
-                                        Set::from_iter([r#ref])
-                                    })
-                                    .build(),
-                            )
-                            .build()
-                    })
-                })
-                .collect::<Vec<_>>()
-        };
-
+        let notes = obsidian
+            .get_note_incoming_references(&self.note.id)
+            .await
+            .into_field_result()?;
         let mut entries = notes
             .into_iter()
             .map(KnowledgeEntry::from)
             .collect::<Vec<_>>();
         entries.sort_by_cached_key(|entry| entry.note.id.clone());
-        entries
+        Ok(entries)
     }
 }
 
@@ -121,27 +76,25 @@ impl KnowledgeQueries {
     async fn knowledge_entries(
         &self,
         ctx: &Context<'_>,
-    ) -> Vec<KnowledgeEntry> {
+    ) -> FieldResult<Vec<KnowledgeEntry>> {
         let Services { obsidian, .. } = ctx.entity().services();
-        let ObsidianVault { notes } = obsidian.get_vault();
-
+        let notes = obsidian.list_notes().await.into_field_result()?;
         let mut entries = notes
-            .into_values()
+            .into_iter()
             .map(KnowledgeEntry::from)
             .collect::<Vec<_>>();
         entries.sort_by_cached_key(|entry| entry.note.id.clone());
-        entries
+        Ok(entries)
     }
 
     async fn knowledge_entry(
         &self,
         ctx: &Context<'_>,
         id: String,
-    ) -> Option<KnowledgeEntry> {
+    ) -> FieldResult<Option<KnowledgeEntry>> {
         let Services { obsidian, .. } = ctx.entity().services();
-        let ObsidianVault { mut notes } = obsidian.get_vault();
-
-        let entry = notes.remove(&id);
-        entry.map(KnowledgeEntry::from)
+        let note = obsidian.get_note(&id).await.into_field_result()?;
+        let entry = note.map(KnowledgeEntry::from);
+        Ok(entry)
     }
 }

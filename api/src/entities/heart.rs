@@ -1,18 +1,5 @@
 use super::prelude::*;
 
-#[derive(
-    Clone,
-    Copy,
-    Hash,
-    IntoBson,
-    PartialEq,
-    Eq,
-    Default,
-    ObjectTypeSerde,
-    ObjectType,
-)]
-pub struct HeartRateType;
-
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct HeartRate {
     #[builder(default, setter(skip))]
@@ -39,14 +26,8 @@ struct HeartRateDocument {
 }
 
 impl Object for HeartRate {
-    type Type = HeartRateType;
-
     fn id(&self) -> ObjectId {
         self.id.clone()
-    }
-
-    fn r#type(&self) -> Self::Type {
-        default()
     }
 
     fn to_document(&self) -> Result<Document> {

@@ -4,10 +4,10 @@ pub use async_trait::async_trait;
 pub use lazy_static::lazy_static;
 pub use pin_project::pin_project;
 
-pub use typed_builder::TypedBuilder as Builder;
 pub use cache::LruCache as Cache;
 pub use derivative::Derivative;
 pub use regex::Regex;
+pub use typed_builder::TypedBuilder as Builder;
 pub use url::Url;
 
 pub use derives::{AsRef, Deref};
@@ -23,7 +23,8 @@ pub use request::Request as HttpRequest;
 pub use request::RequestBuilder as HttpRequestBuilder;
 pub use request::Response as HttpResponse;
 
-pub use tokio::sync::{Mutex, RwLock};
+pub use tokio::sync::Mutex as AsyncMutex;
+pub use tokio::sync::RwLock as AsyncRwLock;
 pub use tokio::task::{spawn, spawn_blocking};
 pub use tokio::task::{JoinError, JoinHandle};
 
@@ -40,7 +41,7 @@ pub use std::marker::PhantomData;
 pub use std::ops::Deref;
 pub use std::pin::Pin;
 pub use std::str::FromStr;
-pub use std::sync::Arc;
+pub use std::sync::{Arc, Mutex, RwLock};
 pub use std::task::Context as TaskContext;
 pub use std::task::Poll as TaskPoll;
 pub use std::time::Duration as StdDuration;

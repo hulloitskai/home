@@ -5,6 +5,16 @@ use crate::auth::{Authenticator, AuthenticatorConfig};
 
 use http::StatusCode;
 
+#[derive(Debug, Clone, Builder)]
+pub struct ClientConfig {
+    pub client_id: String,
+    pub client_secret: String,
+    pub refresh_token: String,
+
+    #[builder(default = Duration::milliseconds(500))]
+    pub ttl: Duration,
+}
+
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Client {
@@ -12,14 +22,7 @@ pub struct Client {
     auth: Authenticator,
 
     #[derivative(Debug = "ignore")]
-    cache: Mutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
-pub struct ClientConfig {
-    pub client_id: String,
-    pub client_secret: String,
-    pub refresh_token: String,
+    cache: AsyncMutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialOrd, Ord, PartialEq, Eq)]
@@ -27,12 +30,13 @@ pub struct CurrentlyPlayingKey;
 
 impl Client {
     pub fn new(config: ClientConfig) -> Self {
+        let ClientConfig {
+            client_id,
+            client_secret,
+            refresh_token,
+            ttl,
+        } = config;
         let auth = {
-            let ClientConfig {
-                client_id,
-                client_secret,
-                refresh_token,
-            } = config;
             let token_endpoint: Url =
                 "https://accounts.spotify.com/api/token".parse().unwrap();
             let config = AuthenticatorConfig::builder()
@@ -47,8 +51,7 @@ impl Client {
             http: default(),
             auth,
             cache: {
-                let ttl = Duration::milliseconds(500).to_std().unwrap();
-                let cache = Cache::with_expiry_duration(ttl);
+                let cache = Cache::with_expiry_duration(ttl.to_std().unwrap());
                 cache.into()
             },
         }
@@ -77,7 +80,7 @@ impl Client {
                 target: "home-api::spotify",
                 artist = %artist_name.unwrap_or_default(),
                 track = %track_name.unwrap_or_default(),
-                "got existing currently-playing from cache",
+                "got currently-playing from cache",
             );
             return Ok(currently_playing.to_owned());
         }
@@ -120,17 +123,17 @@ impl Client {
             if let Some(CurrentlyPlaying { track, .. }) = &currently_playing {
                 let artist = track.artists.first();
                 if let Some(artist) = artist {
-                    trace!(
+                    debug!(
                         target: "home-api::spotify",
                         artist = %artist.name,
                         track = %track.name,
-                        "found currently playing track info",
+                        "got currently-playing",
                     );
                 };
             } else {
                 trace!(
                     target: "home-api::spotify",
-                    "nothing currently playing",
+                    "got currently-playing (none)",
                 );
             }
             cache.insert(CurrentlyPlayingKey, currently_playing.clone());

@@ -1,5 +1,5 @@
-# Build app:
-FROM rust:1.54-alpine as builder
+# Builder:
+FROM rust:1.54-alpine AS builder
 
 # Install system dependencies.
 RUN apk add --update --no-cache musl-dev
@@ -13,7 +13,7 @@ RUN cargo init --bin --name api
 COPY macros/Cargo.toml macros/Cargo.lock macros/
 COPY macros/src/ macros/src/
 COPY Cargo.toml Cargo.lock ./
-RUN cargo rustc --release -- -C target-feature=-crt-static
+RUN cargo build --release
 
 # Build api.
 RUN rm src/*.rs
@@ -24,8 +24,8 @@ RUN cargo build --release
 RUN mkdir -p /dist && mv ./target/release/home-api /dist/api
 
 
-# Build image:
-FROM alpine:3.13 AS runner
+# Runner:
+FROM alpine:3 AS runner
 RUN apk add --update --no-cache ca-certificates curl
 
 WORKDIR /app

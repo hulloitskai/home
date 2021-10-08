@@ -1,4 +1,4 @@
-# Build app:
+# Builder:
 FROM node:14-alpine3.13 AS builder
 
 WORKDIR /workspace/migrator
@@ -7,7 +7,7 @@ RUN yarn install --frozen-lockfile
 RUN mkdir -p /dist && cd .. && mv ./migrator/ /dist/
 
 
-# Build image:
+# Runner:
 FROM node:14-alpine3.13 AS runner
 RUN apk add --update --no-cache curl
 

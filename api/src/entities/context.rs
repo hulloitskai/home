@@ -4,7 +4,7 @@ use super::prelude::*;
 pub struct Context {
     services: Arc<Services>,
     settings: Arc<Settings>,
-    transaction: Option<Arc<Mutex<Transaction>>>,
+    transaction: Option<Arc<AsyncMutex<Transaction>>>,
 }
 
 impl Context {
@@ -28,7 +28,7 @@ impl Context {
 }
 
 impl Context {
-    pub(super) fn transaction(&self) -> Option<Arc<Mutex<Transaction>>> {
+    pub(super) fn transaction(&self) -> Option<Arc<AsyncMutex<Transaction>>> {
         self.transaction.clone()
     }
 
@@ -46,12 +46,12 @@ impl Context {
                 let transaction = {
                     let transaction =
                         Transaction::new(&services.database_client).await?;
-                    Arc::new(Mutex::new(transaction))
+                    Arc::new(AsyncMutex::new(transaction))
                 };
                 let ctx = Self {
                     services: services.clone(),
                     settings: settings.clone(),
-                    transaction: transaction.clone().into(),
+                    transaction: Some(transaction.clone()),
                 };
                 TransactionState {
                     ctx,
@@ -65,7 +65,7 @@ impl Context {
 
     pub(super) async fn with_transaction<F, T, U>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(Self, Arc<Mutex<Transaction>>) -> U,
+        F: FnOnce(Self, Arc<AsyncMutex<Transaction>>) -> U,
         U: Future<Output = Result<T>>,
     {
         let TransactionState {
@@ -109,6 +109,6 @@ impl Context {
 #[derive(Debug)]
 struct TransactionState {
     ctx: Context,
-    transaction: Arc<Mutex<Transaction>>,
+    transaction: Arc<AsyncMutex<Transaction>>,
     is_root: bool,
 }

@@ -1,4 +1,5 @@
 use bson::doc;
+use tokio::main as tokio;
 use tracing_subscriber::fmt::init as init_tracer;
 
 use std::convert::Infallible;
@@ -53,6 +54,9 @@ use entities::Comparison;
 use entities::{Context, Entity, Services, Settings};
 use entities::{HeartRate, HeartRateConditions};
 
+mod graph;
+use graph::Query;
+
 mod auth;
 
 mod spotify;
@@ -61,14 +65,12 @@ use spotify::ClientConfig as SpotifyClientConfig;
 
 mod obsidian;
 use obsidian::Client as ObsidianClient;
+use obsidian::ClientConfig as ObsidianClientConfig;
 
 mod lyricly;
 use lyricly::Client as LyriclyClient;
 
-mod graph;
-use graph::Query;
-
-#[tokio::main]
+#[tokio]
 async fn main() -> Result<()> {
     // Load environment variables and initialize tracer.
     load_env().context("failed to load environment variables")?;
@@ -119,7 +121,10 @@ async fn main() -> Result<()> {
         let vault_path = env_var("OBSIDIAN_VAULT_PATH").context(
             "failed to read environment variable OBSIDIAN_VAULT_PATH",
         )?;
-        ObsidianClient::new(&vault_path)
+        let config = ObsidianClientConfig::builder()
+            .vault_path(vault_path)
+            .build();
+        ObsidianClient::new(config)
             .context("failed to initialize Obsidian client")?
     };
 

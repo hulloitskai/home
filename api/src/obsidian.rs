@@ -1,329 +1,330 @@
 use super::prelude::*;
 
-use std::collections::hash_map::Entry as MapEntry;
 use std::fs::read_to_string;
 use std::fs::File;
-use std::sync::{Arc, Mutex};
+use std::io::ErrorKind as IoErrorKind;
+use std::path::Path;
 
 use yaml::Yaml;
 use yaml_front_matter::parse as parse_front_matter;
 
 use walkdir::WalkDir;
 
-#[derive(Debug)]
-pub struct Client {
-    scanner: Arc<Mutex<VaultScanner>>,
-}
+#[derive(Debug, Clone, Builder)]
+pub struct ClientConfig {
+    vault_path: String,
 
-impl Client {
-    pub fn new(vault_path: &str) -> Result<Self> {
-        let scanner = VaultScanner::new(vault_path)?;
-        let client = Self {
-            scanner: Arc::new(Mutex::new(scanner)),
-        };
-        Ok(client)
-    }
-
-    pub fn get_vault(&self) -> Vault {
-        let scanner = self.scanner.clone();
-        let vault = {
-            let scanner = scanner.lock().unwrap();
-            scanner.data.clone()
-        };
-        spawn(async move {
-            let mut parser = scanner.lock().unwrap();
-            if let Err(error) = parser.sync() {
-                error!(
-                    target: "home-api::obsidian",
-                    error = %format!("{:?}", &error),
-                    "failed to scan Obsidian vault"
-                );
-            }
-        });
-        vault
-    }
+    #[builder(default = Duration::minutes(1))]
+    ttl: Duration,
 }
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-struct VaultScanner {
-    path: String,
+pub struct Client {
+    #[derivative(Debug = "ignore")]
+    cached_notes: AsyncRwLock<Cache<String, Option<Note>>>,
 
     #[derivative(Debug = "ignore")]
-    data: Vault,
+    cached_notes_list: AsyncRwLock<Cache<(), Set<String>>>,
 
-    sync_interval: Duration,
-    sync_timestamp: Option<DateTime>,
+    reader: Arc<VaultReader>,
 }
 
-impl VaultScanner {
-    fn new(path: &str) -> Result<Self> {
-        let path = if path.ends_with('/') {
-            path.to_owned()
-        } else {
-            format!("{}/", path)
+impl Client {
+    pub fn new(config: ClientConfig) -> Result<Self> {
+        let ClientConfig { vault_path, ttl } = config;
+        let client = Self {
+            cached_notes: {
+                let cache = Cache::with_expiry_duration(ttl.to_std().unwrap());
+                AsyncRwLock::new(cache)
+            },
+            cached_notes_list: {
+                let cache = Cache::with_expiry_duration(ttl.to_std().unwrap());
+                AsyncRwLock::new(cache)
+            },
+            reader: {
+                let reader = VaultReader::new(&vault_path)?;
+                Arc::new(reader)
+            },
         };
-
-        let file = File::open(&path).context("failed to open vault")?;
-        let file_meta =
-            file.metadata().context("failed to read vault metadata")?;
-        ensure!(file_meta.is_dir(), "vault must be a directory");
-        let data = scan_vault(&path).context("failed to scan vault")?;
-
-        let parser = Self {
-            path,
-            data,
-            sync_interval: Duration::minutes(1),
-            sync_timestamp: default(),
-        };
-        Ok(parser)
-    }
-}
-
-impl VaultScanner {
-    fn scan(&self) -> Result<Vault> {
-        scan_vault(&self.path)
+        Ok(client)
     }
 
-    fn sync(&mut self) -> Result<()> {
-        if let Some(timestamp) = self.sync_timestamp {
-            if Utc::now() < (timestamp + self.sync_interval) {
-                return Ok(());
+    pub async fn list_notes(&self) -> Result<Vec<Note>> {
+        let notes = {
+            let notes_list = self.cached_notes_list.read().await;
+            notes_list.peek(&()).map(ToOwned::to_owned)
+        };
+        let notes = match notes {
+            Some(notes) => {
+                trace!(
+                    target: "home-api::obsidian",
+                    count = notes.len(),
+                    "got notes from cache"
+                );
+                notes
             }
-        }
-        self.data = self.scan()?;
-        self.sync_timestamp = Some(Utc::now());
-        Ok(())
+            None => {
+                let mut notes_list = self.cached_notes_list.write().await;
+                let notes = {
+                    let reader = self.reader.clone();
+                    spawn_blocking(move || reader.list_notes())
+                        .await
+                        .unwrap()?
+                };
+                notes_list.insert((), notes.clone());
+                debug!(
+                    target: "home-api::obsidian",
+                    count = notes.len(),
+                    "got notes"
+                );
+                notes
+            }
+        };
+        let notes: Vec<Note> = {
+            let notes = notes.into_iter().map(|note| async move {
+                self.get_note(&note)
+                    .await
+                    .with_context(|| format!("failed to get note {}", &note))?
+                    .with_context(|| format!("missing note {}", &note))
+            });
+            try_join_all(notes).await?
+        };
+        Ok(notes)
     }
-}
 
-fn scan_vault(path: &str) -> Result<Vault> {
-    trace!(target: "home-api::obsidian", %path, "scanning Obsidian vault");
-
-    let mut notes_names = Map::<String, Set<String>>::new();
-    let mut notes_links = Map::<String, Set<String>>::new();
-    let mut notes_tags = Map::<String, Set<String>>::new();
-
-    let dir = WalkDir::new(path);
-    for entry in dir {
-        let entry = match entry {
-            Ok(entry) => entry,
-            Err(_) => continue,
+    pub async fn get_note(&self, id: &str) -> Result<Option<Note>> {
+        let note = {
+            let notes = self.cached_notes.read().await;
+            notes.peek(id).map(ToOwned::to_owned)
         };
-        if !entry.file_type().is_file() {
-            continue;
-        }
-
-        let note_path = entry.path();
-        match note_path.extension() {
-            Some(extension) => {
-                if extension != "md" {
-                    continue;
-                }
+        let note = match note {
+            Some(note) => {
+                trace!(
+                    target: "home-api::obsidian",
+                    id,
+                    "got note from cache"
+                );
+                note
             }
-            None => continue,
-        }
-
-        trace!(
-            target: "home-api::obsidian",
-            vault_path = path,
-            note_path = note_path.to_str().unwrap(),
-            "reading Obsidian note"
-        );
-
-        // Resolve note names.
-        let note_id = {
-            let names = {
-                let note_path = note_path
-                    .with_extension("")
-                    .to_str()
-                    .expect("note path has invalid unicode")
-                    .to_owned();
-                let name = note_path
-                    .strip_prefix(path)
-                    .map(ToOwned::to_owned)
-                    .unwrap_or(note_path);
-
-                let mut names = Vec::<String>::new();
-                let mut segments =
-                    name.split('/').map(ToOwned::to_owned).collect::<Vec<_>>();
-                while !segments.is_empty() {
-                    names.push(segments.join("/"));
-                    if let Some((_, tail)) = segments.split_first() {
-                        segments = tail.into_iter().cloned().collect();
-                    }
-                }
-                names
-            };
-            let id = names
-                .first()
-                .map(ToOwned::to_owned)
-                .context("could not procure entry name")?;
-            notes_names.insert(id.clone(), Set::from_iter(names));
-            id
-        };
-
-        // Parse note links and tags.
-        {
-            lazy_static! {
-                static ref REGEX: Regex =
-                    Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
-            }
-            let text =
-                read_to_string(note_path).context("failed to read note")?;
-
-            let tags = {
-                let matter = parse_front_matter(&text)
-                    .context("failed to read note front matter")?;
-                matter
-                    .map(Yaml::into_hash)
-                    .flatten()
-                    .map(|mut hash| {
-                        let key = Yaml::String("tags".to_owned());
-                        hash.remove(&key)
+            None => {
+                let mut notes = self.cached_notes.write().await;
+                let note = {
+                    let id = id.to_owned();
+                    let reader = self.reader.clone();
+                    spawn_blocking(move || {
+                        reader.read_note(&id).context("failed to read note")
                     })
-                    .flatten()
-                    .map(|tags| {
-                        use Yaml::*;
-                        let tags = match tags {
-                            String(tag) => Set::from_iter([tag]),
-                            Array(tags) => tags
-                                .into_iter()
-                                .filter_map(Yaml::into_string)
-                                .collect::<Set<_>>(),
-                            _ => return None,
-                        };
-                        Some(tags)
-                    })
-                    .flatten()
-                    .unwrap_or_default()
-            };
-            notes_tags.insert(note_id.clone(), tags);
-
-            let links = REGEX
-                .captures_iter(&text)
-                .map(|m| m.get(1).unwrap().as_str().to_owned())
-                .collect::<Set<_>>();
-            notes_links.insert(note_id.clone(), links);
-        }
+                    .await
+                    .unwrap()?
+                };
+                notes.insert(id.to_owned(), note.clone());
+                debug!(
+                    target: "home-api::obsidian",
+                    id,
+                    "got note"
+                );
+                note
+            }
+        };
+        Ok(note)
     }
 
-    // Normalize links (replace aliases with IDs).
-    let mut notes_links = {
-        // Create lookup table of note aliases to their IDs.
-        let lookup = {
-            let mut lookup = Map::<String, String>::new();
-            for (id, names) in &notes_names {
-                for alias in names {
-                    if let Some(target) = lookup.get(alias) {
-                        if target.len() <= id.len() {
+    pub async fn get_note_outgoing_references(
+        &self,
+        note: &str,
+    ) -> Result<Vec<Note>> {
+        let note = self.get_note(note).await.context("failed to get note")?;
+        let note = match note {
+            Some(note) => note,
+            None => return Ok(default()),
+        };
+        let notes = self.list_notes().await.context("failed to list notes")?;
+        let notes_by_name = {
+            let mut lookup: Map<String, Note> = default();
+            for other_note in &notes {
+                for name in &other_note.names {
+                    if let Some(target) = lookup.get(name) {
+                        if target.id.len() <= other_note.id.len() {
                             continue;
                         }
                     }
-                    lookup.insert(alias.to_owned(), id.to_owned());
+                    lookup.insert(name.to_owned(), other_note.to_owned());
                 }
             }
             lookup
         };
-        notes_links
+        let refs = note
+            .links
             .into_iter()
-            .map(|(key, links)| {
-                let links = links
-                    .into_iter()
-                    .map(|link| {
-                        lookup.get(&link).map(ToOwned::to_owned).unwrap_or(link)
+            .map(|link| {
+                notes_by_name
+                    .get(&link)
+                    .map(ToOwned::to_owned)
+                    .unwrap_or_else(|| {
+                        Note::builder()
+                            .id(link.clone())
+                            .names(Set::from_iter([link.clone()]))
+                            .build()
                     })
-                    .collect::<Set<_>>();
-                (key, links)
             })
-            .collect::<Map<_, _>>()
-    };
+            .collect::<Vec<_>>();
+        Ok(refs)
+    }
 
-    // Resolve backlinks.
-    let mut notes_backlinks = {
-        let mut backlinks = Map::<String, Set<String>>::new();
-        for (name, links) in &notes_links {
-            for link in links {
-                use MapEntry::*;
-                let backlinks = match backlinks.entry(link.to_owned()) {
-                    Occupied(entry) => entry.into_mut(),
-                    Vacant(entry) => entry.insert(Set::new()),
-                };
-                backlinks.insert(name.to_owned());
-            }
-        }
-        backlinks
-    };
-
-    let notes = notes_names
-        .into_iter()
-        .map(|(id, names)| {
-            let links = {
-                let outgoing = notes_links
-                    .remove(&id)
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(NoteRef::new)
-                    .collect::<Set<_>>();
-                let incoming = notes_backlinks
-                    .remove(&id)
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(NoteRef::new)
-                    .collect::<Set<_>>();
-                NoteLinks::builder()
-                    .outgoing(outgoing)
-                    .incoming(incoming)
-                    .build()
-            };
-            let tags = notes_tags.remove(&id).unwrap_or_default();
-            let note = Note::builder()
-                .id(id.clone())
-                .names(names)
-                .links(links)
-                .tags(tags)
-                .build();
-            (id, note)
-        })
-        .collect::<Map<_, _>>();
-
-    let vault = Vault { notes };
-    Ok(vault)
+    pub async fn get_note_incoming_references(
+        &self,
+        note: &str,
+    ) -> Result<Vec<Note>> {
+        let note = self.get_note(note).await.context("failed to get note")?;
+        let note = match note {
+            Some(note) => note,
+            None => return Ok(default()),
+        };
+        let other_notes = {
+            let other_notes =
+                self.list_notes().await.context("failed to list notes")?;
+            other_notes
+                .into_iter()
+                .filter(|other_note| other_note.id != note.id)
+                .collect::<Vec<_>>()
+        };
+        let refs = other_notes
+            .into_iter()
+            .filter(|other_note| {
+                other_note.links.intersection(&note.names).count() > 0
+            })
+            .collect::<Vec<_>>();
+        Ok(refs)
+    }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct Vault {
-    pub notes: Map<String, Note>,
+#[derive(Debug)]
+struct VaultReader {
+    path: String,
+    dir: File,
+}
+
+impl VaultReader {
+    fn new(path: &str) -> Result<Self> {
+        let path = if path.ends_with('/') {
+            path.to_owned()
+        } else {
+            path.to_owned() + "/"
+        };
+
+        let dir = File::open(&path).context("failed to open vault")?;
+        let dir_meta = dir.metadata().context("failed to read vault")?;
+        ensure!(dir_meta.is_dir(), "vault must be a directory");
+
+        let reader = Self { path, dir };
+        Ok(reader)
+    }
+
+    fn note_path(&self, note: &str) -> String {
+        let mut path = Path::new(&self.path).to_path_buf();
+        path.push(format!("{}.md", note));
+        path.to_string_lossy().into_owned()
+    }
+
+    fn list_notes(&self) -> Result<Set<String>> {
+        let mut notes: Set<String> = default();
+        for entry in WalkDir::new(&self.path) {
+            let entry = entry.context("failed to read directory entry")?;
+            let path = entry.path();
+            if path.extension().unwrap_or_default() != "md" {
+                continue;
+            }
+            let path = path.with_extension("").to_string_lossy().into_owned();
+            let id = path
+                .strip_prefix(&self.path)
+                .map(ToOwned::to_owned)
+                .unwrap_or(path);
+            notes.insert(id);
+        }
+        Ok(notes)
+    }
+
+    fn read_note(&self, id: &str) -> Result<Option<Note>> {
+        let path = self.note_path(id);
+        let text = match read_to_string(&path) {
+            Ok(text) => text,
+            Err(error) => {
+                if error.kind() == IoErrorKind::NotFound {
+                    return Ok(None);
+                }
+                return Err(error).context("failed to read file")?;
+            }
+        };
+
+        let names = {
+            let mut names: Set<String> = default();
+            let mut parts =
+                id.split('/').map(ToOwned::to_owned).collect::<Vec<_>>();
+            while !parts.is_empty() {
+                names.insert(parts.join("/"));
+                if let Some((_, tail)) = parts.split_first() {
+                    parts = tail.into_iter().cloned().collect();
+                }
+            }
+            names
+        };
+
+        let links = {
+            lazy_static! {
+                static ref REGEX: Regex =
+                    Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
+            }
+            REGEX
+                .captures_iter(&text)
+                .map(|m| m.get(1).unwrap().as_str().to_owned())
+                .collect::<Set<_>>()
+        };
+        let tags = {
+            let matter = parse_front_matter(&text)
+                .context("failed to parse front matter")?;
+            matter
+                .map(Yaml::into_hash)
+                .flatten()
+                .map(|mut hash| {
+                    let key = Yaml::String("tags".to_owned());
+                    hash.remove(&key)
+                })
+                .flatten()
+                .map(|tags| {
+                    use Yaml::*;
+                    let tags = match tags {
+                        String(tag) => Set::from_iter([tag]),
+                        Array(tags) => tags
+                            .into_iter()
+                            .filter_map(Yaml::into_string)
+                            .collect::<Set<_>>(),
+                        _ => return None,
+                    };
+                    Some(tags)
+                })
+                .flatten()
+                .unwrap_or_default()
+        };
+
+        let note = Note::builder()
+            .id(id.to_owned())
+            .names(names)
+            .links(links)
+            .tags(tags)
+            .build();
+        Ok(Some(note))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct Note {
     pub id: String,
     pub names: Set<String>,
-    pub links: NoteLinks,
+
+    #[builder(default)]
+    pub links: Set<String>,
 
     #[builder(default)]
     pub tags: Set<String>,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize, Builder)]
-pub struct NoteLinks {
-    #[builder(default)]
-    pub incoming: Set<NoteRef>,
-
-    #[builder(default)]
-    pub outgoing: Set<NoteRef>,
-}
-
-#[derive(
-    Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize,
-)]
-pub struct NoteRef {
-    pub id: String,
-}
-
-impl NoteRef {
-    pub fn new(id: String) -> Self {
-        Self { id }
-    }
 }
