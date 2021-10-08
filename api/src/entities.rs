@@ -7,7 +7,6 @@ mod date;
 mod email;
 mod entity;
 mod heart;
-mod helpers;
 mod object;
 mod phone;
 mod prelude;

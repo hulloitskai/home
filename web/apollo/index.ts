@@ -114,7 +114,7 @@ export type HeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type HeartSectionQuery = { __typename?: 'Query', heartRate?: Maybe<{ __typename?: 'HeartRate', id: string, measurement: number, timestamp: any }> };
 
-export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
+export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
 
 export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -136,12 +136,12 @@ export type HomePageQueryVariables = Exact<{
 }>;
 
 
-export type HomePageQuery = { __typename?: 'Query', dailyEntry?: Maybe<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> } }> };
+export type HomePageQuery = { __typename?: 'Query', dailyEntry?: Maybe<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> } }> };
 
 export type KnowledgePageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type KnowledgePageQuery = { __typename?: 'Query', entries: Array<{ __typename?: 'KnowledgeEntry', id: string, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> };
+export type KnowledgePageQuery = { __typename?: 'Query', entries: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> };
 
 export const HeartStatHeartRateFragmentDoc = gql`
     fragment HeartStatHeartRate on HeartRate {
@@ -153,6 +153,7 @@ export const HeartStatHeartRateFragmentDoc = gql`
 export const KnowledgeGraphEntryFragmentDoc = gql`
     fragment KnowledgeGraphEntry on KnowledgeEntry {
   id
+  tags
   links {
     incoming {
       id

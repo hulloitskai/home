@@ -9,11 +9,12 @@ import { Text, Link, Badge } from "@chakra-ui/react";
 import { IconButton, Icon } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
+import { ClientOnly } from "components/ssr";
 
 import { HeartSection } from "components/heart-section";
 import { MusicSection } from "components/music";
 
-import { KnowledgeGraph } from "components/knowledge";
+import { KnowledgeGraph } from "components/knowledge-graph";
 import { KnowledgeGraphEntryFragment } from "apollo";
 import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
@@ -97,38 +98,40 @@ const HomePage: NextPage = () => {
       {dailyEntry && entries && (
         <DarkMode>
           <Box pos="relative">
-            <KnowledgeGraph
-              entries={entries}
-              highlightedEntryId={dailyEntry.id}
-              linkForce={0.05}
-              bodyForce={-75}
-              h={96}
-              bg="gray.900"
-            />
-            <HStack
-              align="start"
-              spacing={1}
-              pos="absolute"
-              inset={4}
-              bottom="unset"
-            >
-              <Badge colorScheme="yellow">Day Graph</Badge>
-              <Spacer />
-              <Link
-                href="/knowledge"
-                target="_blank"
-                _hover={{ textDecor: "none" }}
+            <ClientOnly>
+              <KnowledgeGraph
+                entries={entries}
+                highlightedEntryId={dailyEntry.id}
+                linkForce={0.05}
+                bodyForce={-75}
+                h={96}
+                bg="gray.900"
+              />
+              <HStack
+                align="start"
+                spacing={1}
+                pos="absolute"
+                inset={4}
+                bottom="unset"
               >
-                <Tooltip label="Open Full Graph">
-                  <IconButton
-                    icon={<Icon as={HiOutlineArrowsExpand} />}
-                    aria-label="Open Full Graph"
-                    size="xs"
-                    colorScheme="yellow"
-                  />
-                </Tooltip>
-              </Link>
-            </HStack>
+                <Badge colorScheme="yellow">Day Graph</Badge>
+                <Spacer />
+                <Link
+                  href="/knowledge"
+                  target="_blank"
+                  _hover={{ textDecor: "none" }}
+                >
+                  <Tooltip label="Open Full Graph">
+                    <IconButton
+                      icon={<Icon as={HiOutlineArrowsExpand} />}
+                      aria-label="Open Full Graph"
+                      size="xs"
+                      colorScheme="yellow"
+                    />
+                  </Tooltip>
+                </Link>
+              </HStack>
+            </ClientOnly>
           </Box>
         </DarkMode>
       )}
