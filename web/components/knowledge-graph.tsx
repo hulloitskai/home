@@ -1,5 +1,4 @@
-import React, { FC, useRef } from "react";
-import { useIsomorphicLayoutEffect } from "components/ssr";
+import React, { FC, useLayoutEffect, useRef } from "react";
 import useComponentSize from "@rehooks/component-size";
 
 import { select } from "d3-selection";
@@ -22,6 +21,7 @@ import type { KnowledgeGraphEntryFragment } from "apollo";
 gql`
   fragment KnowledgeGraphEntry on KnowledgeEntry {
     id
+    tags
     links {
       incoming {
         id
@@ -54,7 +54,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const svgEl = svgRef.current;
 
-  useIsomorphicLayoutEffect(
+  useLayoutEffect(
     () => {
       if (svgEl && !svgEl.children.length && entries) {
         let isDragging = false;
@@ -63,6 +63,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
           string,
           {
             id: string;
+            tags: string[];
             links: { incoming: { id: string }[]; outgoing: { id: string }[] };
             radius: number;
           }
@@ -88,7 +89,10 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
           };
 
           for (const entry of entries) {
-            nodesById[entry.id] = { ...entry, radius: nodeRadius(entry) };
+            nodesById[entry.id] = {
+              ...entry,
+              radius: nodeRadius(entry),
+            };
           }
 
           for (const entry of entries) {
@@ -96,6 +100,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
               if (!nodesById[linked.id] && showOrphans) {
                 nodesById[linked.id] = {
                   id: linked.id,
+                  tags: [],
                   links: { incoming: [], outgoing: [] },
                   radius: nodeRadius(),
                 };
@@ -122,7 +127,7 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
           .selectAll(".node")
           .data(nodes)
           .join("g")
-          .classed("node", true);
+          .attr("class", d => ["node", ...d.tags].join(" "));
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const highlightedNode = highlightedEntryId
@@ -260,9 +265,6 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
           transitionTimingFunction: "ease-in-out",
           transitionDuration: "200ms",
         },
-        ".node.highlighted circle": {
-          fill: "yellow.400",
-        },
         ".node text": {
           pointerEvents: "none",
           fill: nodeLabelFill,
@@ -276,6 +278,21 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
         },
         ".node.focused text": {
           fill: nodeLabelFocusedFill,
+        },
+        ".node.highlighted circle": {
+          fill: "yellow.400",
+        },
+        ".node.person:not(.highlighted):not(.focused) circle": {
+          fill: "rgb(233, 100, 166)",
+        },
+        ".node.day:not(.highlighted):not(.focused) circle": {
+          fill: "rgb(123, 159, 216)",
+        },
+        ".node.week:not(.highlighted):not(.focused) circle": {
+          fill: "rgb(65, 101, 210)",
+        },
+        ".node.month:not(.highlighted):not(.focused) circle": {
+          fill: "rgb(16, 39, 113)",
         },
         ".link": {
           stroke: linkStroke,

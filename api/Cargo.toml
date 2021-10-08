@@ -18,13 +18,11 @@ dotenv = "^0.15.0"
 emails = { package = "mailchecker", version = "^4.0.12" }
 futures = { package = "futures-core", version = "^0.3.17" }
 http = "^0.2.5"
-# FIXME: Temporary workaround for https://github.com/tkaitchuck/aHash/issues/95
-indexmap = "~1.6.2"
+# # FIXME: Temporary workaround for https://github.com/tkaitchuck/aHash/issues/95
+# indexmap = "~1.6.2"
 lazy_static = "^1.4.0"
 macros = { path = "./macros" }
-mime = "^0.3.16"
 mongodb = "^2.0.0"
-nanoid = "^0.4.0"
 oauth2 = "^4.1.0"
 phones = { package = "phonenumber", version = "^0.3.1" }
 pin_project = { package = "pin-project", version = "^1.0.8" }

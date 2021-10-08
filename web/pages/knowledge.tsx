@@ -2,8 +2,9 @@ import React from "react";
 import type { NextPage } from "next";
 
 import { Center, Spinner } from "@chakra-ui/react";
+import { ClientOnly } from "components/ssr";
 
-import { KnowledgeGraph } from "components/knowledge";
+import { KnowledgeGraph } from "components/knowledge-graph";
 import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
 import { gql } from "@apollo/client";
@@ -27,7 +28,9 @@ const KnowledgePage: NextPage = () => {
   return (
     <Center w="100vw" h="100vh">
       {entries ? (
-        <KnowledgeGraph entries={entries} boxSize="full" />
+        <ClientOnly>
+          <KnowledgeGraph entries={entries} boxSize="full" />
+        </ClientOnly>
       ) : (
         <Spinner color="gray.800" />
       )}
