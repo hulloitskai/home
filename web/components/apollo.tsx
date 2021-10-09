@@ -18,7 +18,7 @@ import { HOME_API_URL } from "consts";
 
 const typePolicies: TypePolicies = {
   KnowledgeEntryLinks: { keyFields: false },
-  MusicInfo: { keyFields: false },
+  MusicInfo: { keyFields: [] },
   MusicTrack: { keyFields: ["spotifyId"] },
   MusicAlbum: { keyFields: ["spotifyId"] },
   MusicArtist: { keyFields: ["spotifyId"] },

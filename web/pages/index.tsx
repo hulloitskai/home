@@ -12,7 +12,7 @@ import { DarkMode } from "@chakra-ui/react";
 import { ClientOnly } from "components/ssr";
 
 import { HeartSection } from "components/heart-section";
-import { MusicSection } from "components/music";
+import { MusicSection } from "components/music-section";
 
 import { KnowledgeGraph } from "components/knowledge-graph";
 import { KnowledgeGraphEntryFragment } from "apollo";

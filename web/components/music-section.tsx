@@ -41,7 +41,7 @@ gql`
   }
 `;
 
-const MUSIC_SECTION_HEARTBEAT_QUERY = gql`
+gql`
   query MusicSectionHeartbeat {
     musicInfo {
       isPlaying
@@ -70,14 +70,22 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
 
   // Send heartbeat signal every 2.5 seconds.
   useMusicSectionHeartbeatQuery({
-    query: MUSIC_SECTION_HEARTBEAT_QUERY,
     fetchPolicy: "network-only",
     pollInterval: 2500,
+    ssr: false,
   });
 
   // An interpolated progress accounts for the time since the last progress
   // check (heartbeat).
-  const [interpolatedProgress, setInterpolatedProgress] = useState<number>();
+  const [interpolatedProgress, setInterpolatedProgress] = useState<
+    number | undefined
+  >(() => {
+    const { progress } = musicInfo ?? {};
+    if (progress) {
+      const elapsed = dataTimestamp.diffNow().milliseconds;
+      return progress - elapsed;
+    }
+  });
   useEffect(
     () => {
       if (musicInfo) {
