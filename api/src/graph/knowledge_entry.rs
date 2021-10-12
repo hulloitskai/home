@@ -3,8 +3,8 @@ use super::prelude::*;
 use crate::obsidian::Note as ObsidianNote;
 
 #[derive(Debug, Clone, From)]
-pub struct KnowledgeEntry {
-    note: ObsidianNote,
+pub(super) struct KnowledgeEntry {
+    pub note: ObsidianNote,
 }
 
 #[Object]
@@ -24,11 +24,6 @@ impl KnowledgeEntry {
     async fn tags(&self) -> &Set<String> {
         &self.note.tags
     }
-}
-
-#[derive(Debug, Clone, From)]
-pub struct KnowledgeEntryLinks {
-    note: ObsidianNote,
 }
 
 #[Object]
@@ -69,10 +64,10 @@ impl KnowledgeEntryLinks {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct KnowledgeQueries;
+pub struct KnowledgeEntryQueries;
 
 #[Object]
-impl KnowledgeQueries {
+impl KnowledgeEntryQueries {
     async fn knowledge_entries(
         &self,
         ctx: &Context<'_>,

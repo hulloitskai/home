@@ -38,7 +38,7 @@ pub use std::fmt::{Debug, Display, Formatter};
 pub use std::iter::once;
 pub use std::iter::FromIterator;
 pub use std::marker::PhantomData;
-pub use std::ops::Deref;
+pub use std::ops::{Deref, DerefMut};
 pub use std::pin::Pin;
 pub use std::str::FromStr;
 pub use std::sync::{Arc, Mutex, RwLock};

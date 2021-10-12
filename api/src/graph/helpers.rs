@@ -22,7 +22,7 @@ impl<'a> ContextExt for Context<'a> {
     }
 }
 
-pub trait ResultExt<T> {
+pub(super) trait ResultExt<T> {
     fn into_field_result(self) -> FieldResult<T>;
 }
 

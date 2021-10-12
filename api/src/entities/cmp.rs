@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Comparison<T> {
+pub enum Cmp<T> {
     Eq(T),
     Gt(T),
     Gte(T),
@@ -9,12 +9,12 @@ pub enum Comparison<T> {
     Lte(T),
 }
 
-impl<T> From<Comparison<T>> for Bson
+impl<T> From<Cmp<T>> for Bson
 where
     Bson: From<T>,
 {
-    fn from(comparison: Comparison<T>) -> Self {
-        use Comparison::*;
+    fn from(comparison: Cmp<T>) -> Self {
+        use Cmp::*;
         match comparison {
             Eq(value) => bson!({ "$eq": value }),
             Gt(value) => bson!({ "$gt": value }),
@@ -25,8 +25,8 @@ where
     }
 }
 
-impl<T> From<T> for Comparison<T> {
+impl<T> From<T> for Cmp<T> {
     fn from(value: T) -> Self {
-        Comparison::Eq(value)
+        Cmp::Eq(value)
     }
 }

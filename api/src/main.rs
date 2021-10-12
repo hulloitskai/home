@@ -50,8 +50,8 @@ use env::var_or as env_var_or;
 
 mod entities;
 use entities::BuildInfo;
-use entities::Comparison;
-use entities::{Context, Entity, Services, Settings};
+use entities::{Cmp, Entity, Record};
+use entities::{Context, Services, Settings};
 use entities::{HeartRate, HeartRateConditions};
 
 mod graph;
@@ -175,7 +175,7 @@ async fn main() -> Result<()> {
         .build();
 
     // Build entity context.
-    let context = Context::new(services, settings);
+    let ctx = Context::new(services, settings);
 
     // Build GraphQL schema.
     let graphql_schema = {
@@ -188,7 +188,7 @@ async fn main() -> Result<()> {
                 GraphQLAPQExtension::new(storage)
             })
             .data(build_info)
-            .data(context.clone())
+            .data(ctx.clone())
             .finish()
     };
 
@@ -213,7 +213,7 @@ async fn main() -> Result<()> {
     // Build GraphQL playground filter.
     let graphql_playground_filter = (get().or(head()))
         .map({
-            let ctx = context.clone();
+            let ctx = ctx.clone();
             move |_| ctx.clone()
         })
         .and_then(|ctx: Context| async move {
@@ -260,14 +260,14 @@ async fn main() -> Result<()> {
     // Build health webhook filter.
     let health_webhook_filter = post()
         .map({
-            let ctx = context.clone();
+            let ctx = ctx.clone();
             move || ctx.clone()
         })
         .and(body_json())
         .and_then(|ctx: Context, payload: HealthExportPayload| async move {
             if let Err(error) = import_health_data(&ctx, payload).await {
                 error!(
-                    target: "home-api::webhook",
+                    target: "home-api",
                     error = %format!("{:?}", error),
                     "failed to import health data",
                 );
@@ -280,7 +280,7 @@ async fn main() -> Result<()> {
 
     // Build root webhook filter.
     let webhook_filter =
-        path("webhook").and(path("health").and(health_webhook_filter));
+        path("hooks").and(path("health").and(health_webhook_filter));
 
     // Build root filter.
     let filter = (path_end().and(graphql_playground_filter))
@@ -430,17 +430,19 @@ async fn import_health_data(
                 let rate_exists = HeartRate::find_one({
                     let timestamp = DateTime::from(timestamp);
                     HeartRateConditions::builder()
-                        .timestamp(Comparison::Eq(timestamp))
+                        .timestamp(Cmp::Eq(timestamp))
                         .build()
                 })
                 .exists(&ctx)
                 .await
                 .context("failed to lookup conflicting heart rates")?;
                 if !rate_exists {
-                    let mut rate = HeartRate::builder()
-                        .measurement(measurement)
-                        .timestamp(timestamp)
-                        .build();
+                    let mut rate = Record::new({
+                        HeartRate::builder()
+                            .measurement(measurement)
+                            .timestamp(timestamp)
+                            .build()
+                    });
                     rate.save(&ctx).await?;
                 } else {
                     debug!(
