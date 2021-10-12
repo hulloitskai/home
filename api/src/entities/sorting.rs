@@ -15,19 +15,21 @@ impl Default for SortingOrder {
 impl From<SortingOrder> for Bson {
     fn from(order: SortingOrder) -> Self {
         use SortingOrder::*;
-        match order {
-            Asc => Bson::Int32(1),
-            Desc => Bson::Int32(-1),
-        }
+        let order = match order {
+            Asc => 1,
+            Desc => -1,
+        };
+        order.into()
     }
 }
 
 impl From<Bson> for SortingOrder {
     fn from(bson: Bson) -> Self {
+        use Bson::*;
         use SortingOrder::*;
         match bson {
-            Bson::Int32(1) => Asc,
-            Bson::Int32(-1) => Desc,
+            Int32(1) => Asc,
+            Int32(-1) => Desc,
             other => panic!("invalid sorting order: {}", other),
         }
     }

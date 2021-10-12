@@ -1,51 +1,51 @@
 use super::prelude::*;
 
 #[derive(Debug, Clone, From)]
-pub struct HeartRateObject {
-    inner: HeartRate,
+pub(super) struct HeartRateObject {
+    pub record: Record<HeartRate>,
 }
 
 #[Object(name = "HeartRate")]
 impl HeartRateObject {
-    async fn id(&self) -> Id<Self> {
-        self.inner.id().into()
+    async fn id(&self) -> Id {
+        Id::new(&self.record)
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        let created_at = self.inner.created_at.clone();
+        let created_at = self.record.created_at().to_owned();
         created_at.into()
     }
 
     async fn updated_at(&self) -> DateTimeScalar {
-        let updated_at = self.inner.updated_at.clone();
+        let updated_at = self.record.updated_at().to_owned();
         updated_at.into()
     }
 
     async fn measurement(&self) -> u16 {
-        self.inner.measurement
+        self.record.measurement
     }
 
     async fn timestamp(&self) -> DateTimeScalar {
-        let timestamp = self.inner.timestamp.clone();
+        let timestamp = self.record.timestamp.clone();
         timestamp.into()
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct HeartQueries;
+pub(super) struct HeartRateQueries;
 
 #[Object]
-impl HeartQueries {
+impl HeartRateQueries {
     async fn heart_rate(
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<HeartRateObject>> {
-        let rate = ctx
+        let rate: Option<Record<HeartRate>> = ctx
             .transact(|ctx| async move {
                 let mut rates = HeartRate::find({
-                    let one_day_ago = Utc::now() - Duration::days(1);
+                    let one_day_ago = now() - Duration::days(1);
                     HeartRateConditions::builder()
-                        .timestamp(Comparison::Gt(one_day_ago))
+                        .timestamp(Cmp::Gt(one_day_ago))
                         .build()
                 })
                 .sort(HeartRateSorting::Timestamp(SortingOrder::Desc))

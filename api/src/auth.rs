@@ -63,7 +63,7 @@ impl Authenticator {
             let is_valid = match expires_at {
                 Some(expires_at) => {
                     let expires_at = (*expires_at) - self.clock_skew_leeway;
-                    Utc::now() < expires_at
+                    now() < expires_at
                 }
                 None => true,
             };
@@ -85,7 +85,7 @@ impl Authenticator {
                 let token = response.access_token().secret().to_owned();
                 let expires_at = response.expires_in().map(|expires_in| {
                     let expires_in = Duration::from_std(expires_in).unwrap();
-                    Utc::now() + expires_in
+                    now() + expires_in
                 });
                 AccessToken { token, expires_at }
             };

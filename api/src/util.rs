@@ -10,6 +10,10 @@ pub fn default<T: Default>() -> T {
     Default::default()
 }
 
+pub fn now() -> DateTime {
+    Utc::now()
+}
+
 pub fn decode_base64<T: AsRef<[u8]>>(
     input: T,
 ) -> Result<Vec<u8>, Base64DecodeError> {

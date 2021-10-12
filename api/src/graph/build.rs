@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 #[derive(Debug, Clone, From, Deref)]
-pub struct BuildInfoObject(BuildInfo);
+pub(super) struct BuildInfoObject(BuildInfo);
 
 #[Object(name = "BuildInfo")]
 impl BuildInfoObject {
@@ -15,7 +15,7 @@ impl BuildInfoObject {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct BuildQueries;
+pub(super) struct BuildQueries;
 
 #[Object]
 impl BuildQueries {
