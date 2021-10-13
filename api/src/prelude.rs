@@ -2,7 +2,6 @@ pub use crate::util::*;
 
 pub use async_trait::async_trait;
 pub use lazy_static::lazy_static;
-pub use pin_project::pin_project;
 
 pub use cache::LruCache as Cache;
 pub use derivative::Derivative;
@@ -60,7 +59,6 @@ pub use serde_json::Value as Json;
 pub use futures::{Future, Stream};
 pub use futures_util::future::{join, join_all, try_join, try_join_all};
 pub use futures_util::future::{FutureExt, TryFutureExt};
-pub use futures_util::pin_mut;
 pub use futures_util::stream::{StreamExt, TryStreamExt};
 
 pub use anyhow::Context as AnyhowContext;

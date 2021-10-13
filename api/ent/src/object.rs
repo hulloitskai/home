@@ -1,4 +1,5 @@
-use super::prelude::*;
+use anyhow::Result;
+use bson::Document;
 
 pub trait Object: Sized {
     fn to_document(&self) -> Result<Document>;

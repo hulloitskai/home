@@ -1,10 +1,16 @@
-use super::prelude::*;
+use super::{DatabaseClient, DatabaseSession};
+use super::{EntityContext, EntityServices};
 
-use mongodb::ClientSession as DatabaseSession;
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
+
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub(super) struct Transaction {
-    session: DatabaseSession,
+    pub session: DatabaseSession,
 }
 
 impl Transaction {
@@ -27,8 +33,11 @@ impl Transaction {
         self.session.abort_transaction().await?;
         Ok(())
     }
+}
 
-    pub(super) fn session(&mut self) -> &mut DatabaseSession {
-        &mut self.session
-    }
+#[derive(Debug)]
+pub(super) struct TransactionState<S: EntityServices> {
+    pub ctx: EntityContext<S>,
+    pub transaction: Arc<Mutex<Transaction>>,
+    pub is_root: bool,
 }

@@ -1,6 +1,19 @@
-use super::prelude::*;
+use super::utils::DateTime;
+use super::utils::{default, now};
+use super::{Entity, EntityContext, EntityMeta};
+use super::{Object, ObjectId};
+
+use std::ops::{Deref, DerefMut};
+
+use bson::doc;
+use bson::Document;
+
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
 
 use mongodb::options::ReplaceOptions;
+use serde::{Deserialize, Serialize};
+use tracing::trace;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Record<T: Entity> {
@@ -50,8 +63,11 @@ impl<T: Entity> Record<T> {
 }
 
 impl<T: Entity> Record<T> {
-    pub async fn save(&mut self, ctx: &Context) -> Result<()> {
-        self.validate()?;
+    pub async fn save(
+        &mut self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<()> {
+        self.validate().context("validation failed")?;
         ctx.with_transaction(|ctx, transaction| async move {
             self.before_save(&ctx).await?;
             self.meta.updated_at = now();
@@ -65,10 +81,9 @@ impl<T: Entity> Record<T> {
             let collection = T::collection(&ctx);
             let options = ReplaceOptions::builder().upsert(true).build();
             let mut transaction = transaction.lock().await;
-            let session = transaction.session();
+            let session = &mut transaction.session;
 
             trace!(
-                target: "oyster-api::entities",
                 collection = collection.name(),
                 %query,
                 "saving document"
@@ -83,7 +98,10 @@ impl<T: Entity> Record<T> {
         .await
     }
 
-    pub async fn delete(&mut self, ctx: &Context) -> Result<()> {
+    pub async fn delete(
+        &mut self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<()> {
         ctx.with_transaction(|ctx, transaction| async move {
             self.before_delete(&ctx).await?;
 
@@ -93,10 +111,9 @@ impl<T: Entity> Record<T> {
             };
             let collection = T::collection(&ctx);
             let mut transaction = transaction.lock().await;
-            let session = transaction.session();
+            let session = &mut transaction.session;
 
             trace!(
-                target: "oyster-api::entities",
                 collection = collection.name(),
                 %query,
                 "deleting document"

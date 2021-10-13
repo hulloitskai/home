@@ -18,8 +18,9 @@ impl MusicInfoQueries {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<MusicInfo>> {
-        let Services { spotify, .. } = ctx.entity().services();
-        let currently_playing = spotify
+        let currently_playing = ctx
+            .services()
+            .spotify()
             .get_currently_playing()
             .await
             .context("failed to load currently playing track from Spotify")

@@ -40,12 +40,13 @@ impl MusicTrack {
     }
 
     async fn lyrics(&self, ctx: &Context<'_>) -> FieldResult<Option<Lyrics>> {
-        let Services { lyricly, .. } = ctx.entity().services();
         let artist = match self.artists.first() {
             Some(artist) => artist,
             None => return Ok(None),
         };
-        let lyrics = lyricly
+        let lyrics = ctx
+            .services()
+            .lyricly()
             .get_lyrics(&self.name, &artist.name)
             .await
             .into_field_result()?;

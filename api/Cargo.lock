@@ -472,6 +472,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "ent"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64",
+ "bson",
+ "chrono",
+ "derive_more",
+ "ent-macros",
+ "futures-core",
+ "futures-util",
+ "mongodb",
+ "pin-project",
+ "serde",
+ "tokio",
+ "tracing",
+ "typed-builder",
+]
+
+[[package]]
+name = "ent-macros"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "enum-as-inner"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -755,7 +785,7 @@ dependencies = [
 
 [[package]]
 name = "home-api"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -767,6 +797,7 @@ dependencies = [
  "derivative",
  "derive_more",
  "dotenv",
+ "ent",
  "frontmatter",
  "futures-core",
  "futures-util",
@@ -774,12 +805,10 @@ dependencies = [
  "http",
  "lazy_static",
  "lru_time_cache",
- "macros",
  "mailchecker",
  "mongodb",
  "oauth2",
  "phonenumber",
- "pin-project",
  "regex",
  "reqwest",
  "semver 1.0.4",
@@ -1071,15 +1100,6 @@ name = "lru_time_cache"
 version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9106e1d747ffd48e6be5bb2d97fa706ed25b144fbee4d5c02eae110cd8d6badd"
-
-[[package]]
-name = "macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "mailchecker"

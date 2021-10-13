@@ -61,6 +61,7 @@ impl Object for HeartRate {
 impl Entity for HeartRate {
     const NAME: &'static str = "HeartRate";
 
+    type Services = Services;
     type Id = HeartRateId;
     type Conditions = HeartRateConditions;
     type Sorting = HeartRateSorting;
@@ -69,12 +70,12 @@ impl Entity for HeartRate {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Builder)]
 pub struct HeartRateConditions {
     #[builder(default, setter(into))]
-    pub timestamp: Option<Cmp<DateTime>>,
+    pub timestamp: Option<Comparison<DateTime>>,
 }
 
-impl From<HeartRateConditions> for Document {
-    fn from(conditions: HeartRateConditions) -> Self {
-        let HeartRateConditions { timestamp } = conditions;
+impl Conditions for HeartRateConditions {
+    fn into_document(self) -> Document {
+        let HeartRateConditions { timestamp } = self;
         let mut doc = Document::new();
         if let Some(timestamp) = timestamp {
             doc.insert("timestamp", timestamp);
@@ -88,10 +89,10 @@ pub enum HeartRateSorting {
     Timestamp(SortingOrder),
 }
 
-impl From<HeartRateSorting> for Document {
-    fn from(sorting: HeartRateSorting) -> Document {
+impl Sorting for HeartRateSorting {
+    fn into_document(self) -> Document {
         use HeartRateSorting::*;
-        match sorting {
+        match self {
             Timestamp(order) => doc! { "timestamp": order },
         }
     }

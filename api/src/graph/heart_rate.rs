@@ -40,12 +40,12 @@ impl HeartRateQueries {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<HeartRateObject>> {
-        let rate: Option<Record<HeartRate>> = ctx
+        let rate = ctx
             .transact(|ctx| async move {
                 let mut rates = HeartRate::find({
                     let one_day_ago = now() - Duration::days(1);
                     HeartRateConditions::builder()
-                        .timestamp(Cmp::Gt(one_day_ago))
+                        .timestamp(Comparison::Gt(one_day_ago))
                         .build()
                 })
                 .sort(HeartRateSorting::Timestamp(SortingOrder::Desc))

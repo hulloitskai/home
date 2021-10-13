@@ -5,6 +5,10 @@ use tracing_subscriber::fmt::init as init_tracer;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use ent::Comparison;
+use ent::Entity;
+use ent::Record;
+
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 
@@ -50,7 +54,6 @@ use env::var_or as env_var_or;
 
 mod entities;
 use entities::BuildInfo;
-use entities::{Cmp, Entity, Record};
 use entities::{Context, Services, Settings};
 use entities::{HeartRate, HeartRateConditions};
 
@@ -149,15 +152,6 @@ async fn main() -> Result<()> {
     // Build Lyricly client.
     let lyricly = LyriclyClient::new();
 
-    // Build services.
-    let services = Services::builder()
-        .database_client(database_client)
-        .database(database)
-        .obsidian(obsidian)
-        .spotify(spotify)
-        .lyricly(lyricly)
-        .build();
-
     // Build settings.
     let settings = Settings::builder()
         .web_public_url({
@@ -174,8 +168,18 @@ async fn main() -> Result<()> {
         })
         .build();
 
+    // Build services.
+    let services = Services::builder()
+        .database_client(database_client)
+        .database(database)
+        .settings(settings)
+        .obsidian(obsidian)
+        .spotify(spotify)
+        .lyricly(lyricly)
+        .build();
+
     // Build entity context.
-    let ctx = Context::new(services, settings);
+    let ctx = Context::new(services);
 
     // Build GraphQL schema.
     let graphql_schema = {
@@ -430,7 +434,7 @@ async fn import_health_data(
                 let rate_exists = HeartRate::find_one({
                     let timestamp = DateTime::from(timestamp);
                     HeartRateConditions::builder()
-                        .timestamp(Cmp::Eq(timestamp))
+                        .timestamp(Comparison::Eq(timestamp))
                         .build()
                 })
                 .exists(&ctx)

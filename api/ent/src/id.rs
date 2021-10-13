@@ -1,4 +1,19 @@
-use super::prelude::*;
+use super::Entity;
+
+use base64::decode_config as decode_base64_config;
+use base64::encode_config as encode_base64_config;
+use base64::DecodeError as Base64DecodeError;
+use base64::URL_SAFE as BASE64_CONFIG;
+
+use anyhow::bail;
+use anyhow::Context as AnyhowContext;
+use anyhow::{Error, Result};
+
+use serde::{Deserialize, Serialize};
+
+use std::fmt::Result as FmtResult;
+use std::fmt::{Debug, Display, Formatter};
+use std::str::FromStr;
 
 pub use bson::oid::ObjectId;
 
@@ -42,4 +57,34 @@ impl FromStr for GlobalId {
             }
         }
     }
+}
+
+pub trait EntityId
+where
+    Self: Debug,
+    Self: Clone,
+    Self: Into<ObjectId> + From<ObjectId>,
+{
+    type Entity: Entity;
+}
+
+impl<Id: EntityId> From<Id> for GlobalId {
+    fn from(id: Id) -> Self {
+        let namespace = Id::Entity::NAME;
+        let id: ObjectId = id.into();
+        GlobalId {
+            namespace: namespace.to_owned(),
+            id,
+        }
+    }
+}
+
+pub fn decode_base64<T: AsRef<[u8]>>(
+    input: T,
+) -> Result<Vec<u8>, Base64DecodeError> {
+    decode_base64_config(input, BASE64_CONFIG)
+}
+
+pub fn encode_base64<T: AsRef<[u8]>>(input: T) -> String {
+    encode_base64_config(input, BASE64_CONFIG)
 }

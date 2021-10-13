@@ -1,24 +1,58 @@
-use super::prelude::*;
+use super::utils::default;
+use super::{Collection, Transaction};
+use super::{Conditions, Sorting};
+use super::{EntityContext, EntityServices};
+use super::{EntityId, ObjectId};
+use super::{Object, Record};
+
+use std::convert::TryFrom;
+use std::iter::FromIterator;
+use std::marker::PhantomData;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::task::Context as TaskContext;
+use std::task::Poll as TaskPoll;
 
 use mongodb::error::Result as DatabaseResult;
-use mongodb::SessionCursor;
-
 use mongodb::options::AggregateOptions;
 use mongodb::options::CountOptions;
 use mongodb::options::FindOneOptions;
 use mongodb::options::FindOptions;
+use mongodb::SessionCursor;
+
+use bson::{bson, doc, to_document};
+use bson::{Bson, Document};
+
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
+
+use futures::{Future, Stream};
+use futures_util::pin_mut;
+use futures_util::StreamExt;
+
+use async_trait::async_trait;
+use pin_project::pin_project;
+use serde::de::DeserializeOwned;
+use tokio::sync::Mutex;
+use tracing::trace;
 
 #[async_trait]
-pub trait Entity: Object + Send + Sync {
+pub trait Entity
+where
+    Self: Object,
+    Self: Send + Sync,
+{
     const NAME: &'static str;
 
+    type Services: EntityServices;
     type Id: EntityId;
-    type Conditions: Into<Document>;
-    type Sorting: Into<Document>;
 
-    fn collection(ctx: &Context) -> Collection<Document> {
+    type Conditions: Conditions;
+    type Sorting: Sorting;
+
+    fn collection(ctx: &EntityContext<Self::Services>) -> Collection<Document> {
         let name = Self::NAME;
-        ctx.services().database.collection(name)
+        ctx.database().collection(name)
     }
 
     fn get(id: Self::Id) -> FindOneQuery<Self> {
@@ -51,19 +85,17 @@ pub trait Entity: Object + Send + Sync {
 
     fn aggregate(
         pipeline: impl IntoIterator<Item = Document>,
-    ) -> AggregateQuery {
-        let collection = Self::NAME;
-        AggregateQuery::new(collection, pipeline)
+    ) -> AggregateQuery<Self> {
+        AggregateQuery::new(pipeline)
     }
 
     fn aggregate_one(
         pipeline: impl IntoIterator<Item = Document>,
-    ) -> AggregateOneQuery {
-        let collection = Self::NAME;
-        AggregateOneQuery::new(collection, pipeline)
+    ) -> AggregateOneQuery<Self> {
+        AggregateOneQuery::new(pipeline)
     }
 
-    async fn count(ctx: &Context) -> Result<u64> {
+    async fn count(ctx: &EntityContext<Self::Services>) -> Result<u64> {
         let collection = Self::collection(ctx);
         let count = collection.estimated_document_count(None).await?;
         Ok(count)
@@ -73,136 +105,32 @@ pub trait Entity: Object + Send + Sync {
         Ok(())
     }
 
-    async fn before_save(&mut self, _: &Context) -> Result<()> {
+    async fn before_save(
+        &mut self,
+        _: &EntityContext<Self::Services>,
+    ) -> Result<()> {
         Ok(())
     }
 
-    async fn before_delete(&mut self, _: &Context) -> Result<()> {
+    async fn before_delete(
+        &mut self,
+        _: &EntityContext<Self::Services>,
+    ) -> Result<()> {
         Ok(())
     }
 
-    async fn after_save(&mut self, _: &Context) -> Result<()> {
+    async fn after_save(
+        &mut self,
+        _: &EntityContext<Self::Services>,
+    ) -> Result<()> {
         Ok(())
     }
 
-    async fn after_delete(&mut self, _: &Context) -> Result<()> {
+    async fn after_delete(
+        &mut self,
+        _: &EntityContext<Self::Services>,
+    ) -> Result<()> {
         Ok(())
-    }
-}
-
-pub trait EntityId
-where
-    Self: Debug,
-    Self: Clone,
-    Self: Into<ObjectId> + From<ObjectId>,
-{
-    type Entity: Entity;
-}
-
-impl<Id: EntityId> From<Id> for GlobalId {
-    fn from(id: Id) -> Self {
-        let namespace = Id::Entity::NAME;
-        let id: ObjectId = id.into();
-        GlobalId {
-            namespace: namespace.to_owned(),
-            id,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct EntityMeta<T: Entity> {
-    pub id: T::Id,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
-}
-
-impl<T: Entity> EntityMeta<T> {
-    pub fn new() -> Self {
-        let id: T::Id = ObjectId::new().into();
-        let created_at = now();
-        let updated_at = created_at.clone();
-
-        Self {
-            id,
-            created_at,
-            updated_at,
-        }
-    }
-}
-
-impl<T: Entity> Default for EntityMeta<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T: Entity> Clone for EntityMeta<T> {
-    fn clone(&self) -> Self {
-        let Self {
-            id,
-            created_at,
-            updated_at,
-        } = self;
-        Self {
-            id: id.clone(),
-            created_at: created_at.clone(),
-            updated_at: updated_at.clone(),
-        }
-    }
-}
-
-impl<T: Entity> Object for EntityMeta<T> {
-    fn to_document(&self) -> Result<Document> {
-        let Self {
-            id,
-            created_at,
-            updated_at,
-        } = self.to_owned();
-        let id: ObjectId = id.into();
-
-        let doc = doc! {
-            "_id": id,
-            "_created_at": BsonDateTime::from(created_at),
-            "_updated_at": BsonDateTime::from(updated_at),
-        };
-        Ok(doc)
-    }
-
-    fn from_document(doc: Document) -> Result<Self> {
-        let id = doc
-            .get_object_id("_id")
-            .context("failed to get _id field")?;
-        let created_at = doc
-            .get_datetime("_created_at")
-            .context("failed to get _created_at field")?;
-        let updated_at = doc
-            .get_datetime("_updated_at")
-            .context("failed to get _updated_at field")?;
-        let meta = EntityMeta {
-            id: id.into(),
-            created_at: created_at.to_chrono(),
-            updated_at: updated_at.to_chrono(),
-        };
-        Ok(meta)
-    }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct EmptyConditions;
-
-impl From<EmptyConditions> for Document {
-    fn from(_: EmptyConditions) -> Self {
-        Self::default()
-    }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct EmptySorting;
-
-impl From<EmptySorting> for Document {
-    fn from(_: EmptySorting) -> Self {
-        Self::default()
     }
 }
 
@@ -225,11 +153,14 @@ impl<T: Entity> FindOneQuery<T> {
         MaybeFindOneQuery(inner)
     }
 
-    pub async fn load(self, ctx: &Context) -> Result<T> {
+    pub async fn load(self, ctx: &EntityContext<T::Services>) -> Result<T> {
         self.0.load(ctx).await?.context("not found")
     }
 
-    pub async fn exists(self, ctx: &Context) -> Result<bool> {
+    pub async fn exists(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<bool> {
         self.0.exists(ctx).await
     }
 }
@@ -243,21 +174,27 @@ impl<T: Entity> MaybeFindOneQuery<T> {
         Self(inner)
     }
 
-    fn from_filter(filter: impl Into<Option<Document>>) -> Self {
-        let inner = FindOneQueryInner::from_filter(filter);
-        Self(inner)
-    }
+    // fn from_filter(filter: impl Into<Option<Document>>) -> Self {
+    //     let inner = FindOneQueryInner::from_filter(filter);
+    //     Self(inner)
+    // }
 
     pub fn required(self) -> FindOneQuery<T> {
         let Self(inner) = self;
         FindOneQuery(inner)
     }
 
-    pub async fn load(self, ctx: &Context) -> Result<Option<T>> {
+    pub async fn load(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<Option<T>> {
         self.0.load(ctx).await
     }
 
-    pub async fn exists(self, ctx: &Context) -> Result<bool> {
+    pub async fn exists(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<bool> {
         self.0.exists(ctx).await
     }
 }
@@ -271,8 +208,10 @@ struct FindOneQueryInner<T: Entity> {
 
 impl<T: Entity> FindOneQueryInner<T> {
     pub fn new(conditions: impl Into<Option<T::Conditions>>) -> Self {
-        let conditions: Option<_> = conditions.into();
-        let filter: Option<Document> = conditions.map(Into::into);
+        let filter: Option<Document> = {
+            let conditions: Option<_> = conditions.into();
+            conditions.map(Conditions::into_document)
+        };
         Self::from_filter(filter)
     }
 
@@ -284,15 +223,18 @@ impl<T: Entity> FindOneQueryInner<T> {
         }
     }
 
-    pub async fn load(self, ctx: &Context) -> Result<Option<T>> {
+    pub async fn load(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<Option<T>> {
         let Self {
             filter, options, ..
         } = self;
         let collection = T::collection(ctx);
 
-        let doc = if let Some(transaction) = ctx.transaction() {
+        let doc = if let Some(transaction) = &ctx.transaction {
             let mut transaction = transaction.lock().await;
-            let session = transaction.session();
+            let session = &mut transaction.session;
             {
                 let options = {
                     let options = FindOptions::from(options.clone());
@@ -300,7 +242,6 @@ impl<T: Entity> FindOneQueryInner<T> {
                 };
                 if let Some(filter) = &filter {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         session = %session.id(),
                         %filter,
@@ -309,7 +250,6 @@ impl<T: Entity> FindOneQueryInner<T> {
                     );
                 } else {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         session = %session.id(),
                         %options,
@@ -328,7 +268,6 @@ impl<T: Entity> FindOneQueryInner<T> {
                 };
                 if let Some(filter) = &filter {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         %filter,
                         %options,
@@ -336,7 +275,6 @@ impl<T: Entity> FindOneQueryInner<T> {
                     );
                 } else {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         %options,
                         "finding a document"
@@ -355,7 +293,10 @@ impl<T: Entity> FindOneQueryInner<T> {
         Ok(Some(entity))
     }
 
-    pub async fn exists(self, ctx: &Context) -> Result<bool> {
+    pub async fn exists(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<bool> {
         let Self { filter, .. } = self;
         let collection = T::collection(ctx);
         let count = collection.count_documents(filter, None).await?;
@@ -403,8 +344,10 @@ fn filter_array_has_operator(array: &Vec<Bson>, operator: &str) -> bool {
 
 impl<T: Entity> FindQuery<T> {
     pub fn new(conditions: impl Into<Option<T::Conditions>>) -> Self {
-        let conditions: Option<_> = conditions.into();
-        let filter: Option<Document> = conditions.map(Into::into);
+        let filter: Option<Document> = {
+            let conditions: Option<_> = conditions.into();
+            conditions.map(Conditions::into_document)
+        };
         Self::from_filter(filter)
     }
 
@@ -428,8 +371,10 @@ impl<T: Entity> FindQuery<T> {
     }
 
     pub fn and(mut self, conditions: impl Into<Option<T::Conditions>>) -> Self {
-        let conditions: Option<_> = conditions.into();
-        let incoming: Option<Document> = conditions.map(Into::into);
+        let incoming: Option<Document> = {
+            let conditions: Option<_> = conditions.into();
+            conditions.map(Conditions::into_document)
+        };
         if let Some(incoming) = incoming {
             let filter = match self.filter {
                 Some(existing) => {
@@ -461,7 +406,7 @@ impl<T: Entity> FindQuery<T> {
         let incoming: Option<_> = sorting.into();
         self.options.sort = match incoming {
             Some(incoming) => {
-                let incoming: Document = incoming.into();
+                let incoming = incoming.into_document();
                 let combined = match existing {
                     Some(mut existing) => {
                         existing.extend(incoming);
@@ -478,7 +423,7 @@ impl<T: Entity> FindQuery<T> {
 
     pub async fn load<'a>(
         self,
-        ctx: &Context,
+        ctx: &EntityContext<T::Services>,
     ) -> Result<impl Stream<Item = Result<Record<T>>>> {
         let Self {
             filter, options, ..
@@ -487,13 +432,12 @@ impl<T: Entity> FindQuery<T> {
 
         let cursor: Box<
             dyn Stream<Item = DatabaseResult<Document>> + Send + Unpin,
-        > = if let Some(transaction) = ctx.transaction() {
+        > = if let Some(transaction) = &ctx.transaction {
             let cursor = {
                 let mut transaction = transaction.lock().await;
-                let session = transaction.session();
+                let session = &mut transaction.session;
                 if let Some(filter) = &filter {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         session = %session.id(),
                         %filter,
@@ -502,7 +446,6 @@ impl<T: Entity> FindQuery<T> {
                     );
                 } else {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         session = %session.id(),
                         options = %to_document(&options).unwrap(),
@@ -513,7 +456,7 @@ impl<T: Entity> FindQuery<T> {
                     .find_with_session(filter, options, session)
                     .await?
             };
-            let cursor = TransactionCursor::new(cursor, transaction);
+            let cursor = TransactionCursor::new(cursor, transaction.to_owned());
             Box::new(cursor)
         } else {
             if let Some(filter) = &filter {
@@ -547,7 +490,7 @@ impl<T: Entity> FindQuery<T> {
         Ok(stream)
     }
 
-    pub async fn count(self, ctx: &Context) -> Result<u64> {
+    pub async fn count(self, ctx: &EntityContext<T::Services>) -> Result<u64> {
         let Self {
             filter,
             options: find_options,
@@ -568,14 +511,13 @@ impl<T: Entity> FindQuery<T> {
                 .build()
         };
 
-        let count = if let Some(transaction) = ctx.transaction() {
+        let count = if let Some(transaction) = &ctx.transaction {
             let mut transaction = transaction.lock().await;
-            let session = transaction.session();
+            let session = &mut transaction.session;
             {
                 let options = to_document(&find_options).unwrap();
                 if let Some(filter) = &filter {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         session = %session.id(),
                         %filter,
@@ -584,7 +526,6 @@ impl<T: Entity> FindQuery<T> {
                     );
                 } else {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         session = %session.id(),
                         %options,
@@ -600,7 +541,6 @@ impl<T: Entity> FindQuery<T> {
                 let options = to_document(&find_options).unwrap();
                 if let Some(filter) = &filter {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         %filter,
                         %options,
@@ -608,7 +548,6 @@ impl<T: Entity> FindQuery<T> {
                     );
                 } else {
                     trace!(
-                        target: "oyster-api::entities",
                         collection = collection.name(),
                         %options,
                         "counting documents"
@@ -623,73 +562,72 @@ impl<T: Entity> FindQuery<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct AggregateOneQuery(AggregateOneQueryInner);
+pub struct AggregateOneQuery<T: Entity>(AggregateOneQueryInner<T>);
 
-impl AggregateOneQuery {
-    pub fn new(
-        collection: &str,
-        pipeline: impl IntoIterator<Item = Document>,
-    ) -> Self {
-        let inner = AggregateOneQueryInner::new(collection, pipeline);
+impl<T: Entity> AggregateOneQuery<T> {
+    pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
+        let inner = AggregateOneQueryInner::new(pipeline);
         Self(inner)
     }
 
-    pub fn optional(self) -> MaybeAggregateOneQuery {
+    pub fn optional(self) -> MaybeAggregateOneQuery<T> {
         let Self(inner) = self;
         MaybeAggregateOneQuery(inner)
     }
 
-    pub async fn load(self, ctx: &Context) -> Result<Document> {
+    pub async fn load(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<Document> {
         self.0.load(ctx).await?.context("not found")
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct MaybeAggregateOneQuery(AggregateOneQueryInner);
+pub struct MaybeAggregateOneQuery<T: Entity>(AggregateOneQueryInner<T>);
 
-impl MaybeAggregateOneQuery {
-    pub fn new(
-        collection: &str,
-        pipeline: impl IntoIterator<Item = Document>,
-    ) -> Self {
-        let inner = AggregateOneQueryInner::new(collection, pipeline);
+impl<T: Entity> MaybeAggregateOneQuery<T> {
+    pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
+        let inner = AggregateOneQueryInner::new(pipeline);
         Self(inner)
     }
 
-    pub fn required(self) -> AggregateOneQuery {
+    pub fn required(self) -> AggregateOneQuery<T> {
         let Self(inner) = self;
         AggregateOneQuery(inner)
     }
 
-    pub async fn load(self, ctx: &Context) -> Result<Option<Document>> {
+    pub async fn load(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<Option<Document>> {
         self.0.load(ctx).await
     }
 }
 
 #[derive(Debug, Clone)]
-struct AggregateOneQueryInner {
-    collection: String,
+struct AggregateOneQueryInner<T: Entity> {
     pipeline: Vec<Document>,
+    phantom: PhantomData<T>,
     options: AggregateOptions,
 }
 
-impl AggregateOneQueryInner {
-    pub fn new(
-        collection: &str,
-        pipeline: impl IntoIterator<Item = Document>,
-    ) -> Self {
+impl<T: Entity> AggregateOneQueryInner<T> {
+    pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
         let options = AggregateOptions::default();
         let pipeline = Vec::from_iter(pipeline);
         Self {
-            collection: collection.to_owned(),
             pipeline,
+            phantom: default(),
             options,
         }
     }
 
-    pub async fn load(self, ctx: &Context) -> Result<Option<Document>> {
+    pub async fn load(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<Option<Document>> {
         let Self {
-            collection,
             options,
             mut pipeline,
             ..
@@ -699,16 +637,14 @@ impl AggregateOneQueryInner {
             "$limit": 1
         });
 
-        let collection: Collection<Document> =
-            ctx.services().database.collection(&collection);
+        let collection = T::collection(ctx);
         let mut cursor: Box<
             dyn Stream<Item = DatabaseResult<Document>> + Send + Unpin,
-        > = if let Some(transaction) = ctx.transaction() {
+        > = if let Some(transaction) = &ctx.transaction {
             let cursor = {
                 let mut transaction = transaction.lock().await;
-                let session = transaction.session();
+                let session = &mut transaction.session;
                 trace!(
-                    target: "oyster-api::entities",
                     collection = collection.name(),
                     session = %session.id(),
                     pipeline = %bson!(pipeline.clone()),
@@ -718,7 +654,7 @@ impl AggregateOneQueryInner {
                     .aggregate_with_session(pipeline, options, session)
                     .await?
             };
-            let cursor = TransactionCursor::new(cursor, transaction);
+            let cursor = TransactionCursor::new(cursor, transaction.to_owned());
             Box::new(cursor)
         } else {
             trace!(
@@ -737,24 +673,21 @@ impl AggregateOneQueryInner {
 }
 
 #[derive(Debug, Clone)]
-pub struct AggregateQuery {
-    collection: String,
+pub struct AggregateQuery<T: Entity> {
     pipeline: Vec<Document>,
+    phantom: PhantomData<T>,
     options: AggregateOptions,
     skip: Option<u32>,
     take: Option<u32>,
 }
 
-impl AggregateQuery {
-    pub fn new(
-        collection: &str,
-        pipeline: impl IntoIterator<Item = Document>,
-    ) -> Self {
+impl<T: Entity> AggregateQuery<T> {
+    pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
         let options = AggregateOptions::default();
         let pipeline = Vec::from_iter(pipeline);
         Self {
-            collection: collection.to_owned(),
             pipeline,
+            phantom: default(),
             options,
             skip: default(),
             take: default(),
@@ -773,10 +706,9 @@ impl AggregateQuery {
 
     pub async fn load<'a>(
         self,
-        ctx: &Context,
+        ctx: &EntityContext<T::Services>,
     ) -> Result<impl Stream<Item = Result<Document>>> {
         let Self {
-            collection,
             mut pipeline,
             options,
             skip,
@@ -795,16 +727,14 @@ impl AggregateQuery {
             });
         }
 
-        let collection: Collection<Document> =
-            ctx.services().database.collection(&collection);
+        let collection = T::collection(ctx);
         let cursor: Box<
             dyn Stream<Item = DatabaseResult<Document>> + Send + Unpin,
-        > = if let Some(transaction) = ctx.transaction() {
+        > = if let Some(transaction) = &ctx.transaction {
             let cursor = {
                 let mut transaction = transaction.lock().await;
-                let session = transaction.session();
+                let session = &mut transaction.session;
                 trace!(
-                    target: "oyster-api::entities",
                     collection = collection.name(),
                     session = %session.id(),
                     pipeline = %bson!(pipeline.clone()),
@@ -815,11 +745,10 @@ impl AggregateQuery {
                     .aggregate_with_session(pipeline, options, session)
                     .await?
             };
-            let cursor = TransactionCursor::new(cursor, transaction);
+            let cursor = TransactionCursor::new(cursor, transaction.to_owned());
             Box::new(cursor)
         } else {
             trace!(
-                target: "oyster-api::entities",
                 collection = collection.name(),
                 pipeline = %bson!(pipeline.clone()),
                 ?options,
@@ -834,9 +763,11 @@ impl AggregateQuery {
         Ok(stream)
     }
 
-    pub async fn count<'a>(self, ctx: &Context) -> Result<u64> {
+    pub async fn count<'a>(
+        self,
+        ctx: &EntityContext<T::Services>,
+    ) -> Result<u64> {
         let Self {
-            collection,
             mut pipeline,
             options,
             skip,
@@ -858,13 +789,11 @@ impl AggregateQuery {
             "$count": "_count"
         });
 
-        let collection: Collection<Document> =
-            ctx.services().database.collection(&collection);
-        let result: Document = if let Some(transaction) = ctx.transaction() {
+        let collection = T::collection(ctx);
+        let result: Document = if let Some(transaction) = &ctx.transaction {
             let mut transaction = transaction.lock().await;
-            let session = transaction.session();
+            let session = &mut transaction.session;
             trace!(
-                target: "oyster-api::entities",
                 collection = collection.name(),
                 session = %session.id(),
                 pipeline = %bson!(pipeline.clone()),
@@ -879,7 +808,6 @@ impl AggregateQuery {
             cursor.next(session).await.unwrap()?
         } else {
             trace!(
-                target: "oyster-api::entities",
                 collection = collection.name(),
                 pipeline = %bson!(pipeline.clone()),
                 ?options,
@@ -903,7 +831,7 @@ where
     T: Send + Sync,
 {
     cursor: SessionCursor<T>,
-    transaction: Arc<AsyncMutex<Transaction>>,
+    transaction: Arc<Mutex<Transaction>>,
 }
 
 impl<T> TransactionCursor<T>
@@ -913,7 +841,7 @@ where
 {
     fn new(
         cursor: SessionCursor<T>,
-        transaction: Arc<AsyncMutex<Transaction>>,
+        transaction: Arc<Mutex<Transaction>>,
     ) -> Self {
         Self {
             cursor,
@@ -924,7 +852,7 @@ where
     async fn next(self: Pin<&mut Self>) -> Option<DatabaseResult<T>> {
         let projection = self.project();
         let mut transaction = projection.transaction.lock().await;
-        let session = transaction.session();
+        let session = &mut transaction.session;
         projection.cursor.next(session).await
     }
 }

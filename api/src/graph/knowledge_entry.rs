@@ -32,8 +32,9 @@ impl KnowledgeEntryLinks {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntry>> {
-        let Services { obsidian, .. } = ctx.entity().services();
-        let notes = obsidian
+        let notes = ctx
+            .services()
+            .obsidian()
             .get_note_outgoing_references(&self.note.id)
             .await
             .into_field_result()?;
@@ -49,8 +50,9 @@ impl KnowledgeEntryLinks {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntry>> {
-        let Services { obsidian, .. } = ctx.entity().services();
-        let notes = obsidian
+        let notes = ctx
+            .services()
+            .obsidian()
             .get_note_incoming_references(&self.note.id)
             .await
             .into_field_result()?;
@@ -72,8 +74,12 @@ impl KnowledgeEntryQueries {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntry>> {
-        let Services { obsidian, .. } = ctx.entity().services();
-        let notes = obsidian.list_notes().await.into_field_result()?;
+        let notes = ctx
+            .services()
+            .obsidian()
+            .list_notes()
+            .await
+            .into_field_result()?;
         let mut entries = notes
             .into_iter()
             .map(KnowledgeEntry::from)
@@ -87,8 +93,12 @@ impl KnowledgeEntryQueries {
         ctx: &Context<'_>,
         id: String,
     ) -> FieldResult<Option<KnowledgeEntry>> {
-        let Services { obsidian, .. } = ctx.entity().services();
-        let note = obsidian.get_note(&id).await.into_field_result()?;
+        let note = ctx
+            .services()
+            .obsidian()
+            .get_note(&id)
+            .await
+            .into_field_result()?;
         let entry = note.map(KnowledgeEntry::from);
         Ok(entry)
     }

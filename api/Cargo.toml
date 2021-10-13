@@ -1,7 +1,6 @@
 [package]
 name = "home-api"
-version = "0.1.0"
-authors = ["Steven Xie <dev@stevenxie.me>"]
+version = "0.0.0"
 edition = "2018"
 resolver = "2"
 
@@ -15,17 +14,14 @@ cache = { package = "lru_time_cache", version = "^0.11.11" }
 derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
+ent = { path = "./ent"}
 emails = { package = "mailchecker", version = "^4.0.12" }
 futures = { package = "futures-core", version = "^0.3.17" }
 http = "^0.2.5"
-# # FIXME: Temporary workaround for https://github.com/tkaitchuck/aHash/issues/95
-# indexmap = "~1.6.2"
 lazy_static = "^1.4.0"
-macros = { path = "./macros" }
 mongodb = "^2.0.0"
 oauth2 = "^4.1.0"
 phones = { package = "phonenumber", version = "^0.3.1" }
-pin_project = { package = "pin-project", version = "^1.0.8" }
 regex = "^1.5.4"
 serde = { version = "^1.0.130", features = ["derive"] }
 serde_json = "^1.0.68"

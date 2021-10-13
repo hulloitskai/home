@@ -1,4 +1,20 @@
-use super::prelude::*;
+use super::utils::default;
+
+use bson::{Bson, Document};
+use serde::{Deserialize, Serialize};
+
+pub trait Sorting {
+    fn into_document(self) -> Document;
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EmptySorting;
+
+impl Sorting for EmptySorting {
+    fn into_document(self) -> Document {
+        default()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SortingOrder {

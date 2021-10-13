@@ -1,7 +1,6 @@
 [package]
-name = "macros"
-version = "0.1.0"
-authors = ["Steven Xie <dev@stevenxie.me>"]
+name = "ent-macros"
+version = "0.0.0"
 edition = "2018"
 
 
