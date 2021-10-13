@@ -83,15 +83,15 @@ where
         FindOneQuery::new(conditions)
     }
 
-    fn aggregate(
+    fn aggregate<U: Object>(
         pipeline: impl IntoIterator<Item = Document>,
-    ) -> AggregateQuery<Self> {
+    ) -> AggregateQuery<Self, U> {
         AggregateQuery::new(pipeline)
     }
 
-    fn aggregate_one(
+    fn aggregate_one<U: Object>(
         pipeline: impl IntoIterator<Item = Document>,
-    ) -> AggregateOneQuery<Self> {
+    ) -> AggregateOneQuery<Self, U> {
         AggregateOneQuery::new(pipeline)
     }
 
@@ -154,14 +154,16 @@ impl<T: Entity> FindOneQuery<T> {
     }
 
     pub async fn load(self, ctx: &EntityContext<T::Services>) -> Result<T> {
-        self.0.load(ctx).await?.context("not found")
+        let Self(inner) = self;
+        inner.load(ctx).await?.context("not found")
     }
 
     pub async fn exists(
         self,
         ctx: &EntityContext<T::Services>,
     ) -> Result<bool> {
-        self.0.exists(ctx).await
+        let Self(inner) = self;
+        inner.exists(ctx).await
     }
 }
 
@@ -188,14 +190,16 @@ impl<T: Entity> MaybeFindOneQuery<T> {
         self,
         ctx: &EntityContext<T::Services>,
     ) -> Result<Option<T>> {
-        self.0.load(ctx).await
+        let Self(inner) = self;
+        inner.load(ctx).await
     }
 
     pub async fn exists(
         self,
         ctx: &EntityContext<T::Services>,
     ) -> Result<bool> {
-        self.0.exists(ctx).await
+        let Self(inner) = self;
+        inner.exists(ctx).await
     }
 }
 
@@ -562,37 +566,39 @@ impl<T: Entity> FindQuery<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct AggregateOneQuery<T: Entity>(AggregateOneQueryInner<T>);
+pub struct AggregateOneQuery<T: Entity, U: Object>(
+    AggregateOneQueryInner<T, U>,
+);
 
-impl<T: Entity> AggregateOneQuery<T> {
+impl<T: Entity, U: Object> AggregateOneQuery<T, U> {
     pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
         let inner = AggregateOneQueryInner::new(pipeline);
         Self(inner)
     }
 
-    pub fn optional(self) -> MaybeAggregateOneQuery<T> {
+    pub fn optional(self) -> MaybeAggregateOneQuery<T, U> {
         let Self(inner) = self;
         MaybeAggregateOneQuery(inner)
     }
 
-    pub async fn load(
-        self,
-        ctx: &EntityContext<T::Services>,
-    ) -> Result<Document> {
-        self.0.load(ctx).await?.context("not found")
+    pub async fn load(self, ctx: &EntityContext<T::Services>) -> Result<U> {
+        let Self(inner) = self;
+        inner.load(ctx).await?.context("not found")
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct MaybeAggregateOneQuery<T: Entity>(AggregateOneQueryInner<T>);
+pub struct MaybeAggregateOneQuery<T: Entity, U: Object>(
+    AggregateOneQueryInner<T, U>,
+);
 
-impl<T: Entity> MaybeAggregateOneQuery<T> {
+impl<T: Entity, U: Object> MaybeAggregateOneQuery<T, U> {
     pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
         let inner = AggregateOneQueryInner::new(pipeline);
         Self(inner)
     }
 
-    pub fn required(self) -> AggregateOneQuery<T> {
+    pub fn required(self) -> AggregateOneQuery<T, U> {
         let Self(inner) = self;
         AggregateOneQuery(inner)
     }
@@ -600,25 +606,28 @@ impl<T: Entity> MaybeAggregateOneQuery<T> {
     pub async fn load(
         self,
         ctx: &EntityContext<T::Services>,
-    ) -> Result<Option<Document>> {
-        self.0.load(ctx).await
+    ) -> Result<Option<U>> {
+        let Self(inner) = self;
+        inner.load(ctx).await
     }
 }
 
 #[derive(Debug, Clone)]
-struct AggregateOneQueryInner<T: Entity> {
+struct AggregateOneQueryInner<T: Entity, U: Object> {
     pipeline: Vec<Document>,
-    phantom: PhantomData<T>,
+    phantom_entity: PhantomData<T>,
+    phantom_object: PhantomData<U>,
     options: AggregateOptions,
 }
 
-impl<T: Entity> AggregateOneQueryInner<T> {
+impl<T: Entity, U: Object> AggregateOneQueryInner<T, U> {
     pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
         let options = AggregateOptions::default();
         let pipeline = Vec::from_iter(pipeline);
         Self {
             pipeline,
-            phantom: default(),
+            phantom_entity: default(),
+            phantom_object: default(),
             options,
         }
     }
@@ -626,7 +635,7 @@ impl<T: Entity> AggregateOneQueryInner<T> {
     pub async fn load(
         self,
         ctx: &EntityContext<T::Services>,
-    ) -> Result<Option<Document>> {
+    ) -> Result<Option<U>> {
         let Self {
             options,
             mut pipeline,
@@ -668,26 +677,33 @@ impl<T: Entity> AggregateOneQueryInner<T> {
         };
 
         let doc = cursor.next().await;
-        doc.transpose().map_err(Into::into)
+        let doc = doc.transpose()?;
+        let object = doc
+            .map(U::from_document)
+            .transpose()
+            .context("failed to deserialize object")?;
+        Ok(object)
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct AggregateQuery<T: Entity> {
+pub struct AggregateQuery<T: Entity, U: Object> {
     pipeline: Vec<Document>,
-    phantom: PhantomData<T>,
+    phantom_entity: PhantomData<T>,
+    phantom_object: PhantomData<U>,
     options: AggregateOptions,
     skip: Option<u32>,
     take: Option<u32>,
 }
 
-impl<T: Entity> AggregateQuery<T> {
+impl<T: Entity, U: Object> AggregateQuery<T, U> {
     pub fn new(pipeline: impl IntoIterator<Item = Document>) -> Self {
         let options = AggregateOptions::default();
         let pipeline = Vec::from_iter(pipeline);
         Self {
             pipeline,
-            phantom: default(),
+            phantom_entity: default(),
+            phantom_object: default(),
             options,
             skip: default(),
             take: default(),
@@ -707,7 +723,7 @@ impl<T: Entity> AggregateQuery<T> {
     pub async fn load<'a>(
         self,
         ctx: &EntityContext<T::Services>,
-    ) -> Result<impl Stream<Item = Result<Document>>> {
+    ) -> Result<impl Stream<Item = Result<U>>> {
         let Self {
             mut pipeline,
             options,
@@ -758,8 +774,11 @@ impl<T: Entity> AggregateQuery<T> {
             Box::new(cursor)
         };
 
-        let stream =
-            cursor.map(|doc| -> Result<Document> { doc.map_err(Into::into) });
+        let stream = cursor.map(|doc| -> Result<U> {
+            let object = U::from_document(doc?)
+                .context("failed to deserialize object")?;
+            Ok(object)
+        });
         Ok(stream)
     }
 

@@ -9,17 +9,20 @@ pub struct Phone(String);
 
 impl Phone {
     pub fn as_str(&self) -> &str {
-        &self.0
+        let Self(inner) = self;
+        inner
     }
 
     pub fn as_string(&self) -> &String {
-        &self.0
+        let Self(inner) = self;
+        inner
     }
 }
 
 impl AsRef<str> for Phone {
     fn as_ref(&self) -> &str {
-        &self.0
+        let Self(inner) = self;
+        inner
     }
 }
 

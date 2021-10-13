@@ -8,17 +8,20 @@ pub struct Email(String);
 
 impl Email {
     pub fn as_str(&self) -> &str {
-        &self.0
+        let Self(inner) = self;
+        inner
     }
 
     pub fn as_string(&self) -> &String {
-        &self.0
+        let Self(inner) = self;
+        inner
     }
 }
 
 impl AsRef<str> for Email {
     fn as_ref(&self) -> &str {
-        &self.0
+        let Self(inner) = self;
+        inner
     }
 }
 
