@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 #[derive(Debug, Clone, From)]
 pub(super) struct HeartRateObject {
@@ -48,7 +48,7 @@ impl HeartRateQueries {
                         .timestamp(Comparison::Gt(one_day_ago))
                         .build()
                 })
-                .sort(HeartRateSorting::Timestamp(SortingOrder::Desc))
+                .sort(HeartRateSorting::Timestamp(SortingDirection::Desc))
                 .load(&ctx)
                 .await
                 .context("failed to lookup heart rates")?;

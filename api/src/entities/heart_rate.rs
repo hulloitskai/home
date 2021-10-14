@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 #[derive(
     Debug,
@@ -73,7 +73,7 @@ pub struct HeartRateConditions {
     pub timestamp: Option<Comparison<DateTime>>,
 }
 
-impl Conditions for HeartRateConditions {
+impl EntityConditions for HeartRateConditions {
     fn into_document(self) -> Document {
         let HeartRateConditions { timestamp } = self;
         let mut doc = Document::new();
@@ -86,10 +86,10 @@ impl Conditions for HeartRateConditions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HeartRateSorting {
-    Timestamp(SortingOrder),
+    Timestamp(SortingDirection),
 }
 
-impl Sorting for HeartRateSorting {
+impl EntitySorting for HeartRateSorting {
     fn into_document(self) -> Document {
         use HeartRateSorting::*;
         match self {

@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 use crate::lyricly::Lyrics as LyriclyLyrics;
 use crate::spotify::Track as SpotifyTrack;

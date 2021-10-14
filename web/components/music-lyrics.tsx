@@ -25,7 +25,7 @@ gql`
   }
 `;
 
-const MUSIC_LYRICS_DELAY = 1000; // 1 second of estimated latency
+const MUSIC_LYRICS_DELAY = 1_000; // 1 second of estimated latency
 
 export interface MusicLyricsProps extends BoxProps {
   trackSpotifyId: string | undefined | null;

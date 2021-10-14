@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 use emails::is_valid as is_valid_email;
 
@@ -7,14 +7,10 @@ use emails::is_valid as is_valid_email;
 pub struct Email(String);
 
 impl Email {
-    pub fn as_str(&self) -> &str {
-        let Self(inner) = self;
-        inner
-    }
-
-    pub fn as_string(&self) -> &String {
-        let Self(inner) = self;
-        inner
+    delegate! {
+        to self.0 {
+            pub fn as_str(&self) -> &str;
+        }
     }
 }
 

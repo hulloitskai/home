@@ -1,7 +1,7 @@
-use super::prelude::*;
+use super::*;
 
-use crate::auth::AccessToken;
-use crate::auth::{Authenticator, AuthenticatorConfig};
+use auth::AccessToken;
+use auth::{Authenticator, AuthenticatorConfig};
 
 use http::StatusCode;
 

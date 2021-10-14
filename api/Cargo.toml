@@ -1,6 +1,6 @@
 [package]
 name = "home-api"
-version = "0.0.0"
+version = "0.5.2"
 edition = "2018"
 resolver = "2"
 
@@ -8,13 +8,12 @@ resolver = "2"
 [dependencies]
 anyhow = "^1.0.44"
 async_trait = { package = "async-trait", version = "^0.1.51" }
-base64 = "^0.13.0"
 bson = { version = "^2.0.0", features = ["chrono-0_4"] }
 cache = { package = "lru_time_cache", version = "^0.11.11" }
+delegate = "^0.6.1"
 derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
-ent = { path = "./ent"}
 emails = { package = "mailchecker", version = "^4.0.12" }
 futures = { package = "futures-core", version = "^0.3.17" }
 http = "^0.2.5"
@@ -39,6 +38,11 @@ yaml_front_matter = { package = "frontmatter", version = "^0.4.0" }
 version = "^0.4.19"
 default-features = false
 features = ["std", "clock", "serde"]
+
+[dependencies.entrust]
+package = "entrust"
+git = "https://github.com/hulloitskai/entrust"
+tag = "v0.1.0"
 
 [dependencies.futures_util]
 package = "futures-util"

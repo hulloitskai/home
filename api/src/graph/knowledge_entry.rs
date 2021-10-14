@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 use crate::obsidian::Note as ObsidianNote;
 

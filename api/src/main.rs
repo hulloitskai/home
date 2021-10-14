@@ -1,13 +1,19 @@
-use bson::doc;
-use tokio::main as tokio;
-use tracing_subscriber::fmt::init as init_tracer;
+use home_api::entities::BuildInfo;
+use home_api::entities::{Context, Services, Settings};
+use home_api::entities::{HeartRate, HeartRateConditions};
+use home_api::env::load as load_env;
+use home_api::env::var as env_var;
+use home_api::env::var_or as env_var_or;
+use home_api::graph::Query;
+use home_api::lyricly::Client as LyriclyClient;
+use home_api::obsidian::Client as ObsidianClient;
+use home_api::obsidian::ClientConfig as ObsidianClientConfig;
+use home_api::spotify::Client as SpotifyClient;
+use home_api::spotify::ClientConfig as SpotifyClientConfig;
 
+use std::borrow::Cow;
 use std::convert::Infallible;
 use std::net::SocketAddr;
-
-use ent::Comparison;
-use ent::Entity;
-use ent::Record;
 
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
@@ -29,49 +35,27 @@ use warp_graphql::graphql_subscription as warp_graphql_subscription;
 use warp_graphql::BadRequest as BadWarpGraphQLRequest;
 use warp_graphql::Response as WarpGraphQLResponse;
 
+use graphql::extensions::apollo_persisted_queries as graphql_apq;
 use graphql::http::playground_source as graphql_playground_source;
 use graphql::http::GraphQLPlaygroundConfig;
 use graphql::Request as GraphQLRequest;
 use graphql::Response as GraphQLResponse;
 use graphql::{EmptyMutation, EmptySubscription, Schema};
-
-use graphql::extensions::apollo_persisted_queries as graphql_apq;
 use graphql_apq::ApolloPersistedQueries as GraphQLAPQExtension;
 use graphql_apq::LruCacheStorage as GraphQLAPQStorage;
 
 use mongodb::options::ClientOptions as MongoClientOptions;
 use mongodb::Client as MongoClient;
 
-mod util;
+use tracing::{debug, error, info};
+use tracing_subscriber::fmt::init as init_tracer;
 
-mod prelude;
-use prelude::*;
-
-mod env;
-use env::load as load_env;
-use env::var as env_var;
-use env::var_or as env_var_or;
-
-mod entities;
-use entities::BuildInfo;
-use entities::{Context, Services, Settings};
-use entities::{HeartRate, HeartRateConditions};
-
-mod graph;
-use graph::Query;
-
-mod auth;
-
-mod spotify;
-use spotify::Client as SpotifyClient;
-use spotify::ClientConfig as SpotifyClientConfig;
-
-mod obsidian;
-use obsidian::Client as ObsidianClient;
-use obsidian::ClientConfig as ObsidianClientConfig;
-
-mod lyricly;
-use lyricly::Client as LyriclyClient;
+use anyhow::Error;
+use bson::doc;
+use chrono::{DateTime, FixedOffset};
+use entrust::{Comparison, Entity, Record};
+use serde::{Deserialize, Serialize};
+use tokio::main as tokio;
 
 #[tokio]
 async fn main() -> Result<()> {
@@ -80,14 +64,17 @@ async fn main() -> Result<()> {
     init_tracer();
 
     // Read build info.
-    let timestamp: DateTime<FixedOffset> =
-        DateTime::parse_from_rfc3339(env!("BUILD_TIMESTAMP"))
-            .context("failed to parse build timestamp")?;
-    let version = match env!("BUILD_VERSION") {
-        "" => None,
-        version => Some(version.to_owned()),
+    let build_info = {
+        let timestamp = DateTime::<FixedOffset>::parse_from_rfc3339(env!(
+            "BUILD_TIMESTAMP"
+        ))
+        .context("failed to parse build timestamp")?;
+        let version = match env!("BUILD_VERSION") {
+            "" => None,
+            version => Some(version.to_owned()),
+        };
+        BuildInfo { timestamp, version }
     };
-    let build_info = BuildInfo { timestamp, version };
 
     // Connect to database.
     let database_client = {

@@ -1,11 +1,10 @@
-use super::prelude::*;
+use super::*;
 
 use oauth2::basic::BasicClient as Client;
+use oauth2::reqwest::async_http_client;
 use oauth2::{AuthUrl, TokenUrl};
 use oauth2::{ClientId, ClientSecret};
 use oauth2::{RefreshToken, TokenResponse};
-
-use oauth2::reqwest::async_http_client;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct AuthenticatorConfig {

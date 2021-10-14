@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 #[derive(Debug, Builder)]
 pub struct Services {
@@ -8,6 +8,12 @@ pub struct Services {
     obsidian: ObsidianClient,
     spotify: SpotifyClient,
     lyricly: LyriclyClient,
+}
+
+#[derive(Debug, Clone, Builder)]
+pub struct Settings {
+    pub web_public_url: Url,
+    pub api_public_url: Url,
 }
 
 impl Services {

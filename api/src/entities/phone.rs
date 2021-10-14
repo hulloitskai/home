@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 use phones::country::CA;
 use phones::parse as parse_phone;
@@ -8,14 +8,10 @@ use phones::parse as parse_phone;
 pub struct Phone(String);
 
 impl Phone {
-    pub fn as_str(&self) -> &str {
-        let Self(inner) = self;
-        inner
-    }
-
-    pub fn as_string(&self) -> &String {
-        let Self(inner) = self;
-        inner
+    delegate! {
+        to self.0 {
+            pub fn as_str(&self) -> &str;
+        }
     }
 }
 

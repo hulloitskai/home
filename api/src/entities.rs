@@ -1,25 +1,42 @@
 #![allow(dead_code)]
 
-mod build;
-mod context;
-mod email;
-mod heart_rate;
-mod knowledge_entry;
-mod phone;
-mod prelude;
 mod services;
-mod settings;
-
-pub use build::*;
-pub use context::*;
-pub use email::*;
-pub use heart_rate::*;
-pub use knowledge_entry::*;
-pub use phone::*;
 pub use services::*;
-pub use settings::*;
 
-use prelude::*;
+mod context;
+pub use context::*;
+
+mod build;
+pub use build::*;
+
+mod email;
+pub use email::*;
+
+mod phone;
+pub use phone::*;
+
+mod heart_rate;
+pub use heart_rate::*;
+
+mod knowledge_entry;
+pub use knowledge_entry::*;
+
+use super::*;
+
+use lyricly::Client as LyriclyClient;
+use obsidian::Client as ObsidianClient;
+use spotify::Client as SpotifyClient;
+
+use entrust::{Comparison, SortingDirection};
+use entrust::{Database, DatabaseClient};
+use entrust::{EmptyConditions, EntityConditions};
+use entrust::{EmptySorting, EntitySorting};
+use entrust::{Entity, EntityContext, EntityId, EntityServices};
+use entrust::{Object, ObjectId};
+
+use ::bson::DateTime as BsonDateTime;
+use ::bson::{doc, from_document, to_document};
+use ::bson::{Bson, Document};
 
 fn to_date_time(date: Date) -> DateTime {
     let time = Time::from_hms(0, 0, 0);

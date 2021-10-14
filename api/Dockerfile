@@ -7,10 +7,9 @@ RUN apk add --update --no-cache musl-dev
 ARG BUILD_VERSION
 ENV BUILD_VERSION=${BUILD_VERSION}
 
-# Build dependencies and entity framework.
+# Build dependencies.
 WORKDIR /workspace/api
 RUN cargo init --bin --name api
-COPY ./ent/ ./ent/
 COPY Cargo.toml Cargo.lock ./
 RUN cargo build --release
 

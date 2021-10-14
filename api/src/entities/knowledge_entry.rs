@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 #[derive(
     Debug,
@@ -22,6 +22,8 @@ impl EntityId for KnowledgeEntryId {
 #[derive(Debug, Clone, Serialize, Deserialize, Object, Builder)]
 pub struct KnowledgeEntry {
     pub names: Set<String>,
+    pub links: Set<ObjectId>,
+    pub tags: Set<String>,
 }
 
 impl Entity for KnowledgeEntry {

@@ -1,5 +1,6 @@
 {
   "name": "home-web",
+  "version": "0.5.2",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {

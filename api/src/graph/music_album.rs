@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 use crate::spotify::Album as SpotifyAlbum;
 use crate::spotify::Image as SpotifyImage;

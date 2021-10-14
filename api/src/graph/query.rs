@@ -1,20 +1,20 @@
-use super::prelude::*;
+use super::*;
 
 #[derive(Debug, Clone, Copy, MergedObject)]
 pub struct Query(
     BuildQueries,
-    KnowledgeEntryQueries,
     HeartRateQueries,
     MusicInfoQueries,
+    KnowledgeEntryQueries,
 );
 
 impl Query {
     pub fn new() -> Self {
         Self(
             BuildQueries,
-            KnowledgeEntryQueries,
             HeartRateQueries,
             MusicInfoQueries,
+            KnowledgeEntryQueries,
         )
     }
 }
