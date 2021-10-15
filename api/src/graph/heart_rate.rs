@@ -5,6 +5,7 @@ pub(super) struct HeartRateObject {
     pub record: Record<HeartRate>,
 }
 
+
 #[Object(name = "HeartRate")]
 impl HeartRateObject {
     async fn id(&self) -> Id {

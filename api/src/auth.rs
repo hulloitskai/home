@@ -46,7 +46,7 @@ impl Authenticator {
             auth_url,
             Some(token_url),
         );
-        Self {
+        Authenticator {
             client,
             refresh_token,
             current_access_token: default(),

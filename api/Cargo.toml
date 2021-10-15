@@ -18,7 +18,7 @@ emails = { package = "mailchecker", version = "^4.0.12" }
 futures = { package = "futures-core", version = "^0.3.17" }
 http = "^0.2.5"
 lazy_static = "^1.4.0"
-mongodb = "^2.0.0"
+mongodb = "^2.0.1"
 oauth2 = "^4.1.0"
 phones = { package = "phonenumber", version = "^0.3.1" }
 regex = "^1.5.4"

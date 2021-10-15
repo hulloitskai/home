@@ -19,6 +19,13 @@ impl EntityId for HeartRateId {
     type Entity = HeartRate;
 }
 
+impl From<HeartRateId> for Bson {
+    fn from(rate: HeartRateId) -> Self {
+        let HeartRateId(id) = rate;
+        id.into()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct HeartRate {
     pub timestamp: DateTime,
@@ -33,7 +40,7 @@ struct HeartRateDocument {
 
 impl Object for HeartRate {
     fn to_document(&self) -> Result<Document> {
-        let Self {
+        let HeartRate {
             timestamp,
             measurement,
         } = self.clone();

@@ -19,7 +19,7 @@ struct LyricsKey {
 
 impl Client {
     pub fn new() -> Self {
-        Self {
+        Client {
             http: default(),
             lyrics_cache: {
                 let capacity = 1000;

@@ -15,9 +15,10 @@ impl Email {
 }
 
 impl AsRef<str> for Email {
-    fn as_ref(&self) -> &str {
-        let Self(inner) = self;
-        inner
+    delegate! {
+        to self.0 {
+            fn as_ref(&self) -> &str;
+        }
     }
 }
 

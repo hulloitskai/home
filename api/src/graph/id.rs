@@ -24,7 +24,7 @@ impl ScalarType for Id {
     }
 
     fn to_value(&self) -> Value {
-        let Self(id) = self;
+        let Id(id) = self;
         Value::String(id.to_string())
     }
 }

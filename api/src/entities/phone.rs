@@ -16,9 +16,10 @@ impl Phone {
 }
 
 impl AsRef<str> for Phone {
-    fn as_ref(&self) -> &str {
-        let Self(inner) = self;
-        inner
+    delegate! {
+        to self.0 {
+            fn as_ref(&self) -> &str;
+        }
     }
 }
 

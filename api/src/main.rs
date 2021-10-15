@@ -336,7 +336,7 @@ struct ErrorRejection {
 
 impl ErrorRejection {
     pub fn new(msg: impl Into<Cow<'static, str>>) -> Self {
-        Self {
+        ErrorRejection {
             message: msg.into(),
         }
     }

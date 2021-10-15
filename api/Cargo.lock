@@ -14,9 +14,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "991984e3fd003e7ba02eb724f87a0f997b78677c46c0e91f8424ad7394c9886a"
+checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
 dependencies = [
  "getrandom",
  "once_cell",
@@ -485,7 +485,7 @@ dependencies = [
 [[package]]
 name = "entrust"
 version = "0.1.0"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.1.0#e47a2428157f339adeab1c22ef1b21d1a5830066"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.1.0#4cd9a725eff94495cea692384f06cdac5f8fd986"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -507,7 +507,7 @@ dependencies = [
 [[package]]
 name = "entrust-macros"
 version = "0.1.0"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.1.0#e47a2428157f339adeab1c22ef1b21d1a5830066"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.1.0#4cd9a725eff94495cea692384f06cdac5f8fd986"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1510,9 +1510,9 @@ checksum = "7c9b1041b4387893b91ee6746cddfc28516aff326a3519fb2adf820932c5e6cb"
 
 [[package]]
 name = "ppv-lite86"
-version = "0.2.10"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
+checksum = "c3ca011bd0129ff4ae15cd04c4eef202cadf6c51c21e47aba319b4e0501db741"
 
 [[package]]
 name = "proc-macro-crate"

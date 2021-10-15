@@ -19,11 +19,19 @@ impl EntityId for KnowledgeEntryId {
     type Entity = KnowledgeEntry;
 }
 
+impl From<KnowledgeEntryId> for Bson {
+    fn from(rate: KnowledgeEntryId) -> Self {
+        let KnowledgeEntryId(id) = rate;
+        id.into()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Object, Builder)]
 pub struct KnowledgeEntry {
     pub names: Set<String>,
-    pub links: Set<ObjectId>,
+    pub links: Set<KnowledgeEntryId>,
     pub tags: Set<String>,
+    pub text: String,
 }
 
 impl Entity for KnowledgeEntry {
