@@ -272,11 +272,10 @@ impl VaultReader {
 
         let links = {
             lazy_static! {
-                static ref REGEX: Regex =
+                static ref RE: Regex =
                     Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
             }
-            REGEX
-                .captures_iter(&text)
+            RE.captures_iter(&text)
                 .map(|m| m.get(1).unwrap().as_str().to_owned())
                 .collect::<Set<_>>()
         };
