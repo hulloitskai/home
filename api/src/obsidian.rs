@@ -67,8 +67,8 @@ impl Client {
         let _permit = sem.acquire().await.unwrap();
 
         // Retrieve list from cache, otherwise list from disk.
-        let notes = cache.get(&());
-        let notes = match notes {
+        let notes_ids = cache.get(&());
+        let notes_ids = match notes_ids {
             Some(notes) => {
                 trace!(
                     target: "home-api::obsidian",
@@ -96,13 +96,13 @@ impl Client {
 
         // Resolve notes by their IDs.
         let notes: Vec<Note> = {
-            let notes = notes.into_iter().map(|note| async move {
-                self.get_note(&note)
+            let futures = notes_ids.into_iter().map(|id| async move {
+                self.get_note(&id)
                     .await
-                    .with_context(|| format!("failed to get note {}", &note))?
-                    .with_context(|| format!("missing note {}", &note))
+                    .with_context(|| format!("failed to get note {}", &id))?
+                    .with_context(|| format!("missing note {}", &id))
             });
-            try_join_all(notes).await?
+            try_join_all(futures).await?
         };
         Ok(notes)
     }
@@ -153,9 +153,10 @@ impl Client {
 
     pub async fn get_note_outgoing_references(
         &self,
-        note: &str,
+        note_id: &str,
     ) -> Result<Vec<Note>> {
-        let note = self.get_note(note).await.context("failed to get note")?;
+        let note =
+            self.get_note(note_id).await.context("failed to get note")?;
         let note = match note {
             Some(note) => note,
             None => return Ok(default()),
@@ -175,48 +176,49 @@ impl Client {
             }
             lookup
         };
-        let refs = note
+        let references = note
             .links
             .into_iter()
-            .map(|link| {
+            .map(|id| {
                 notes_by_name
-                    .get(&link)
+                    .get(&id)
                     .map(ToOwned::to_owned)
                     .unwrap_or_else(|| {
                         Note::builder()
-                            .id(link.clone())
-                            .names(Set::from_iter([link.clone()]))
+                            .id(id.clone())
+                            .names(Set::from_iter([id.clone()]))
                             .build()
                     })
             })
             .collect::<Vec<_>>();
-        Ok(refs)
+        Ok(references)
     }
 
     pub async fn get_note_incoming_references(
         &self,
-        note: &str,
+        note_id: &str,
     ) -> Result<Vec<Note>> {
-        let note = self.get_note(note).await.context("failed to get note")?;
+        let note =
+            self.get_note(note_id).await.context("failed to get note")?;
         let note = match note {
             Some(note) => note,
             None => return Ok(default()),
         };
         let other_notes = {
-            let other_notes =
+            let notes =
                 self.list_notes().await.context("failed to list notes")?;
-            other_notes
+            notes
                 .into_iter()
-                .filter(|other_note| other_note.id != note.id)
+                .filter(|Note { id, .. }| *id != note.id)
                 .collect::<Vec<_>>()
         };
-        let refs = other_notes
+        let references = other_notes
             .into_iter()
             .filter(|other_note| {
                 other_note.links.intersection(&note.names).count() > 0
             })
             .collect::<Vec<_>>();
-        Ok(refs)
+        Ok(references)
     }
 }
 
