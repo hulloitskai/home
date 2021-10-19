@@ -9,7 +9,6 @@ resolver = "2"
 anyhow = "^1.0.44"
 async_trait = { package = "async-trait", version = "^0.1.51" }
 bson = { version = "^2.0.0", features = ["chrono-0_4"] }
-cache = { package = "lru_time_cache", version = "^0.11.11" }
 chrono = { version = "^0.4.19", features = ["serde"] }
 delegate = "^0.6.1"
 derives = { package = "derive_more", version = "^0.99.16" }
@@ -21,6 +20,7 @@ futures = { package = "futures-core", version = "^0.3.17" }
 futures_util = { package = "futures-util", version = "^0.3.17" }
 http = "^0.2.5"
 lazy_static = "^1.4.0"
+moka = { version = "^0.6.1", features = ["future"] }
 mongodb = { version = "^2.0.1", features = ["bson-chrono-0_4"] }
 oauth2 = "^4.1.0"
 phones = { package = "phonenumber", version = "^0.3.1" }

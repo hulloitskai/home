@@ -5,10 +5,13 @@ use http::StatusCode;
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Client {
-    http: HttpClient,
+    client: HttpClient,
 
     #[derivative(Debug = "ignore")]
-    lyrics_cache: AsyncMutex<Cache<LyricsKey, Lyrics>>,
+    lyrics_cache: Cache<LyricsKey, Lyrics>,
+
+    #[derivative(Debug = "ignore")]
+    lyrics_sem: Semaphore,
 }
 
 #[derive(Debug, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
@@ -20,14 +23,11 @@ struct LyricsKey {
 impl Client {
     pub fn new() -> Self {
         Client {
-            http: default(),
-            lyrics_cache: {
-                let capacity = 1000;
-                let ttl = Duration::hours(1).to_std().unwrap();
-                let cache =
-                    Cache::with_expiry_duration_and_capacity(ttl, capacity);
-                cache.into()
-            },
+            client: default(),
+            lyrics_cache: CacheBuilder::new(1000)
+                .time_to_live(Duration::hours(1).to_std().unwrap())
+                .build(),
+            lyrics_sem: Semaphore::new(1),
         }
     }
 }
@@ -44,7 +44,15 @@ impl Client {
         track_name: &str,
         artist_name: &str,
     ) -> Result<Option<Lyrics>> {
-        let mut cache = self.lyrics_cache.lock().await;
+        let Self {
+            client,
+            lyrics_sem: sem,
+            lyrics_cache: cache,
+            ..
+        } = self;
+
+        // Acquire permit.
+        let _permit = sem.acquire().await.unwrap();
 
         // Try to load lyrics from cache.
         let key = LyricsKey {
@@ -58,7 +66,7 @@ impl Client {
                 track = track_name,
                 "got lyrics from cache",
             );
-            return Ok(Some(lyrics.to_owned()));
+            return Ok(Some(lyrics));
         }
 
         // Fetch new lyrics.
@@ -77,7 +85,7 @@ impl Client {
         };
         let response = {
             let response =
-                self.http.get(url).send().await.context("request failed")?;
+                client.get(url).send().await.context("request failed")?;
             if response.status() == StatusCode::NOT_FOUND {
                 return Ok(None);
             }
@@ -94,7 +102,7 @@ impl Client {
                 track = track_name,
                 "got lyrics",
             );
-            cache.insert(key, lyrics.clone());
+            cache.insert(key, lyrics.clone()).await;
             lyrics
         };
         Ok(Some(lyrics))

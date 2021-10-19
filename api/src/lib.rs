@@ -9,9 +9,9 @@ pub mod spotify;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
 
-use cache::LruCache as Cache;
 use delegate::delegate;
 use derivative::Derivative;
+use moka::future::{Cache, CacheBuilder};
 use regex::Regex;
 use typed_builder::TypedBuilder as Builder;
 use url::Url;
@@ -23,7 +23,8 @@ use derives::{From, Into};
 use request::Client as HttpClient;
 
 use tokio::sync::Mutex as AsyncMutex;
-use tokio::sync::RwLock as AsyncRwLock;
+use tokio::sync::Semaphore;
+// use tokio::sync::RwLock as AsyncRwLock;
 use tokio::task::spawn_blocking;
 
 use std::collections::HashMap as Map;

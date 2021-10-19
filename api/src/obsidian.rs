@@ -21,40 +21,53 @@ pub struct ClientConfig {
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Client {
-    #[derivative(Debug = "ignore")]
-    cached_notes: AsyncRwLock<Cache<String, Option<Note>>>,
-
-    #[derivative(Debug = "ignore")]
-    cached_notes_list: AsyncRwLock<Cache<(), Set<String>>>,
-
     reader: Arc<VaultReader>,
+
+    #[derivative(Debug = "ignore")]
+    notes_cache: Cache<String, Option<Note>>,
+
+    #[derivative(Debug = "ignore")]
+    notes_sem: Semaphore,
+
+    #[derivative(Debug = "ignore")]
+    notes_list_cache: Cache<(), Set<String>>,
+
+    #[derivative(Debug = "ignore")]
+    notes_list_sem: Semaphore,
 }
 
 impl Client {
     pub fn new(config: ClientConfig) -> Result<Self> {
         let ClientConfig { vault_path, ttl } = config;
+        let ttl = ttl.to_std().context("invalid TTL")?;
         let client = Self {
-            cached_notes: {
-                let cache = Cache::with_expiry_duration(ttl.to_std().unwrap());
-                AsyncRwLock::new(cache)
-            },
-            cached_notes_list: {
-                let cache = Cache::with_expiry_duration(ttl.to_std().unwrap());
-                AsyncRwLock::new(cache)
-            },
             reader: {
                 let reader = VaultReader::new(&vault_path)?;
                 Arc::new(reader)
             },
+            notes_cache: CacheBuilder::new(1000).time_to_live(ttl).build(),
+            notes_sem: Semaphore::new(1),
+            notes_list_cache: {
+                CacheBuilder::new(1000).time_to_live(ttl).build()
+            },
+            notes_list_sem: Semaphore::new(1),
         };
         Ok(client)
     }
 
     pub async fn list_notes(&self) -> Result<Vec<Note>> {
-        let notes = {
-            let notes_list = self.cached_notes_list.read().await;
-            notes_list.peek(&()).map(ToOwned::to_owned)
-        };
+        let Self {
+            reader,
+            notes_list_cache: cache,
+            notes_list_sem: sem,
+            ..
+        } = self;
+
+        // Acquire permit.
+        let _permit = sem.acquire().await.unwrap();
+
+        // Retrieve list from cache, otherwise list from disk.
+        let notes = cache.get(&());
         let notes = match notes {
             Some(notes) => {
                 trace!(
@@ -65,14 +78,13 @@ impl Client {
                 notes
             }
             None => {
-                let mut notes_list = self.cached_notes_list.write().await;
                 let notes = {
-                    let reader = self.reader.clone();
+                    let reader = reader.to_owned();
                     spawn_blocking(move || reader.list_notes())
                         .await
                         .unwrap()?
                 };
-                notes_list.insert((), notes.clone());
+                cache.insert((), notes.clone()).await;
                 debug!(
                     target: "home-api::obsidian",
                     count = notes.len(),
@@ -81,6 +93,8 @@ impl Client {
                 notes
             }
         };
+
+        // Resolve notes by their IDs.
         let notes: Vec<Note> = {
             let notes = notes.into_iter().map(|note| async move {
                 self.get_note(&note)
@@ -94,34 +108,41 @@ impl Client {
     }
 
     pub async fn get_note(&self, id: &str) -> Result<Option<Note>> {
-        let note = {
-            let notes = self.cached_notes.read().await;
-            notes.peek(id).map(ToOwned::to_owned)
-        };
+        let Self {
+            reader,
+            notes_cache: cache,
+            notes_sem: sem,
+            ..
+        } = self;
+
+        // Acquire permit.
+        let _permit = sem.acquire().await.unwrap();
+
+        // Retrieve note from cache, otherwise read note from disk.
+        let note = cache.get(&String::from(id));
         let note = match note {
             Some(note) => {
                 trace!(
                     target: "home-api::obsidian",
-                    id,
+                    note = id,
                     "got note from cache"
                 );
                 note
             }
             None => {
-                let mut notes = self.cached_notes.write().await;
                 let note = {
                     let id = id.to_owned();
-                    let reader = self.reader.clone();
+                    let reader = reader.to_owned();
                     spawn_blocking(move || {
                         reader.read_note(&id).context("failed to read note")
                     })
                     .await
                     .unwrap()?
                 };
-                notes.insert(id.to_owned(), note.clone());
+                cache.insert(id.to_owned(), note.clone()).await;
                 debug!(
                     target: "home-api::obsidian",
-                    id,
+                    note = %id,
                     "got note"
                 );
                 note

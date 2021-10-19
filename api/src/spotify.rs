@@ -18,11 +18,14 @@ pub struct ClientConfig {
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Client {
-    http: HttpClient,
-    auth: Authenticator,
+    client: HttpClient,
+    authenticator: Authenticator,
 
     #[derivative(Debug = "ignore")]
-    cache: AsyncMutex<Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>>,
+    cache: Cache<CurrentlyPlayingKey, Option<CurrentlyPlaying>>,
+
+    #[derivative(Debug = "ignore")]
+    sem: Semaphore,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialOrd, Ord, PartialEq, Eq)]
@@ -36,7 +39,8 @@ impl Client {
             refresh_token,
             ttl,
         } = config;
-        let auth = {
+
+        let authenticator = {
             let token_endpoint: Url =
                 "https://accounts.spotify.com/api/token".parse().unwrap();
             let config = AuthenticatorConfig::builder()
@@ -47,13 +51,14 @@ impl Client {
                 .build();
             Authenticator::new(config)
         };
+
         Self {
-            http: default(),
-            auth,
-            cache: {
-                let cache = Cache::with_expiry_duration(ttl.to_std().unwrap());
-                cache.into()
-            },
+            client: default(),
+            authenticator,
+            cache: CacheBuilder::new(1000)
+                .time_to_live(ttl.to_std().unwrap())
+                .build(),
+            sem: Semaphore::new(1),
         }
     }
 }
@@ -62,11 +67,20 @@ impl Client {
     pub async fn get_currently_playing(
         &self,
     ) -> Result<Option<CurrentlyPlaying>> {
-        let mut cache = self.cache.lock().await;
+        let Client {
+            client,
+            authenticator,
+            cache,
+            sem,
+            ..
+        } = self;
+
+        // Acquire permit.
+        let _permit = sem.acquire().await.unwrap();
 
         // Try to load currently playing from cache.
         if let Some(currently_playing) = cache.get(&CurrentlyPlayingKey) {
-            let (artist_name, track_name) = match currently_playing {
+            let (artist_name, track_name) = match &currently_playing {
                 Some(CurrentlyPlaying { track, .. }) => {
                     let artist = track.artists.first();
                     (
@@ -98,12 +112,11 @@ impl Client {
             url
         };
         let request = {
-            let AccessToken { token, .. } = self
-                .auth
+            let AccessToken { token, .. } = authenticator
                 .access_token()
                 .await
                 .context("failed to get access token")?;
-            self.http.get(url).bearer_auth(token)
+            client.get(url).bearer_auth(token)
         };
         let response = {
             let response = request.send().await.context("request failed")?;
@@ -136,7 +149,9 @@ impl Client {
                     "got currently-playing (none)",
                 );
             }
-            cache.insert(CurrentlyPlayingKey, currently_playing.clone());
+            cache
+                .insert(CurrentlyPlayingKey, currently_playing.clone())
+                .await;
             currently_playing
         };
         Ok(currently_playing)
