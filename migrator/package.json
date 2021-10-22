@@ -10,14 +10,14 @@
     "format": "prettier --write ."
   },
   "volta": {
-    "node": "14.17.0",
-    "yarn": "1.22.10"
+    "node": "14.18.1",
+    "yarn": "1.22.17"
   },
   "dependencies": {
     "dotenv": "^10.0.0",
     "migrate-mongo": "^8.2.3"
   },
   "devDependencies": {
-    "prettier": "^2.3.2"
+    "prettier": "^2.4.1"
   }
 }
