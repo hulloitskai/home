@@ -142,7 +142,7 @@ impl Client {
                 cache.insert(id.to_owned(), note.clone()).await;
                 debug!(
                     target: "home-api::obsidian",
-                    note = %id,
+                    %id,
                     "got note"
                 );
                 note

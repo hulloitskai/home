@@ -76,7 +76,7 @@ const HomePage: NextPage = () => {
                 Kai
               </Text>
               , your favorite{" "}
-              <Tooltip label="(Non-Playable Character)">NPC</Tooltip>.
+              <Tooltip label="Non-Playable Character">NPC</Tooltip>.
             </Text>
           </VStack>
           <MusicSection />
