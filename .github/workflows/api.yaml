@@ -15,14 +15,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Restore Docker cache
-        uses: actions/cache@v2
-        env:
-          cache-name: docker
-        with:
-          path: /tmp/.docker-cache
-          key: ${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ env.cache-name }}-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ env.cache-name }}
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -46,10 +38,8 @@ jobs:
           tags: ${{ steps.generate-tags.outputs.tags }}
           build-args: |
             BUILD_VERSION=${{ steps.describe-version.outputs.version }}
-          cache-from: |
-            type=local,src=/tmp/.docker-cache
-          cache-to: |
-            type=local,dest=/tmp/.docker-cache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
   test:
     runs-on: ubuntu-latest
     steps:
