@@ -1,5 +1,5 @@
 # Builder:
-FROM rust:1.54-alpine AS builder
+FROM rust:1.56-alpine AS builder
 
 # Install system dependencies.
 RUN apk add --update --no-cache musl-dev
