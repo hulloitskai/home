@@ -45,6 +45,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Volta
+        uses: volta-cli/action@v1
       - name: Checkout
         uses: actions/checkout@v2
       - name: Discover Yarn cache dir

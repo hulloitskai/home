@@ -50,3 +50,31 @@ jobs:
             type=local,src=/tmp/.docker-cache
           cache-to: |
             type=local,dest=/tmp/.docker-cache,mode=max
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Restore Rust cache
+        uses: actions/cache@v2
+        env:
+          cache-name: rust
+        with:
+          path: ${{ github.workspace }}/api/target
+          key: ${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ env.cache-name }}-${{ hashFiles('api/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ env.cache-name }}
+      - name: Check
+        working-directory: api
+        run: cargo check --all-targets --all-features
+      - name: Lint
+        working-directory: api
+        run: cargo clippy --all-targets --all-features
+      - name: Format
+        working-directory: api
+        run: cargo fmt --all -- --check

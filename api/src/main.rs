@@ -419,7 +419,6 @@ async fn import_health_data(
 
             ctx.transact(|ctx| async move {
                 let rate_exists = HeartRate::find_one({
-                    let timestamp = DateTime::from(timestamp);
                     HeartRateConditions::builder()
                         .timestamp(Comparison::Eq(timestamp))
                         .build()

@@ -101,9 +101,8 @@ impl Client {
 
         // Fetch new currently playing data.
         let url = {
-            let url = format!(
-                "https://api.spotify.com/v1/me/player/currently-playing"
-            );
+            let url = "https://api.spotify.com/v1/me/player/currently-playing"
+                .to_owned();
             let mut url: Url = url.parse().unwrap();
             {
                 let mut query = url.query_pairs_mut();

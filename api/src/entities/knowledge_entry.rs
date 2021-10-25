@@ -3,6 +3,7 @@ use super::*;
 #[derive(
     Debug,
     Clone,
+    Copy,
     Hash,
     From,
     Into,

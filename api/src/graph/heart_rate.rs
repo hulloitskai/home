@@ -5,7 +5,6 @@ pub(super) struct HeartRateObject {
     pub record: Record<HeartRate>,
 }
 
-
 #[Object(name = "HeartRate")]
 impl HeartRateObject {
     async fn id(&self) -> Id {
@@ -13,13 +12,12 @@ impl HeartRateObject {
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        let created_at = self.record.created_at().to_owned();
+        let created_at = self.record.created_at();
         created_at.into()
     }
 
     async fn updated_at(&self) -> DateTimeScalar {
-        let updated_at = self.record.updated_at().to_owned();
-        updated_at.into()
+        self.record.updated_at().into()
     }
 
     async fn measurement(&self) -> u16 {
@@ -27,8 +25,7 @@ impl HeartRateObject {
     }
 
     async fn timestamp(&self) -> DateTimeScalar {
-        let timestamp = self.record.timestamp.clone();
-        timestamp.into()
+        self.record.timestamp.into()
     }
 }
 

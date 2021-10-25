@@ -39,8 +39,7 @@ fn to_date_time(date: Date) -> DateTime {
 }
 
 fn from_date_time(date_time: DateTime) -> Date {
-    let date = date_time.naive_utc().date();
-    date.into()
+    date_time.naive_utc().date()
 }
 
 #[derive(Debug, Builder)]
