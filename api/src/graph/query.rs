@@ -18,3 +18,9 @@ impl Query {
         )
     }
 }
+
+impl Default for Query {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -287,7 +287,7 @@ impl VaultReader {
             while !parts.is_empty() {
                 names.insert(parts.join("/"));
                 if let Some((_, tail)) = parts.split_first() {
-                    parts = tail.iter().cloned().collect();
+                    parts = tail.to_vec();
                 }
             }
             names
