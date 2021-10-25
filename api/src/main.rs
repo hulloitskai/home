@@ -69,10 +69,7 @@ async fn main() -> Result<()> {
             "BUILD_TIMESTAMP"
         ))
         .context("failed to parse build timestamp")?;
-        let version = match env!("BUILD_VERSION") {
-            "" => None,
-            version => Some(version.to_owned()),
-        };
+        let version = env!("CARGO_PKG_VERSION").to_owned();
         BuildInfo { timestamp, version }
     };
 

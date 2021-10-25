@@ -9,8 +9,8 @@ impl BuildInfoObject {
         &self.timestamp
     }
 
-    async fn version(&self) -> Option<&String> {
-        self.version.as_ref()
+    async fn version(&self) -> &String {
+        &self.version
     }
 }
 

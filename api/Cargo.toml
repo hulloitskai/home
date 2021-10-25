@@ -59,8 +59,6 @@ features = ["env-filter", "fmt", "ansi", "chrono", "tracing-log", "json"]
 [build-dependencies]
 anyhow = "^1.0.44"
 chrono = { version = "^0.4.19" }
-git = { package = "git2", version = "^0.13.22", default-features = false }
-semver = { version = "^1.0.4", default-features = false }
 
 
 [profile.dev]

@@ -30,7 +30,7 @@ impl From<KnowledgeEntryId> for Bson {
 #[derive(Debug, Clone, Serialize, Deserialize, Object, Builder)]
 pub struct KnowledgeEntry {
     pub names: Set<String>,
-    pub links: Set<KnowledgeEntryId>,
+    pub links: Set<String>,
     pub tags: Set<String>,
     pub text: String,
 }

@@ -24,20 +24,12 @@ jobs:
         uses: hulloitskai/generate-docker-tags-action@v0.2.1
         with:
           repo: hulloitskai/home-api
-      - name: Describe build version
-        id: describe-version
-        run: |
-          BUILD_VERSION="$(git describe --tags --always)"
-          echo "Build version: $BUILD_VERSION"
-          echo "::set-output name=version::$BUILD_VERSION"
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: api
           push: true
           tags: ${{ steps.generate-tags.outputs.tags }}
-          build-args: |
-            BUILD_VERSION=${{ steps.describe-version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
   test:

@@ -1,19 +1,16 @@
 # Builder:
 FROM rust:1.56-alpine AS builder
 
-# Install system dependencies.
+# Install system dependencies
 RUN apk add --update --no-cache musl-dev
 
-ARG BUILD_VERSION
-ENV BUILD_VERSION=${BUILD_VERSION}
-
-# Build dependencies.
+# Build dependencies
 WORKDIR /workspace/api
 RUN cargo init --bin --name api
 COPY Cargo.toml Cargo.lock ./
 RUN cargo build --release
 
-# Build api.
+# Build api
 RUN rm src/*.rs
 COPY ./build.rs ./build.rs
 COPY ./src/ ./src/
@@ -29,14 +26,16 @@ RUN apk add --update --no-cache ca-certificates curl
 WORKDIR /app
 COPY --from=builder /dist/api ./
 
+# Configure permissions
 RUN addgroup -g 1001 -S docker && \
     adduser -u 1001 -S docker && \
     chown -R docker:docker /app/api
 USER docker
 
-# TODO: Add healthchecks.
-
+# Run api
 ENV HOME_API_ENV=production
+ENV HOME_API_HOST=0.0.0.0
 ENV HOME_API_PORT=3000
-EXPOSE 3000
+EXPOSE $HOME_API_PORT
 ENTRYPOINT ["/app/api"]
+HEALTHCHECK CMD curl --fail --head http://localhost:$HOME_API_PORT

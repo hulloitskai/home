@@ -9,7 +9,6 @@ RUN mkdir -p /dist && cd .. && mv ./migrator/ /dist/
 
 # Runner:
 FROM node:14-alpine3.13 AS runner
-RUN apk add --update --no-cache curl
 
 WORKDIR /app
 COPY migrations/ migrations/

@@ -4,11 +4,11 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 8000",
+    "dev": "next dev -H ${HOME_WEB_HOST:-0.0.0.0} -p ${HOME_WEB_PORT:-8000}",
     "format": "prettier --write .",
     "lint": "eslint . && tsc --noEmit",
     "build": "next build",
-    "start": "next start -p 8000",
+    "start": "next start -H ${HOME_WEB_HOST:-0.0.0.0} -p ${HOME_WEB_PORT:-8000}",
     "generate": "npm run generate:graphql",
     "generate:graphql": "graphql-codegen --config codegen.yml"
   },
@@ -55,6 +55,7 @@
     "@types/tailwindcss": "^2.2.1",
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
+    "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-next": "^11.1.2",
     "eslint-config-prettier": "^8.3.0",
