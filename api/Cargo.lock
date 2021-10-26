@@ -61,9 +61,9 @@ checksum = "71938f30533e4d95a6d17aa530939da3842c2ab6f4f84b9dae68447e4129f74a"
 
 [[package]]
 name = "async-graphql"
-version = "2.10.5"
+version = "2.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db90708749da7ba77f48d801fb54ee31cd955865c0a54a222f0e19ac065700b7"
+checksum = "e2387502ea1d9fb15a8c4f073b584685b94866afbc655ef229ef221a7f2f7f3f"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -93,9 +93,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "2.10.5"
+version = "2.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa7e002edba829393e110363d7622162d4a259996a22b6bd5a4975ad0aed2163"
+checksum = "f54639e96270ae34f1adbcd1ddb0080f4a2cbc165cfe7557a9f644e92a307b66"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -109,9 +109,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "2.10.5"
+version = "2.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9443f5154cedcf2e2b189083b81f3761ee94c31a1d99c740421cacb8eada323c"
+checksum = "b76e2368315e1a53ea710a4f69d4f74b044e9672ee473fee365db9ff8e4ae681"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -122,20 +122,21 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "2.10.5"
+version = "2.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c50fc17991b098c92cc0d8a6f9a1a45090403329898c7a724ac8b833802ad2b1"
+checksum = "15a0f1b7791a73a96bf614379691bc2157879911c1e73aeb9e6088dd9fb3f2ba"
 dependencies = [
  "bytes",
+ "indexmap",
  "serde",
  "serde_json",
 ]
 
 [[package]]
 name = "async-graphql-warp"
-version = "2.10.5"
+version = "2.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24c5b2a8806bb89f9e22e721ee2119e6415f14a3cb646e83470cde15046c019f"
+checksum = "9680e55b5ffb38e6d86b5c7a120a8a984f895d89ff2d9bef5368453eee8ccfb8"
 dependencies = [
  "async-graphql",
  "futures-util",
@@ -605,7 +606,7 @@ dependencies = [
 [[package]]
 name = "entrust"
 version = "0.2.1"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.1#305fb65b36190273c4802116b8815ae942f4c8ac"
+source = "git+https://github.com/hulloitskai/entrust?rev=148b53b#148b53be796a3a6d52517b3eebf4da0b3f745d7c"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -627,7 +628,7 @@ dependencies = [
 [[package]]
 name = "entrust-macros"
 version = "0.2.1"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.1#305fb65b36190273c4802116b8815ae942f4c8ac"
+source = "git+https://github.com/hulloitskai/entrust?rev=148b53b#148b53be796a3a6d52517b3eebf4da0b3f745d7c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1090,6 +1091,7 @@ checksum = "bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5"
 dependencies = [
  "autocfg",
  "hashbrown",
+ "serde",
 ]
 
 [[package]]

@@ -1,9 +1,12 @@
+#![allow(unused_imports)]
+
 pub mod auth;
 pub mod entities;
 pub mod env;
 pub mod graph;
 pub mod lyricly;
 pub mod obsidian;
+pub mod services;
 pub mod spotify;
 
 use async_trait::async_trait;
@@ -13,6 +16,7 @@ use delegate::delegate;
 use derivative::Derivative;
 use moka::future::{Cache, CacheBuilder};
 use regex::Regex;
+use request::Client as HttpClient;
 use typed_builder::TypedBuilder as Builder;
 use url::Url;
 
@@ -20,11 +24,9 @@ use derives::Display;
 use derives::{AsRef, Deref};
 use derives::{From, Into};
 
-use request::Client as HttpClient;
-
 use tokio::sync::Mutex as AsyncMutex;
+use tokio::sync::RwLock as AsyncRwLock;
 use tokio::sync::Semaphore;
-// use tokio::sync::RwLock as AsyncRwLock;
 use tokio::task::spawn_blocking;
 
 use std::collections::HashMap as Map;

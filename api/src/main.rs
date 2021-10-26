@@ -1,5 +1,5 @@
 use home_api::entities::BuildInfo;
-use home_api::entities::{Context, Services, Settings};
+use home_api::entities::Context as EntityContext;
 use home_api::entities::{HeartRate, HeartRateConditions};
 use home_api::env::load as load_env;
 use home_api::env::var as env_var;
@@ -8,6 +8,8 @@ use home_api::graph::Query;
 use home_api::lyricly::Client as LyriclyClient;
 use home_api::obsidian::Client as ObsidianClient;
 use home_api::obsidian::ClientConfig as ObsidianClientConfig;
+use home_api::services::Config as ServicesConfig;
+use home_api::services::{Services, Settings};
 use home_api::spotify::Client as SpotifyClient;
 use home_api::spotify::ClientConfig as SpotifyClientConfig;
 
@@ -64,7 +66,7 @@ async fn main() -> Result<()> {
     init_tracer();
 
     // Read build info.
-    let build_info = {
+    let build = {
         let timestamp = DateTime::<FixedOffset>::parse_from_rfc3339(env!(
             "BUILD_TIMESTAMP"
         ))
@@ -153,17 +155,17 @@ async fn main() -> Result<()> {
         .build();
 
     // Build services.
-    let services = Services::builder()
-        .database_client(database_client)
-        .database(database)
-        .settings(settings)
-        .obsidian(obsidian)
-        .spotify(spotify)
-        .lyricly(lyricly)
-        .build();
-
-    // Build entity context.
-    let ctx = Context::new(services);
+    let services = {
+        let config = ServicesConfig::builder()
+            .database_client(database_client)
+            .database(database)
+            .settings(settings)
+            .obsidian(obsidian)
+            .spotify(spotify)
+            .lyricly(lyricly)
+            .build();
+        Services::new(config)
+    };
 
     // Build GraphQL schema.
     let graphql_schema = {
@@ -175,8 +177,8 @@ async fn main() -> Result<()> {
                 let storage = GraphQLAPQStorage::new(1024);
                 GraphQLAPQExtension::new(storage)
             })
-            .data(build_info)
-            .data(ctx.clone())
+            .data(build)
+            .data(services.clone())
             .finish()
     };
 
@@ -201,12 +203,12 @@ async fn main() -> Result<()> {
     // Build GraphQL playground filter.
     let graphql_playground_filter = (get().or(head()))
         .map({
-            let ctx = ctx.clone();
-            move |_| ctx.clone()
+            let services = services.clone();
+            move |_| services.clone()
         })
-        .and_then(|ctx: Context| async move {
+        .and_then(|services: Services| async move {
             let endpoint = {
-                let mut endpoint = ctx.settings().api_public_url.clone();
+                let mut endpoint = services.settings().api_public_url.clone();
                 if !matches!(endpoint.scheme(), "http" | "https") {
                     let error = ErrorRejection::new(
                         "invalid GraphQL playground endpoint scheme",
@@ -248,21 +250,24 @@ async fn main() -> Result<()> {
     // Build health webhook filter.
     let health_webhook_filter = post()
         .map({
-            let ctx = ctx.clone();
-            move || ctx.clone()
+            let services = services.clone();
+            move || services.clone()
         })
         .and(body_json())
-        .and_then(|ctx: Context, payload: HealthExportPayload| async move {
-            if let Err(error) = import_health_data(&ctx, payload).await {
-                error!(
-                    target: "home-api",
-                    error = %format!("{:?}", error),
-                    "failed to import health data",
-                );
-                return Err(rejection(ErrorRejection::from(error)));
-            }
-            Ok(())
-        })
+        .and_then(
+            |services: Services, payload: HealthExportPayload| async move {
+                if let Err(error) = import_health_data(services, payload).await
+                {
+                    error!(
+                        target: "home-api",
+                        error = %format!("{:?}", error),
+                        "failed to import health data",
+                    );
+                    return Err(rejection(ErrorRejection::from(error)));
+                }
+                Ok(())
+            },
+        )
         .untuple_one()
         .map(|| StatusCode::OK);
 
@@ -395,9 +400,10 @@ struct HealthExportHeartRateMeasurement {
 }
 
 async fn import_health_data(
-    ctx: &Context,
+    services: Services,
     payload: HealthExportPayload,
 ) -> Result<()> {
+    let ctx = EntityContext::new(services);
     for metric in payload.data.metrics {
         let HealthExportMetric::HeartRate(rate) = metric;
         for measurement in rate.data {
