@@ -1,31 +1,6 @@
 use super::*;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    Hash,
-    From,
-    Into,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Serialize,
-    Deserialize,
-)]
-pub struct HeartRateId(ObjectId);
-
-impl EntityId for HeartRateId {
-    type Entity = HeartRate;
-}
-
-impl From<HeartRateId> for Bson {
-    fn from(rate: HeartRateId) -> Self {
-        let HeartRateId(id) = rate;
-        id.into()
-    }
-}
+pub type HeartRateId = EntityId<HeartRate>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct HeartRate {
@@ -70,7 +45,6 @@ impl Entity for HeartRate {
     const NAME: &'static str = "HeartRate";
 
     type Services = Services;
-    type Id = HeartRateId;
     type Conditions = HeartRateConditions;
     type Sorting = HeartRateSorting;
 }
@@ -101,7 +75,7 @@ impl EntitySorting for HeartRateSorting {
     fn into_document(self) -> Document {
         use HeartRateSorting::*;
         match self {
-            Timestamp(order) => doc! { "timestamp": order },
+            Timestamp(direction) => doc! { "timestamp": direction },
         }
     }
 }

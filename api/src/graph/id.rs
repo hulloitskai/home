@@ -1,24 +1,18 @@
 use super::*;
 
 #[derive(Debug, Clone, From, Into, Deref)]
-pub(super) struct Id(GlobalId);
-
-impl Id {
-    pub fn new<T: Entity>(record: &Record<T>) -> Self {
-        let id = GlobalId::from(record.id().to_owned());
-        Self(id)
-    }
-}
+pub(super) struct Id<T: Entity>(EntityId<T>);
 
 #[Scalar(name = "ID")]
-impl ScalarType for Id {
+impl<T: Entity> ScalarType for Id<T> {
     fn parse(value: Value) -> InputValueResult<Self> {
         let id = match value {
             Value::String(s) => s,
             _ => return Err(InputValueError::expected_type(value)),
         };
-        let id: GlobalId = id.parse().map_err(|error| {
-            InputValueError::custom(format!("{:?}", &error))
+        let id: EntityId<T> = id.parse().map_err(|error| {
+            let message = format!("{:?}", &error);
+            InputValueError::custom(message)
         })?;
         Ok(Id(id))
     }

@@ -21,12 +21,11 @@ use lyricly::Client as LyriclyClient;
 use obsidian::Client as ObsidianClient;
 use spotify::Client as SpotifyClient;
 
-use entrust::{Comparison, SortingDirection};
+use entrust::{Comparison, Object, SortingDirection};
 use entrust::{Database, DatabaseClient};
 use entrust::{EmptyConditions, EntityConditions};
 use entrust::{EmptySorting, EntitySorting};
 use entrust::{Entity, EntityContext, EntityId, EntityServices};
-use entrust::{Object, ObjectId};
 
 use ::bson::DateTime as BsonDateTime;
 use ::bson::{doc, from_document, to_document};

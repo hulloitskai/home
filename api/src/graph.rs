@@ -1,9 +1,6 @@
 mod build;
 use build::*;
 
-// mod date;
-// use date::*
-
 mod date_time;
 use date_time::*;
 
@@ -47,10 +44,8 @@ use super::*;
 
 use entities::{Context as EntityContext, *};
 
-use entrust::Entity;
-use entrust::GlobalId;
-use entrust::Record;
-use entrust::{Comparison, SortingDirection};
+use entrust::{Comparison, Record, SortingDirection};
+use entrust::{Entity, EntityId};
 
 use graphql::scalar;
 use graphql::Value;

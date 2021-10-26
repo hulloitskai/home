@@ -7,8 +7,8 @@ pub(super) struct HeartRateObject {
 
 #[Object(name = "HeartRate")]
 impl HeartRateObject {
-    async fn id(&self) -> Id {
-        Id::new(&self.record)
+    async fn id(&self) -> Id<HeartRate> {
+        self.record.id().into()
     }
 
     async fn created_at(&self) -> DateTimeScalar {
