@@ -1,14 +1,23 @@
+mod query;
+pub use query::*;
+
+mod mutation;
+pub use mutation::*;
+
 mod build;
 use build::*;
+
+// mod date;
+// use date::*;
 
 mod date_time;
 use date_time::*;
 
-mod heart_rate;
-use heart_rate::*;
-
 mod id;
 use id::*;
+
+mod heart_rate;
+use heart_rate::*;
 
 mod knowledge_entry;
 use knowledge_entry::*;
@@ -34,17 +43,6 @@ use music_track::*;
 mod music_info;
 use music_info::*;
 
-mod query;
-pub use query::*;
-
-mod mutation;
-pub use mutation::*;
-
-use super::*;
-
-use entities::{Context as EntityContext, *};
-use services::Services;
-
 use entrust::{Comparison, Record, SortingDirection};
 use entrust::{Entity, EntityId};
 
@@ -54,6 +52,11 @@ use graphql::{Context, FieldError, FieldResult};
 use graphql::{InputValueError, InputValueResult};
 use graphql::{MergedObject, Object, SimpleObject};
 use graphql::{Scalar, ScalarType};
+
+use super::*;
+
+use entities::{Context as EntityContext, *};
+use services::Services;
 
 #[async_trait]
 pub(super) trait ContextExt {

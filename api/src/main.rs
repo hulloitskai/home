@@ -15,15 +15,18 @@ use home_api::spotify::ClientConfig as SpotifyClientConfig;
 
 use std::borrow::Cow;
 use std::convert::Infallible;
+use std::env::VarError as EnvVarError;
 use std::net::SocketAddr;
 
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 
 use http::header::CONTENT_TYPE;
+use http::Method;
 use http::{Response, StatusCode};
 
 use warp::body::json as body_json;
+use warp::cors;
 use warp::path::end as path_end;
 use warp::reject::custom as rejection;
 use warp::reject::Reject;
@@ -61,11 +64,11 @@ use tokio::main as tokio;
 
 #[tokio]
 async fn main() -> Result<()> {
-    // Load environment variables and initialize tracer.
+    // Load environment variables and initialize tracer
     load_env().context("failed to load environment variables")?;
     init_tracer();
 
-    // Read build info.
+    // Read build info
     let build = {
         let timestamp = DateTime::<FixedOffset>::parse_from_rfc3339(env!(
             "BUILD_TIMESTAMP"
@@ -75,7 +78,7 @@ async fn main() -> Result<()> {
         BuildInfo { timestamp, version }
     };
 
-    // Connect to database.
+    // Connect to database
     let database_client = {
         let uri = env_var_or("MONGO_URI", "mongodb://localhost:27017")
             .context("failed to read environment variable MONGO_URI")?;
@@ -105,7 +108,7 @@ async fn main() -> Result<()> {
 
     info!(target: "home-api", "initializing services");
 
-    // Build Obsidian client.
+    // Build Obsidian client
     let obsidian = {
         let vault_path = env_var("OBSIDIAN_VAULT_PATH").context(
             "failed to read environment variable OBSIDIAN_VAULT_PATH",
@@ -117,7 +120,7 @@ async fn main() -> Result<()> {
             .context("failed to initialize Obsidian client")?
     };
 
-    // Build Spotify client.
+    // Build Spotify client
     let spotify = {
         let client_id = env_var("SPOTIFY_CLIENT_ID")
             .context("failed to read environment variable SPOTIFY_CLIENT_ID")?;
@@ -135,10 +138,10 @@ async fn main() -> Result<()> {
         SpotifyClient::new(config)
     };
 
-    // Build Lyricly client.
+    // Build Lyricly client
     let lyricly = LyriclyClient::new();
 
-    // Build settings.
+    // Build settings
     let settings = Settings::builder()
         .web_public_url({
             let url = env_var("HOME_WEB_PUBLIC_URL").context(
@@ -154,7 +157,7 @@ async fn main() -> Result<()> {
         })
         .build();
 
-    // Build services.
+    // Build services
     let services = {
         let config = ServicesConfig::builder()
             .database_client(database_client)
@@ -167,7 +170,7 @@ async fn main() -> Result<()> {
         Services::new(config)
     };
 
-    // Build GraphQL schema.
+    // Build GraphQL schema
     let graphql_schema = {
         let query = Query::new();
         let mutation = EmptyMutation;
@@ -182,7 +185,7 @@ async fn main() -> Result<()> {
             .finish()
     };
 
-    // Build GraphQL filter.
+    // Build GraphQL filter
     let graphql_filter = {
         let graphql = {
             warp_graphql(graphql_schema.clone()).untuple_one().and_then(
@@ -200,7 +203,7 @@ async fn main() -> Result<()> {
             .and(graphql_subscription.or(graphql))
     };
 
-    // Build GraphQL playground filter.
+    // Build GraphQL playground filter
     let graphql_playground_filter = (get().or(head()))
         .map({
             let services = services.clone();
@@ -247,7 +250,7 @@ async fn main() -> Result<()> {
                 .body(source)
         });
 
-    // Build health webhook filter.
+    // Build health webhook filter
     let health_webhook_filter = post()
         .map({
             let services = services.clone();
@@ -271,14 +274,36 @@ async fn main() -> Result<()> {
         .untuple_one()
         .map(|| StatusCode::OK);
 
-    // Build root webhook filter.
+    // Build root webhook filter
     let webhook_filter =
         path("hooks").and(path("health").and(health_webhook_filter));
 
-    // Build root filter.
+    // Build root filter
     let filter = (path_end().and(graphql_playground_filter))
         .or(graphql_filter)
         .or(webhook_filter)
+        .with({
+            let cors =
+                cors().allow_method(Method::POST).allow_header(CONTENT_TYPE);
+            let cors = match env_var("TEMPLATE_API_CORS_ALLOW_ORIGIN") {
+                Ok(origin) => {
+                    println!("origin from env: {}", &origin);
+                    if origin == "*" {
+                        cors.allow_any_origin()
+                    } else {
+                        cors.allow_origins(origin.split(','))
+                    }
+                }
+                Err(EnvVarError::NotPresent) => cors,
+                Err(error) => {
+                    return Err(error).context(
+                        "invalid environment variable \
+                        TEMPLATE_API_CORS_ALLOW_ORIGIN",
+                    )
+                }
+            };
+            cors
+        })
         .recover(recover);
 
     let host = env_var_or("HOME_API_HOST", "0.0.0.0")
