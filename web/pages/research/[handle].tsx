@@ -186,7 +186,10 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
               </FormLabel>
               <Input
                 bg="white"
-                _dark={{ bg: "black", borderColor: transparentBlueBorder }}
+                _dark={{
+                  bg: transparentBlue,
+                  borderColor: transparentBlueBorder,
+                }}
                 {...register("respondent", {
                   required: {
                     value: true,
