@@ -16,7 +16,7 @@ use derives::{From, Into};
 use tokio::sync::Mutex as AsyncMutex;
 use tokio::sync::RwLock as AsyncRwLock;
 use tokio::sync::Semaphore;
-use tokio::task::spawn_blocking;
+use tokio::task::{spawn, spawn_blocking};
 
 use std::collections::HashMap as Map;
 use std::collections::HashSet as Set;

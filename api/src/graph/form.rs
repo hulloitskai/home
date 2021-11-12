@@ -20,6 +20,10 @@ impl FormObject {
         self.record.updated_at().into()
     }
 
+    async fn handle(&self) -> &str {
+        self.record.handle.as_str()
+    }
+
     async fn name(&self) -> &str {
         self.record.name.as_str()
     }
@@ -255,6 +259,39 @@ impl FormMutation {
         let payload = SubmitFormPayload { ok: true };
         Ok(payload)
     }
+
+    async fn delete_form(
+        &self,
+        ctx: &Context<'_>,
+        input: DeleteFormInput,
+        secret: String,
+    ) -> FieldResult<DeleteFormPayload> {
+        let services = ctx.services();
+        let settings = services.settings();
+        let ctx = EntityContext::new(services.clone());
+
+        if secret != settings.api_secret {
+            let error = FieldError::new("incorrect secret");
+            return Err(error);
+        }
+
+        let DeleteFormInput { form_id } = input;
+        let form_id = FormId::from(form_id);
+
+        ctx.transact(|ctx| async move {
+            let mut form = Form::get(form_id)
+                .load(&ctx)
+                .await
+                .context("failed to load form")?;
+            form.delete(&ctx).await.context("failed to delete form")?;
+            Ok(())
+        })
+        .await
+        .into_field_result()?;
+
+        let payload = DeleteFormPayload { ok: true };
+        Ok(payload)
+    }
 }
 
 #[derive(Debug, Clone, InputObject)]
@@ -377,5 +414,15 @@ impl TryFrom<FormFieldResponseInput> for FormFieldResponse {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct SubmitFormPayload {
+    pub ok: bool,
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct DeleteFormInput {
+    pub form_id: Id<Form>,
+}
+
+#[derive(Debug, Clone, SimpleObject)]
+pub(super) struct DeleteFormPayload {
     pub ok: bool,
 }

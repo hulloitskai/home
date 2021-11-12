@@ -605,8 +605,8 @@ dependencies = [
 
 [[package]]
 name = "entrust"
-version = "0.2.3"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.3#6fd89d8b700d71aa4546ef6a8a88c3f26c0b60bf"
+version = "0.2.6"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.6#45d681c1d4c90a2cde9b91233924b13105e99d8d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -627,8 +627,8 @@ dependencies = [
 
 [[package]]
 name = "entrust-macros"
-version = "0.2.1"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.3#6fd89d8b700d71aa4546ef6a8a88c3f26c0b60bf"
+version = "0.2.6"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.6#45d681c1d4c90a2cde9b91233924b13105e99d8d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -931,7 +931,7 @@ dependencies = [
 
 [[package]]
 name = "home-api"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "async-graphql",

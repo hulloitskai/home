@@ -9,11 +9,16 @@ export type CreateFormPayloadFieldPolicy = {
 	form?: FieldPolicy<any> | FieldReadFunction<any>,
 	ok?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type FormKeySpecifier = ('createdAt' | 'description' | 'fields' | 'id' | 'name' | 'respondentHelper' | 'respondentLabel' | 'updatedAt' | FormKeySpecifier)[];
+export type DeleteFormPayloadKeySpecifier = ('ok' | DeleteFormPayloadKeySpecifier)[];
+export type DeleteFormPayloadFieldPolicy = {
+	ok?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type FormKeySpecifier = ('createdAt' | 'description' | 'fields' | 'handle' | 'id' | 'name' | 'respondentHelper' | 'respondentLabel' | 'updatedAt' | FormKeySpecifier)[];
 export type FormFieldPolicy = {
 	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	description?: FieldPolicy<any> | FieldReadFunction<any>,
 	fields?: FieldPolicy<any> | FieldReadFunction<any>,
+	handle?: FieldPolicy<any> | FieldReadFunction<any>,
 	id?: FieldPolicy<any> | FieldReadFunction<any>,
 	name?: FieldPolicy<any> | FieldReadFunction<any>,
 	respondentHelper?: FieldPolicy<any> | FieldReadFunction<any>,
@@ -97,9 +102,10 @@ export type MusicTrackFieldPolicy = {
 	spotifyId?: FieldPolicy<any> | FieldReadFunction<any>,
 	spotifyUrl?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type MutationKeySpecifier = ('createForm' | 'submitForm' | 'testFailure' | MutationKeySpecifier)[];
+export type MutationKeySpecifier = ('createForm' | 'deleteForm' | 'submitForm' | 'testFailure' | MutationKeySpecifier)[];
 export type MutationFieldPolicy = {
 	createForm?: FieldPolicy<any> | FieldReadFunction<any>,
+	deleteForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	submitForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	testFailure?: FieldPolicy<any> | FieldReadFunction<any>
 };
@@ -129,6 +135,10 @@ export type StrictTypedTypePolicies = {
 	CreateFormPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | CreateFormPayloadKeySpecifier | (() => undefined | CreateFormPayloadKeySpecifier),
 		fields?: CreateFormPayloadFieldPolicy,
+	},
+	DeleteFormPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | DeleteFormPayloadKeySpecifier | (() => undefined | DeleteFormPayloadKeySpecifier),
+		fields?: DeleteFormPayloadFieldPolicy,
 	},
 	Form?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | FormKeySpecifier | (() => undefined | FormKeySpecifier),

@@ -92,7 +92,7 @@ async fn main() -> Result<()> {
     };
 
     // Connect to MongoDB
-    info!(target: "home-api", "connecting to database");
+    info!("connecting to database");
     let database = {
         let name = env_var_or("MONGO_DATABASE", "home")
             .context("failed to read environment variable MONGO_DATABASE")?;
@@ -104,7 +104,7 @@ async fn main() -> Result<()> {
         database
     };
 
-    info!(target: "home-api", "initializing services");
+    info!("initializing services");
 
     // Build Obsidian service
     let obsidian = {
@@ -265,7 +265,6 @@ async fn main() -> Result<()> {
                 if let Err(error) = import_health_data(services, payload).await
                 {
                     error!(
-                        target: "home-api",
                         error = %format!("{:?}", error),
                         "failed to import health data",
                     );
@@ -317,7 +316,7 @@ async fn main() -> Result<()> {
         .parse()
         .context("failed to parse server address")?;
 
-    info!(target: "home-api", "listening on http://{}", &addr);
+    info!("listening on http://{}", &addr);
     serve(filter).run(addr).await;
     Ok(())
 }
@@ -337,7 +336,7 @@ async fn recover(rejection: Rejection) -> Result<impl Reply, Infallible> {
         let error = ErrorRejection::from(error);
         (error, StatusCode::INTERNAL_SERVER_ERROR)
     } else {
-        error!(target: "home-api", "unhandled rejection: {:?}", &rejection);
+        error!("unhandled rejection: {:?}", &rejection);
         let error = ErrorRejection::new("internal server error");
         (error, StatusCode::INTERNAL_SERVER_ERROR)
     };
@@ -394,7 +393,7 @@ fn trace_graphql_response(response: &GraphQLResponse) {
         .for_each(|error| match error.message.as_str() {
             "PersistedQueryNotFound" => (),
             _ => {
-                error!(target: "home-api", "GraphQL error: {:#}", error)
+                error!("GraphQL error: {:#}", error)
             }
         })
 }
@@ -467,7 +466,6 @@ async fn import_health_data(
                     rate.save(&ctx).await?;
                 } else {
                     debug!(
-                        target: "home-api",
                         %timestamp,
                         "existing heart rate for timestamp",
                     )

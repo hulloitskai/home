@@ -41,11 +41,21 @@ export type CreateFormPayload = {
   ok: Scalars['Boolean'];
 };
 
+export type DeleteFormInput = {
+  formId: Scalars['ID'];
+};
+
+export type DeleteFormPayload = {
+  __typename?: 'DeleteFormPayload';
+  ok: Scalars['Boolean'];
+};
+
 export type Form = {
   __typename?: 'Form';
   createdAt: Scalars['DateTime'];
   description?: Maybe<Scalars['String']>;
   fields: Array<FormField>;
+  handle: Scalars['String'];
   id: Scalars['ID'];
   name: Scalars['String'];
   respondentHelper?: Maybe<Scalars['String']>;
@@ -171,6 +181,7 @@ export type MusicTrack = {
 export type Mutation = {
   __typename?: 'Mutation';
   createForm: CreateFormPayload;
+  deleteForm: DeleteFormPayload;
   submitForm: SubmitFormPayload;
   testFailure: TestFailurePayload;
 };
@@ -178,6 +189,12 @@ export type Mutation = {
 
 export type MutationCreateFormArgs = {
   input: CreateFormInput;
+  secret: Scalars['String'];
+};
+
+
+export type MutationDeleteFormArgs = {
+  input: DeleteFormInput;
   secret: Scalars['String'];
 };
 

@@ -24,10 +24,14 @@ pub use form_response::*;
 
 use super::*;
 
-use entrust::{Comparison, Object, SortingDirection};
+use entrust::Record;
+use entrust::{AggregateOneQuery, AggregateQuery, MaybeAggregateOneQuery};
+use entrust::{Comparison, SortingDirection};
 use entrust::{EmptyConditions, EntityConditions};
 use entrust::{EmptySorting, EntitySorting};
-use entrust::{Entity, EntityContext, EntityId};
+use entrust::{Entity, EntityContext, EntityId, EntityServices};
+use entrust::{FindOneQuery, FindQuery, MaybeFindOneQuery};
+use entrust::{Object, ObjectId};
 
 use ::bson::DateTime as BsonDateTime;
 use ::bson::{bson, doc, from_document, to_document};

@@ -1,3 +1,5 @@
+use entrust::AggregateQuery;
+
 use super::*;
 
 pub type FormId = EntityId<Form>;
@@ -26,12 +28,70 @@ pub enum FormFieldInputConfig {
     MultipleChoice { options: Set<String> },
 }
 
+impl Form {
+    pub fn responses(record: &Record<Self>) -> FindQuery<FormResponse> {
+        FormResponse::find({
+            let form_id = record.id();
+            FormResponseConditions::builder().form_id(form_id).build()
+        })
+    }
+
+    pub async fn delete_responses(
+        record: &Record<Self>,
+        ctx: &Context,
+    ) -> Result<Vec<Record<FormResponse>>> {
+        ctx.transact(|ctx| async move {
+            let responses = Self::responses(record)
+                .load(&ctx)
+                .await
+                .context("failed to find responses")?;
+            let responses: Vec<_> = responses
+                .try_collect()
+                .await
+                .context("failed to load responses")?;
+            let responses_futures: Vec<_> = responses
+                .into_iter()
+                .map(|mut response| {
+                    let ctx = ctx.clone();
+                    async move {
+                        response.delete(&ctx).await.with_context(|| {
+                            format!(
+                                "failed to delete response {}",
+                                response.id()
+                            )
+                        })?;
+                        Ok::<_, Error>(response)
+                    }
+                })
+                .map(|future| async move {
+                    let result = spawn(future).await;
+                    result.unwrap()
+                })
+                .collect();
+            let responses = try_join_all(responses_futures).await?;
+            Ok(responses)
+        })
+        .await
+    }
+}
+
+#[async_trait]
 impl Entity for Form {
     const NAME: &'static str = "Form";
 
     type Services = Services;
     type Conditions = FormConditions;
     type Sorting = EmptySorting;
+
+    async fn before_delete(
+        record: &mut Record<Self>,
+        ctx: &EntityContext<Self::Services>,
+    ) -> Result<()> {
+        Self::delete_responses(record, ctx)
+            .await
+            .context("failed to delete responses")?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
