@@ -30,33 +30,34 @@ impl HeartRateObject {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(super) struct HeartRateQueries;
+pub(super) struct HeartRateQuery;
 
 #[Object]
-impl HeartRateQueries {
+impl HeartRateQuery {
     async fn heart_rate(
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<HeartRateObject>> {
-        let rate = ctx
-            .transact(|ctx| async move {
-                let mut rates = HeartRate::find({
-                    let one_day_ago = now() - Duration::days(1);
-                    HeartRateConditions::builder()
-                        .timestamp(Comparison::Gt(one_day_ago))
-                        .build()
-                })
-                .sort(HeartRateSorting::Timestamp(SortingDirection::Desc))
-                .load(&ctx)
-                .await
-                .context("failed to lookup heart rates")?;
-                let rate = rates
-                    .try_next()
-                    .await
-                    .context("failed to load heart rate")?;
-                Ok(rate)
-            })
-            .await?;
+        let services = ctx.services();
+        let ctx = EntityContext::new(services);
+
+        let mut rates = HeartRate::find({
+            let one_day_ago = now() - Duration::days(1);
+            HeartRateConditions::builder()
+                .timestamp(Comparison::Gt(one_day_ago))
+                .build()
+        })
+        .sort(HeartRateSorting::Timestamp(SortingDirection::Desc))
+        .load(&ctx)
+        .await
+        .context("failed to lookup heart rates")
+        .into_field_result()?;
+        let rate = rates
+            .try_next()
+            .await
+            .context("failed to load heart rate")
+            .into_field_result()?;
+
         let rate = rate.map(HeartRateObject::from);
         Ok(rate)
     }

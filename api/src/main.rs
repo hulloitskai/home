@@ -4,7 +4,7 @@ use home_api::entities::{HeartRate, HeartRateConditions};
 use home_api::env::load as load_env;
 use home_api::env::var as env_var;
 use home_api::env::var_or as env_var_or;
-use home_api::graph::Query;
+use home_api::graph::{Mutation, Query, Subscription};
 use home_api::services::Config as ServicesConfig;
 use home_api::services::LyriclyService;
 use home_api::services::{ObsidianService, ObsidianServiceConfig};
@@ -43,7 +43,7 @@ use graphql::http::playground_source as graphql_playground_source;
 use graphql::http::GraphQLPlaygroundConfig;
 use graphql::Request as GraphQLRequest;
 use graphql::Response as GraphQLResponse;
-use graphql::{EmptyMutation, EmptySubscription, Schema};
+use graphql::Schema;
 use graphql_apq::ApolloPersistedQueries as GraphQLAPQExtension;
 use graphql_apq::LruCacheStorage as GraphQLAPQStorage;
 
@@ -170,9 +170,9 @@ async fn main() -> Result<()> {
 
     // Build GraphQL schema
     let graphql_schema = {
-        let query = Query::new();
-        let mutation = EmptyMutation;
-        let subscription = EmptySubscription;
+        let query = Query::default();
+        let mutation = Mutation::default();
+        let subscription = Subscription::default();
         Schema::build(query, mutation, subscription)
             .extension({
                 let storage = GraphQLAPQStorage::new(1024);

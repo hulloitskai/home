@@ -10,10 +10,10 @@ pub(super) struct MusicInfo {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(super) struct MusicInfoQueries;
+pub(super) struct MusicInfoQuery;
 
 #[Object]
-impl MusicInfoQueries {
+impl MusicInfoQuery {
     async fn music_info(
         &self,
         ctx: &Context<'_>,

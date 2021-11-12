@@ -1,79 +1,78 @@
-mod query;
-pub use query::*;
-
 mod mutation;
+mod query;
+mod subscription;
+
 pub use mutation::*;
+pub use query::*;
+pub use subscription::*;
 
 mod build;
-use build::*;
-
-// mod date;
-// use date::*;
-
 mod date_time;
-use date_time::*;
-
-mod id;
-use id::*;
-
+mod form;
 mod heart_rate;
-use heart_rate::*;
-
+mod id;
 mod knowledge_entry;
-use knowledge_entry::*;
-
 mod knowledge_entry_links;
-use knowledge_entry_links::*;
-
 mod lyric_line;
-use lyric_line::*;
-
 mod lyrics;
-use lyrics::*;
-
 mod music_album;
-use music_album::*;
-
 mod music_artist;
-use music_artist::*;
-
-mod music_track;
-use music_track::*;
-
 mod music_info;
+mod music_track;
+mod test;
+
+use build::*;
+use date_time::*;
+use form::*;
+use heart_rate::*;
+use id::*;
+use knowledge_entry::*;
+use knowledge_entry_links::*;
+use lyric_line::*;
+use lyrics::*;
+use music_album::*;
+use music_artist::*;
 use music_info::*;
-
-use entrust::{Comparison, Record, SortingDirection};
-use entrust::{Entity, EntityId};
-
-use graphql::scalar;
-use graphql::Value;
-use graphql::{Context, FieldError, FieldResult};
-use graphql::{InputValueError, InputValueResult};
-use graphql::{MergedObject, Object, SimpleObject};
-use graphql::{Scalar, ScalarType};
+use music_track::*;
+use test::*;
 
 use super::*;
 
 use entities::{Context as EntityContext, *};
+use entrust::{Comparison, Record, SortingDirection};
+use entrust::{Entity, EntityId};
 use services::Services;
+
+use graphql::scalar;
+use graphql::Context;
+use graphql::SimpleObject;
+use graphql::Value;
+use graphql::{Enum, EnumType};
+use graphql::{FieldError, FieldResult};
+use graphql::{InputObject, InputObjectType};
+use graphql::{InputValueError, InputValueResult};
+use graphql::{Interface, InterfaceType};
+use graphql::{MergedObject, Object, ObjectType};
+use graphql::{MergedSubscription, Subscription, SubscriptionType};
+use graphql::{Scalar, ScalarType};
+use graphql::{Union, UnionType};
 
 #[async_trait]
 pub(super) trait ContextExt {
     fn services(&self) -> Services;
 
-    async fn transact<F, T, U>(&self, f: F) -> FieldResult<T>
-    where
-        F: Send,
-        F: FnOnce(EntityContext) -> U,
-        T: Send,
-        U: Send,
-        U: Future<Output = Result<T>>,
-    {
-        let services = self.services();
-        let ctx = EntityContext::new(services);
-        ctx.transact(f).await.into_field_result()
-    }
+    // async fn transact<F, T, U>(&self, f: F) -> FieldResult<T>
+    // where
+    //     F: Send,
+    //     F: FnOnce(EntityContext) -> U,
+    //     T: Send,
+    //     U: Send,
+    //     U: Future<Output = Result<T>>,
+    // {
+    //     let services = self.services();
+    //     let ctx = EntityContext::new(services);
+    //     ctx.transact(f).await.into_field_result()
+    // }
 }
 
 impl<'a> ContextExt for Context<'a> {
