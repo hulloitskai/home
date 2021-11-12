@@ -15,14 +15,15 @@ pub struct Form {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FormField {
     pub question: String,
-    pub input: FormFieldInput,
+    pub input: FormFieldInputConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum FormFieldInput {
+#[serde(tag = "type")]
+pub enum FormFieldInputConfig {
     Text,
-    SingleChoice { options: Vec<String> },
-    MultipleChoice { options: Vec<String> },
+    SingleChoice { options: Set<String> },
+    MultipleChoice { options: Set<String> },
 }
 
 impl Entity for Form {

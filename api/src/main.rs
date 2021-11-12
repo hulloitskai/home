@@ -153,6 +153,11 @@ async fn main() -> Result<()> {
             )?;
             url.parse().context("failed to parse home-api public URL")?
         })
+        .api_secret({
+            env_var("HOME_API_SECRET").context(
+                "failed to read environment variable HOME_API_SECRET",
+            )?
+        })
         .build();
 
     // Build services

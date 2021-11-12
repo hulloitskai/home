@@ -110,4 +110,5 @@ impl EntityServices for Services {
 pub struct Settings {
     pub web_public_url: Url,
     pub api_public_url: Url,
+    pub api_secret: String,
 }

@@ -11,7 +11,7 @@ pub struct FormResponse {
 pub enum FormFieldResponse {
     Text(String),
     SingleChoice(String),
-    MultipleChoice(Vec<String>),
+    MultipleChoice(Set<String>),
 }
 
 impl Entity for FormResponse {

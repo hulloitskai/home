@@ -69,18 +69,18 @@ pub(super) struct FormFieldInputConfigObject {
 #[derive(Debug, Clone, SimpleObject)]
 #[graphql(name = "FormFieldSingleChoiceInputConfig")]
 pub(super) struct FormFieldSingleChoiceInputConfigObject {
-    pub options: Vec<String>,
+    pub options: Set<String>,
 }
 
 #[derive(Debug, Clone, SimpleObject)]
 #[graphql(name = "FormFieldMultipleChoiceInputConfig")]
 pub(super) struct FormFieldMultipleChoiceInputConfigObject {
-    pub options: Vec<String>,
+    pub options: Set<String>,
 }
 
-impl From<FormFieldInput> for FormFieldInputConfigObject {
-    fn from(input: FormFieldInput) -> Self {
-        use FormFieldInput::*;
+impl From<FormFieldInputConfig> for FormFieldInputConfigObject {
+    fn from(input: FormFieldInputConfig) -> Self {
+        use FormFieldInputConfig::*;
         match input {
             Text => FormFieldInputConfigObject {
                 text: Some(true),
@@ -163,6 +163,60 @@ pub(super) struct FormMutation;
 
 #[Object]
 impl FormMutation {
+    async fn create_form(
+        &self,
+        ctx: &Context<'_>,
+        input: CreateFormInput,
+        secret: String,
+    ) -> FieldResult<CreateFormPayload> {
+        let services = ctx.services();
+        let settings = services.settings();
+        let ctx = EntityContext::new(services.clone());
+
+        if secret != settings.api_secret {
+            let error = FieldError::new("incorrect secret");
+            return Err(error);
+        }
+
+        let CreateFormInput {
+            handle,
+            name,
+            description,
+            fields,
+            respondent_label,
+            respondent_helper,
+        } = input;
+
+        let handle = Handle::from_str(&handle)
+            .context("failed to parse handle")
+            .into_field_result()?;
+        let fields = fields
+            .into_iter()
+            .map(FormField::try_from)
+            .collect::<Result<Vec<_>>>()
+            .context("invalid form field")
+            .into_field_result()?;
+
+        let mut form = Record::new({
+            Form::builder()
+                .handle(handle)
+                .name(name)
+                .description(description)
+                .fields(fields)
+                .respondent_label(respondent_label)
+                .respondent_helper(respondent_helper)
+                .build()
+        });
+        form.save(&ctx)
+            .await
+            .context("failed to save form")
+            .into_field_result()?;
+
+        let form = FormObject::from(form);
+        let payload = CreateFormPayload { form, ok: true };
+        Ok(payload)
+    }
+
     async fn submit_form(
         &self,
         ctx: &Context<'_>,
@@ -204,6 +258,87 @@ impl FormMutation {
 }
 
 #[derive(Debug, Clone, InputObject)]
+pub(super) struct CreateFormInput {
+    pub handle: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub fields: Vec<FormFieldInput>,
+    pub respondent_label: Option<String>,
+    pub respondent_helper: Option<String>,
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct FormFieldInput {
+    pub question: String,
+    pub input: FormFieldInputConfigInput,
+}
+
+impl TryFrom<FormFieldInput> for FormField {
+    type Error = Error;
+
+    fn try_from(input: FormFieldInput) -> Result<Self, Self::Error> {
+        let FormFieldInput { question, input } = input;
+        let input = FormFieldInputConfig::try_from(input)
+            .context("invalid input config")?;
+        let config = FormField { question, input };
+        Ok(config)
+    }
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct FormFieldInputConfigInput {
+    pub text: Option<bool>,
+    pub single_choice: Option<FormFieldSingleChoiceInputConfigInput>,
+    pub multiple_choice: Option<FormFieldMultipleChoiceInputConfigInput>,
+}
+
+impl TryFrom<FormFieldInputConfigInput> for FormFieldInputConfig {
+    type Error = Error;
+
+    fn try_from(input: FormFieldInputConfigInput) -> Result<Self, Self::Error> {
+        let FormFieldInputConfigInput {
+            text,
+            single_choice,
+            multiple_choice,
+        } = input;
+
+        use FormFieldInputConfig::*;
+        let config = if text.unwrap_or_default() {
+            Text
+        } else if let Some(FormFieldSingleChoiceInputConfigInput { options }) =
+            single_choice
+        {
+            SingleChoice { options }
+        } else if let Some(FormFieldMultipleChoiceInputConfigInput {
+            options,
+        }) = multiple_choice
+        {
+            MultipleChoice { options }
+        } else {
+            bail!("not configured");
+        };
+
+        Ok(config)
+    }
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct FormFieldSingleChoiceInputConfigInput {
+    pub options: Set<String>,
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct FormFieldMultipleChoiceInputConfigInput {
+    pub options: Set<String>,
+}
+
+#[derive(Debug, Clone, SimpleObject)]
+pub(super) struct CreateFormPayload {
+    pub form: FormObject,
+    pub ok: bool,
+}
+
+#[derive(Debug, Clone, InputObject)]
 pub(super) struct SubmitFormInput {
     pub form_id: Id<Form>,
     pub respondent: String,
@@ -214,7 +349,7 @@ pub(super) struct SubmitFormInput {
 pub(super) struct FormFieldResponseInput {
     pub text: Option<String>,
     pub single_choice: Option<String>,
-    pub multiple_choice: Option<Vec<String>>,
+    pub multiple_choice: Option<Set<String>>,
 }
 
 impl TryFrom<FormFieldResponseInput> for FormFieldResponse {
@@ -234,7 +369,7 @@ impl TryFrom<FormFieldResponseInput> for FormFieldResponse {
         } else if let Some(choice) = multiple_choice {
             MultipleChoice(choice)
         } else {
-            bail!("missing response");
+            bail!("not provided");
         };
         Ok(response)
     }

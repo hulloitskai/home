@@ -4,10 +4,11 @@ import {
   gray,
   rose,
   amber,
-  emerald,
+  orange,
+  green,
   teal,
-  indigo,
-  violet,
+  cyan,
+  purple,
   pink,
   blue,
 } from "tailwindcss/colors";
@@ -28,12 +29,13 @@ export const ChakraTheme = extendTheme({
   colors: {
     gray,
     red: rose,
+    orange,
     yellow: amber,
-    green: emerald,
+    green,
     teal,
     blue,
-    indigo,
-    purple: violet,
+    cyan,
+    purple,
     pink,
   },
   fonts: {
@@ -68,6 +70,26 @@ export const ChakraTheme = extendTheme({
     }),
   },
   components: {
+    Button: {
+      variants: {
+        solid: (props: Record<string, any>) => {
+          const { colorScheme } = props;
+          if (colorScheme === "black") {
+            const bg = mode("black", "white")(props);
+            return {
+              bg,
+              _hover: {
+                bg: mode("gray.700", "gray.100")(props),
+                _disabled: { bg },
+              },
+              _active: {
+                bg: mode("gray.600", "gray.200")(props),
+              },
+            };
+          }
+        },
+      },
+    },
     Form: {
       baseStyle: {
         helperText: {
@@ -97,16 +119,6 @@ export const ChakraTheme = extendTheme({
     Textarea: {
       defaultProps: {
         focusBorderColor: "gray.400",
-      },
-    },
-    Button: {
-      defaultProps: {
-        variant: "outline",
-      },
-    },
-    IconButton: {
-      defaultProps: {
-        variant: "outline",
       },
     },
   },

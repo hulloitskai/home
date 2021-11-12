@@ -23,36 +23,111 @@ export type Scalars = {
 export type BuildInfo = {
   __typename?: 'BuildInfo';
   timestamp: Scalars['DateTime'];
-  version?: Maybe<Scalars['String']>;
+  version: Scalars['String'];
+};
+
+export type CreateFormInput = {
+  description?: Maybe<Scalars['String']>;
+  fields: Array<FormFieldInput>;
+  handle: Scalars['String'];
+  name: Scalars['String'];
+  respondentHelper?: Maybe<Scalars['String']>;
+  respondentLabel?: Maybe<Scalars['String']>;
+};
+
+export type CreateFormPayload = {
+  __typename?: 'CreateFormPayload';
+  form: Form;
+  ok: Scalars['Boolean'];
+};
+
+export type Form = {
+  __typename?: 'Form';
+  createdAt: Scalars['DateTime'];
+  description?: Maybe<Scalars['String']>;
+  fields: Array<FormField>;
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  respondentHelper?: Maybe<Scalars['String']>;
+  respondentLabel?: Maybe<Scalars['String']>;
+  updatedAt: Scalars['DateTime'];
+};
+
+export type FormField = {
+  __typename?: 'FormField';
+  input: FormFieldInputConfig;
+  question: Scalars['String'];
+};
+
+export type FormFieldInput = {
+  input: FormFieldInputConfigInput;
+  question: Scalars['String'];
+};
+
+export type FormFieldInputConfig = {
+  __typename?: 'FormFieldInputConfig';
+  multipleChoice?: Maybe<FormFieldMultipleChoiceInputConfig>;
+  singleChoice?: Maybe<FormFieldSingleChoiceInputConfig>;
+  text?: Maybe<Scalars['Boolean']>;
+};
+
+export type FormFieldInputConfigInput = {
+  multipleChoice?: Maybe<FormFieldMultipleChoiceInputConfigInput>;
+  singleChoice?: Maybe<FormFieldSingleChoiceInputConfigInput>;
+  text?: Maybe<Scalars['Boolean']>;
+};
+
+export type FormFieldMultipleChoiceInputConfig = {
+  __typename?: 'FormFieldMultipleChoiceInputConfig';
+  options: Array<Scalars['String']>;
+};
+
+export type FormFieldMultipleChoiceInputConfigInput = {
+  options: Array<Scalars['String']>;
+};
+
+export type FormFieldResponseInput = {
+  multipleChoice?: Maybe<Array<Scalars['String']>>;
+  singleChoice?: Maybe<Scalars['String']>;
+  text?: Maybe<Scalars['String']>;
+};
+
+export type FormFieldSingleChoiceInputConfig = {
+  __typename?: 'FormFieldSingleChoiceInputConfig';
+  options: Array<Scalars['String']>;
+};
+
+export type FormFieldSingleChoiceInputConfigInput = {
+  options: Array<Scalars['String']>;
 };
 
 export type HeartRate = {
   __typename?: 'HeartRate';
-  id: Scalars['ID'];
   createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  id: Scalars['ID'];
   measurement: Scalars['Int'];
   timestamp: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
 };
 
 export type KnowledgeEntry = {
   __typename?: 'KnowledgeEntry';
   id: Scalars['String'];
-  names: Array<Scalars['String']>;
   links: KnowledgeEntryLinks;
+  names: Array<Scalars['String']>;
   tags: Array<Scalars['String']>;
 };
 
 export type KnowledgeEntryLinks = {
   __typename?: 'KnowledgeEntryLinks';
-  outgoing: Array<KnowledgeEntry>;
   incoming: Array<KnowledgeEntry>;
+  outgoing: Array<KnowledgeEntry>;
 };
 
 export type LyricLine = {
   __typename?: 'LyricLine';
-  text: Scalars['String'];
   position: Scalars['Int'];
+  text: Scalars['String'];
 };
 
 export type Lyrics = {
@@ -62,44 +137,74 @@ export type Lyrics = {
 
 export type MusicAlbum = {
   __typename?: 'MusicAlbum';
+  imageUrl: Scalars['String'];
+  name: Scalars['String'];
   spotifyId: Scalars['String'];
   spotifyUrl: Scalars['String'];
-  name: Scalars['String'];
-  imageUrl: Scalars['String'];
 };
 
 export type MusicArtist = {
   __typename?: 'MusicArtist';
+  name: Scalars['String'];
   spotifyId: Scalars['String'];
   spotifyUrl: Scalars['String'];
-  name: Scalars['String'];
 };
 
 export type MusicInfo = {
   __typename?: 'MusicInfo';
   isPlaying: Scalars['Boolean'];
-  track: MusicTrack;
   progress: Scalars['Int'];
+  track: MusicTrack;
 };
 
 export type MusicTrack = {
   __typename?: 'MusicTrack';
-  spotifyId: Scalars['String'];
-  spotifyUrl: Scalars['String'];
-  name: Scalars['String'];
-  duration: Scalars['Int'];
   album: MusicAlbum;
   artists: Array<MusicArtist>;
+  duration: Scalars['Int'];
   lyrics?: Maybe<Lyrics>;
+  name: Scalars['String'];
+  spotifyId: Scalars['String'];
+  spotifyUrl: Scalars['String'];
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createForm: CreateFormPayload;
+  submitForm: SubmitFormPayload;
+  testFailure: TestFailurePayload;
+};
+
+
+export type MutationCreateFormArgs = {
+  input: CreateFormInput;
+  secret: Scalars['String'];
+};
+
+
+export type MutationSubmitFormArgs = {
+  input: SubmitFormInput;
 };
 
 export type Query = {
   __typename?: 'Query';
   buildInfo: BuildInfo;
+  form?: Maybe<Form>;
+  formByHandle?: Maybe<Form>;
+  heartRate?: Maybe<HeartRate>;
   knowledgeEntries: Array<KnowledgeEntry>;
   knowledgeEntry?: Maybe<KnowledgeEntry>;
-  heartRate?: Maybe<HeartRate>;
   musicInfo?: Maybe<MusicInfo>;
+};
+
+
+export type QueryFormArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryFormByHandleArgs = {
+  handle: Scalars['String'];
 };
 
 
@@ -107,41 +212,71 @@ export type QueryKnowledgeEntryArgs = {
   id: Scalars['String'];
 };
 
+export type SubmitFormInput = {
+  fields: Array<FormFieldResponseInput>;
+  formId: Scalars['ID'];
+  respondent: Scalars['String'];
+};
+
+export type SubmitFormPayload = {
+  __typename?: 'SubmitFormPayload';
+  ok: Scalars['Boolean'];
+};
+
+export type TestFailurePayload = {
+  __typename?: 'TestFailurePayload';
+  ok: Scalars['Boolean'];
+};
+
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
 export type HeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type HeartSectionQuery = { __typename?: 'Query', heartRate?: Maybe<{ __typename?: 'HeartRate', id: string, measurement: number, timestamp: any }> };
+export type HeartSectionQuery = { __typename?: 'Query', heartRate?: { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any } | null | undefined };
 
 export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
 
 export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: Maybe<{ __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> }> } }> };
+export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: { __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> } | null | undefined } } | null | undefined };
 
 export type MusicSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MusicSectionQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string, spotifyUrl: string, name: string, duration: number, album: { __typename?: 'MusicAlbum', spotifyId: string, spotifyUrl: string, name: string }, artists: Array<{ __typename?: 'MusicArtist', spotifyId: string, spotifyUrl: string, name: string }> } }> };
+export type MusicSectionQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string, spotifyUrl: string, name: string, duration: number, album: { __typename?: 'MusicAlbum', spotifyId: string, spotifyUrl: string, name: string }, artists: Array<{ __typename?: 'MusicArtist', spotifyId: string, spotifyUrl: string, name: string }> } } | null | undefined };
 
 export type MusicSectionHeartbeatQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MusicSectionHeartbeatQuery = { __typename?: 'Query', musicInfo?: Maybe<{ __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string } }> };
+export type MusicSectionHeartbeatQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string } } | null | undefined };
 
 export type HomePageQueryVariables = Exact<{
   dailyNoteId: Scalars['String'];
 }>;
 
 
-export type HomePageQuery = { __typename?: 'Query', dailyEntry?: Maybe<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> } }> };
+export type HomePageQuery = { __typename?: 'Query', dailyEntry?: { __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> } } | null | undefined };
 
 export type KnowledgePageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type KnowledgePageQuery = { __typename?: 'Query', entries: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> };
+
+export type SubmitFormMutationVariables = Exact<{
+  input: SubmitFormInput;
+}>;
+
+
+export type SubmitFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'SubmitFormPayload', ok: boolean } };
+
+export type ResearchPagePropsQueryVariables = Exact<{
+  handle: Scalars['String'];
+}>;
+
+
+export type ResearchPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
 
 export const HeartStatHeartRateFragmentDoc = gql`
     fragment HeartStatHeartRate on HeartRate {
@@ -411,3 +546,87 @@ export function useKnowledgePageLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type KnowledgePageQueryHookResult = ReturnType<typeof useKnowledgePageQuery>;
 export type KnowledgePageLazyQueryHookResult = ReturnType<typeof useKnowledgePageLazyQuery>;
 export type KnowledgePageQueryResult = Apollo.QueryResult<KnowledgePageQuery, KnowledgePageQueryVariables>;
+export const SubmitFormDocument = gql`
+    mutation SubmitForm($input: SubmitFormInput!) {
+  payload: submitForm(input: $input) {
+    ok
+  }
+}
+    `;
+export type SubmitFormMutationFn = Apollo.MutationFunction<SubmitFormMutation, SubmitFormMutationVariables>;
+
+/**
+ * __useSubmitFormMutation__
+ *
+ * To run a mutation, you first call `useSubmitFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubmitFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [submitFormMutation, { data, loading, error }] = useSubmitFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSubmitFormMutation(baseOptions?: Apollo.MutationHookOptions<SubmitFormMutation, SubmitFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SubmitFormMutation, SubmitFormMutationVariables>(SubmitFormDocument, options);
+      }
+export type SubmitFormMutationHookResult = ReturnType<typeof useSubmitFormMutation>;
+export type SubmitFormMutationResult = Apollo.MutationResult<SubmitFormMutation>;
+export type SubmitFormMutationOptions = Apollo.BaseMutationOptions<SubmitFormMutation, SubmitFormMutationVariables>;
+export const ResearchPagePropsDocument = gql`
+    query ResearchPageProps($handle: String!) {
+  form: formByHandle(handle: $handle) {
+    id
+    name
+    description
+    fields {
+      question
+      input {
+        text
+        singleChoice {
+          options
+        }
+        multipleChoice {
+          options
+        }
+      }
+    }
+    respondentLabel
+    respondentHelper
+  }
+}
+    `;
+
+/**
+ * __useResearchPagePropsQuery__
+ *
+ * To run a query within a React component, call `useResearchPagePropsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useResearchPagePropsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useResearchPagePropsQuery({
+ *   variables: {
+ *      handle: // value for 'handle'
+ *   },
+ * });
+ */
+export function useResearchPagePropsQuery(baseOptions: Apollo.QueryHookOptions<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>(ResearchPagePropsDocument, options);
+      }
+export function useResearchPagePropsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>(ResearchPagePropsDocument, options);
+        }
+export type ResearchPagePropsQueryHookResult = ReturnType<typeof useResearchPagePropsQuery>;
+export type ResearchPagePropsLazyQueryHookResult = ReturnType<typeof useResearchPagePropsLazyQuery>;
+export type ResearchPagePropsQueryResult = Apollo.QueryResult<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>;

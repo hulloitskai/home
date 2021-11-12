@@ -76,7 +76,13 @@ const HomePage: NextPage = () => {
                 Kai
               </Text>
               , your favorite{" "}
-              <Tooltip label="Non-Playable Character">NPC</Tooltip>.
+              <Tooltip
+                label="Non-Playable Character"
+                _light={{ bg: "gray.900" }}
+              >
+                NPC
+              </Tooltip>
+              .
             </Text>
           </VStack>
           <MusicSection />
@@ -121,7 +127,7 @@ const HomePage: NextPage = () => {
                   target="_blank"
                   _hover={{ textDecor: "none" }}
                 >
-                  <Tooltip label="Open Full Graph">
+                  <Tooltip label="Open Full Graph" _light={{ bg: "gray.900" }}>
                     <IconButton
                       icon={<Icon as={HiOutlineArrowsExpand} />}
                       aria-label="Open Full Graph"
