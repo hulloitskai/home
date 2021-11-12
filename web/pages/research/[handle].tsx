@@ -182,7 +182,7 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
           >
             <FormControl isInvalid={!!formErrors.respondent}>
               <FormLabel color="gray.800" _dark={{ color: "gray.300" }}>
-                {respondentLabel}
+                {respondentLabel || "Name"}
               </FormLabel>
               <Input
                 bg="white"
