@@ -40,8 +40,8 @@ use futures::Future;
 use futures_util::future::try_join_all;
 use futures_util::stream::TryStreamExt;
 
-use anyhow::ensure;
 use anyhow::Context as AnyhowContext;
+use anyhow::{bail, ensure};
 use anyhow::{Error, Result};
 
 use chrono::NaiveDate as Date;

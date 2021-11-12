@@ -2,19 +2,19 @@ use super::*;
 
 #[derive(Debug, Clone, Copy, MergedObject)]
 pub struct Query(
-    BuildQueries,
-    HeartRateQueries,
-    MusicInfoQueries,
-    KnowledgeEntryQueries,
+    BuildQuery,
+    HeartRateQuery,
+    MusicInfoQuery,
+    KnowledgeEntryQuery,
 );
 
 impl Query {
     pub fn new() -> Self {
         Self(
-            BuildQueries,
-            HeartRateQueries,
-            MusicInfoQueries,
-            KnowledgeEntryQueries,
+            BuildQuery,
+            HeartRateQuery,
+            MusicInfoQuery,
+            KnowledgeEntryQuery,
         )
     }
 }

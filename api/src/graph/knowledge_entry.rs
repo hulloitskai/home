@@ -3,12 +3,12 @@ use super::*;
 use services::obsidian::Note as ObsidianNote;
 
 #[derive(Debug, Clone, From)]
-pub(super) struct KnowledgeEntry {
+pub(super) struct KnowledgeEntryObject {
     pub note: ObsidianNote,
 }
 
-#[Object]
-impl KnowledgeEntry {
+#[Object(name = "KnowledgeEntry")]
+impl KnowledgeEntryObject {
     async fn id(&self) -> &String {
         &self.note.id
     }
@@ -17,7 +17,7 @@ impl KnowledgeEntry {
         &self.note.names
     }
 
-    async fn links(&self) -> KnowledgeEntryLinks {
+    async fn links(&self) -> KnowledgeEntryLinksObject {
         self.note.clone().into()
     }
 
@@ -26,54 +26,15 @@ impl KnowledgeEntry {
     }
 }
 
-#[Object]
-impl KnowledgeEntryLinks {
-    async fn outgoing(
-        &self,
-        ctx: &Context<'_>,
-    ) -> FieldResult<Vec<KnowledgeEntry>> {
-        let notes = ctx
-            .services()
-            .obsidian()
-            .get_note_outgoing_references(&self.note.id)
-            .await
-            .into_field_result()?;
-        let mut entries = notes
-            .into_iter()
-            .map(KnowledgeEntry::from)
-            .collect::<Vec<_>>();
-        entries.sort_by_cached_key(|entry| entry.note.id.clone());
-        Ok(entries)
-    }
-
-    async fn incoming(
-        &self,
-        ctx: &Context<'_>,
-    ) -> FieldResult<Vec<KnowledgeEntry>> {
-        let notes = ctx
-            .services()
-            .obsidian()
-            .get_note_incoming_references(&self.note.id)
-            .await
-            .into_field_result()?;
-        let mut entries = notes
-            .into_iter()
-            .map(KnowledgeEntry::from)
-            .collect::<Vec<_>>();
-        entries.sort_by_cached_key(|entry| entry.note.id.clone());
-        Ok(entries)
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
-pub struct KnowledgeEntryQueries;
+pub(super) struct KnowledgeEntryQuery;
 
 #[Object]
-impl KnowledgeEntryQueries {
+impl KnowledgeEntryQuery {
     async fn knowledge_entries(
         &self,
         ctx: &Context<'_>,
-    ) -> FieldResult<Vec<KnowledgeEntry>> {
+    ) -> FieldResult<Vec<KnowledgeEntryObject>> {
         let notes = ctx
             .services()
             .obsidian()
@@ -82,7 +43,7 @@ impl KnowledgeEntryQueries {
             .into_field_result()?;
         let mut entries = notes
             .into_iter()
-            .map(KnowledgeEntry::from)
+            .map(KnowledgeEntryObject::from)
             .collect::<Vec<_>>();
         entries.sort_by_cached_key(|entry| entry.note.id.clone());
         Ok(entries)
@@ -92,14 +53,14 @@ impl KnowledgeEntryQueries {
         &self,
         ctx: &Context<'_>,
         id: String,
-    ) -> FieldResult<Option<KnowledgeEntry>> {
+    ) -> FieldResult<Option<KnowledgeEntryObject>> {
         let note = ctx
             .services()
             .obsidian()
             .get_note(&id)
             .await
             .into_field_result()?;
-        let entry = note.map(KnowledgeEntry::from);
+        let entry = note.map(KnowledgeEntryObject::from);
         Ok(entry)
     }
 }

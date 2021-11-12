@@ -1,28 +1,16 @@
-// use super::*;
+use super::*;
 
-// #[derive(Debug, Clone, MergedObject)]
-// pub struct Mutation(
-//     // BusinessMutations,
-//     CommentMutations,
-//     CommunityMutations,
-//     PilotListingMutations,
-//     PollMutations,
-//     PostMutations,
-//     UploadMutations,
-//     UserMutations,
-// );
+#[derive(Debug, Clone, Copy, MergedObject)]
+pub struct Mutation(TestMutation, FormMutation);
 
-// impl Mutation {
-//     pub fn new() -> Self {
-//         Self(
-//             // BusinessMutations,
-//             CommentMutations,
-//             CommunityMutations,
-//             PilotListingMutations,
-//             PollMutations,
-//             PostMutations,
-//             UploadMutations,
-//             UserMutations,
-//         )
-//     }
-// }
+impl Mutation {
+    pub fn new() -> Self {
+        Self(TestMutation, FormMutation)
+    }
+}
+
+impl Default for Mutation {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -15,10 +15,10 @@ impl BuildInfoObject {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(super) struct BuildQueries;
+pub(super) struct BuildQuery;
 
 #[Object]
-impl BuildQueries {
+impl BuildQuery {
     async fn build_info(&self, ctx: &Context<'_>) -> BuildInfoObject {
         let info = ctx.data_unchecked::<BuildInfo>().clone();
         info.into()

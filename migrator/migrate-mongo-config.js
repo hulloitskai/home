@@ -15,7 +15,7 @@ const config = {
     },
   },
   migrationsDir: "migrations",
-  changelogCollectionName: "Changelog",
+  changelogCollectionName: "_changelog",
   migrationFileExtension: ".js",
   useFileHash: false,
 };
