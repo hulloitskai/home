@@ -406,7 +406,7 @@ impl TryFrom<FormFieldResponseInput> for FormFieldResponse {
         } else if let Some(choice) = multiple_choice {
             MultipleChoice(choice)
         } else {
-            bail!("not provided");
+            bail!("no response");
         };
         Ok(response)
     }

@@ -123,18 +123,17 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
                     <Controller
                       control={control}
                       name={`fields.${index}.singleChoice`}
+                      rules={{ required: true }}
                       render={({ field }) => {
                         const { value, onChange, onBlur } = field;
                         return (
                           <RadioGroup {...{ value, onChange, onBlur }}>
                             <VStack align="stretch">
-                              {input.singleChoice!.options.map(option => {
-                                return (
-                                  <Radio key={option} value={option}>
-                                    {option}
-                                  </Radio>
-                                );
-                              })}
+                              {input.singleChoice!.options.map(option => (
+                                <Radio key={option} value={option}>
+                                  {option}
+                                </Radio>
+                              ))}
                             </VStack>
                           </RadioGroup>
                         );
@@ -145,18 +144,17 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
                     <Controller
                       control={control}
                       name={`fields.${index}.multipleChoice`}
+                      rules={{ required: true }}
                       render={({ field }) => {
                         const { value, onChange, onBlur } = field;
                         return (
                           <CheckboxGroup {...{ value, onChange, onBlur }}>
                             <VStack align="stretch">
-                              {input.multipleChoice!.options.map(option => {
-                                return (
-                                  <Checkbox key={option} value={option}>
-                                    {option}
-                                  </Checkbox>
-                                );
-                              })}
+                              {input.multipleChoice!.options.map(option => (
+                                <Checkbox key={option} value={option}>
+                                  {option}
+                                </Checkbox>
+                              ))}
                             </VStack>
                           </CheckboxGroup>
                         );
