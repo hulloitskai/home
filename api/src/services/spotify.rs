@@ -6,7 +6,7 @@ use auth::{Authenticator, AuthenticatorConfig};
 use http::StatusCode;
 
 #[derive(Debug, Clone, Builder)]
-pub struct ClientConfig {
+pub struct ServiceConfig {
     pub client_id: String,
     pub client_secret: String,
     pub refresh_token: String,
@@ -17,7 +17,7 @@ pub struct ClientConfig {
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Client {
+pub struct Service {
     client: HttpClient,
     authenticator: Authenticator,
 
@@ -31,9 +31,9 @@ pub struct Client {
 #[derive(Debug, Clone, Copy, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct CurrentlyPlayingKey;
 
-impl Client {
-    pub fn new(config: ClientConfig) -> Self {
-        let ClientConfig {
+impl Service {
+    pub fn new(config: ServiceConfig) -> Self {
+        let ServiceConfig {
             client_id,
             client_secret,
             refresh_token,
@@ -55,7 +55,7 @@ impl Client {
         Self {
             client: default(),
             authenticator,
-            cache: CacheBuilder::new(1000)
+            cache: Cache::builder(1000)
                 .time_to_live(ttl.to_std().unwrap())
                 .build(),
             sem: Semaphore::new(1),
@@ -63,11 +63,11 @@ impl Client {
     }
 }
 
-impl Client {
+impl Service {
     pub async fn get_currently_playing(
         &self,
     ) -> Result<Option<CurrentlyPlaying>> {
-        let Client {
+        let Service {
             client,
             authenticator,
             cache,

@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::obsidian::Note as ObsidianNote;
+use services::obsidian::Note as ObsidianNote;
 
 #[derive(Debug, Clone, From)]
 pub(super) struct KnowledgeEntryLinks {

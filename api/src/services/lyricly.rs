@@ -4,7 +4,7 @@ use http::StatusCode;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Client {
+pub struct Service {
     client: HttpClient,
 
     #[derivative(Debug = "ignore")]
@@ -20,11 +20,11 @@ struct LyricsKey {
     artist_name: String,
 }
 
-impl Client {
+impl Service {
     pub fn new() -> Self {
-        Client {
+        Service {
             client: default(),
-            lyrics_cache: CacheBuilder::new(1000)
+            lyrics_cache: Cache::builder(1000)
                 .time_to_live(Duration::hours(1).to_std().unwrap())
                 .build(),
             lyrics_sem: Semaphore::new(1),
@@ -32,13 +32,13 @@ impl Client {
     }
 }
 
-impl Default for Client {
+impl Default for Service {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Client {
+impl Service {
     pub async fn get_lyrics(
         &self,
         track_name: &str,

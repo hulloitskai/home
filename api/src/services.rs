@@ -1,20 +1,26 @@
-use entrust::EntityServices;
-use entrust::{Database, DatabaseClient};
+pub mod lyricly;
+pub mod obsidian;
+pub mod spotify;
+
+pub use lyricly::Service as LyriclyService;
+pub use obsidian::Service as ObsidianService;
+pub use obsidian::ServiceConfig as ObsidianServiceConfig;
+pub use spotify::Service as SpotifyService;
+pub use spotify::ServiceConfig as SpotifyServiceConfig;
 
 use super::*;
 
-use lyricly::Client as LyriclyClient;
-use obsidian::Client as ObsidianClient;
-use spotify::Client as SpotifyClient;
+use entrust::EntityServices;
+use entrust::{Database, DatabaseClient};
 
 #[derive(Debug, Builder)]
 pub struct Config {
     pub database: Database,
     pub database_client: DatabaseClient,
     pub settings: Settings,
-    pub obsidian: ObsidianClient,
-    pub spotify: SpotifyClient,
-    pub lyricly: LyriclyClient,
+    pub obsidian: ObsidianService,
+    pub spotify: SpotifyService,
+    pub lyricly: LyriclyService,
 }
 
 #[derive(Debug, Builder)]
@@ -22,9 +28,9 @@ struct ServicesInner {
     database: Database,
     database_client: DatabaseClient,
     settings: Settings,
-    obsidian: ObsidianClient,
-    spotify: SpotifyClient,
-    lyricly: LyriclyClient,
+    obsidian: ObsidianService,
+    spotify: SpotifyService,
+    lyricly: LyriclyService,
 }
 
 impl ServicesInner {
@@ -40,15 +46,15 @@ impl ServicesInner {
         &self.settings
     }
 
-    pub fn obsidian(&self) -> &ObsidianClient {
+    pub fn obsidian(&self) -> &ObsidianService {
         &self.obsidian
     }
 
-    pub fn spotify(&self) -> &SpotifyClient {
+    pub fn spotify(&self) -> &SpotifyService {
         &self.spotify
     }
 
-    pub fn lyricly(&self) -> &LyriclyClient {
+    pub fn lyricly(&self) -> &LyriclyService {
         &self.lyricly
     }
 }
@@ -83,9 +89,9 @@ impl Services {
             pub fn database(&self) -> &Database;
             pub fn database_client(&self) -> &DatabaseClient;
             pub fn settings(&self) -> &Settings;
-            pub fn obsidian(&self) -> &ObsidianClient;
-            pub fn spotify(&self) -> &SpotifyClient;
-            pub fn lyricly(&self) -> &LyriclyClient;
+            pub fn obsidian(&self) -> &ObsidianService;
+            pub fn spotify(&self) -> &SpotifyService;
+            pub fn lyricly(&self) -> &LyriclyService;
         }
     }
 }

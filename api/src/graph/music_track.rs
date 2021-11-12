@@ -1,7 +1,7 @@
 use super::*;
 
-use crate::lyricly::Lyrics as LyriclyLyrics;
-use crate::spotify::Track as SpotifyTrack;
+use services::lyricly::Lyrics as LyriclyLyrics;
+use services::spotify::Track as SpotifyTrack;
 
 #[derive(Debug, Clone)]
 pub(super) struct MusicTrack {

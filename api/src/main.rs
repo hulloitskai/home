@@ -5,13 +5,11 @@ use home_api::env::load as load_env;
 use home_api::env::var as env_var;
 use home_api::env::var_or as env_var_or;
 use home_api::graph::Query;
-use home_api::lyricly::Client as LyriclyClient;
-use home_api::obsidian::Client as ObsidianClient;
-use home_api::obsidian::ClientConfig as ObsidianClientConfig;
 use home_api::services::Config as ServicesConfig;
+use home_api::services::LyriclyService;
+use home_api::services::{ObsidianService, ObsidianServiceConfig};
 use home_api::services::{Services, Settings};
-use home_api::spotify::Client as SpotifyClient;
-use home_api::spotify::ClientConfig as SpotifyClientConfig;
+use home_api::services::{SpotifyService, SpotifyServiceConfig};
 
 use std::borrow::Cow;
 use std::convert::Infallible;
@@ -108,19 +106,19 @@ async fn main() -> Result<()> {
 
     info!(target: "home-api", "initializing services");
 
-    // Build Obsidian client
+    // Build Obsidian service
     let obsidian = {
         let vault_path = env_var("OBSIDIAN_VAULT_PATH").context(
             "failed to read environment variable OBSIDIAN_VAULT_PATH",
         )?;
-        let config = ObsidianClientConfig::builder()
+        let config = ObsidianServiceConfig::builder()
             .vault_path(vault_path)
             .build();
-        ObsidianClient::new(config)
+        ObsidianService::new(config)
             .context("failed to initialize Obsidian client")?
     };
 
-    // Build Spotify client
+    // Build Spotify service
     let spotify = {
         let client_id = env_var("SPOTIFY_CLIENT_ID")
             .context("failed to read environment variable SPOTIFY_CLIENT_ID")?;
@@ -130,16 +128,16 @@ async fn main() -> Result<()> {
         let refresh_token = env_var("SPOTIFY_REFRESH_TOKEN").context(
             "failed to read environment variable SPOTIFY_REFRESH_TOKEN",
         )?;
-        let config = SpotifyClientConfig::builder()
+        let config = SpotifyServiceConfig::builder()
             .client_id(client_id)
             .client_secret(client_secret)
             .refresh_token(refresh_token)
             .build();
-        SpotifyClient::new(config)
+        SpotifyService::new(config)
     };
 
-    // Build Lyricly client
-    let lyricly = LyriclyClient::new();
+    // Build Lyricly service
+    let lyricly = LyriclyService::new();
 
     // Build settings
     let settings = Settings::builder()

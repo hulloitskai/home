@@ -15,7 +15,7 @@ derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
 emails = { package = "mailchecker", version = "^4.0.12" }
-entrust = { git = "https://github.com/hulloitskai/entrust", rev = "148b53b" }
+entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.2" }
 futures = { package = "futures-core", version = "^0.3.17" }
 futures_util = { package = "futures-util", version = "^0.3.17" }
 http = "^0.2.5"

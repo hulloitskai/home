@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::spotify::CurrentlyPlaying;
+use services::spotify::CurrentlyPlaying;
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct MusicInfo {

@@ -4,21 +4,10 @@ pub mod auth;
 pub mod entities;
 pub mod env;
 pub mod graph;
-pub mod lyricly;
-pub mod obsidian;
 pub mod services;
-pub mod spotify;
+pub mod util;
 
-use async_trait::async_trait;
-use lazy_static::lazy_static;
-
-use delegate::delegate;
-use derivative::Derivative;
-use moka::future::{Cache, CacheBuilder};
-use regex::Regex;
-use request::Client as HttpClient;
-use typed_builder::TypedBuilder as Builder;
-use url::Url;
+use util::*;
 
 use derives::Display;
 use derives::{AsRef, Deref};
@@ -33,12 +22,19 @@ use std::collections::HashMap as Map;
 use std::collections::HashSet as Set;
 use std::convert::{TryFrom, TryInto};
 use std::fmt::{Debug, Display};
+use std::hash::Hash;
 use std::iter::FromIterator;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::time::Duration as StdDuration;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::from_str as from_json_str;
+use serde_json::from_value as from_json;
+use serde_json::json;
+use serde_json::to_string as to_json_string;
+use serde_json::to_value as to_json;
 
 use futures::Future;
 use futures_util::future::try_join_all;
@@ -48,19 +44,37 @@ use anyhow::ensure;
 use anyhow::Context as AnyhowContext;
 use anyhow::{Error, Result};
 
-use tracing::{debug, trace};
-
-use chrono::DateTime as GenericDateTime;
 use chrono::NaiveDate as Date;
 use chrono::NaiveTime as Time;
 use chrono::{Duration, FixedOffset, TimeZone, Utc};
 
-type DateTime<Tz = Utc> = GenericDateTime<Tz>;
+type DateTime<Tz = Utc> = chrono::DateTime<Tz>;
 
-pub fn default<T: Default>() -> T {
-    Default::default()
+use cache::{Cache, CacheBuilder};
+use moka::future as cache;
+
+use async_trait::async_trait;
+use delegate::delegate;
+use derivative::Derivative;
+use lazy_static::lazy_static;
+use regex::Regex;
+use request::Client as HttpClient;
+use tracing::{debug, trace};
+use typed_builder::TypedBuilder as Builder;
+use url::Url;
+
+trait MokaCacheExt<K, V> {
+    fn builder(max_capacity: usize) -> CacheBuilder<Cache<K, V>>;
 }
 
-pub fn now() -> DateTime {
-    Utc::now()
+impl<K, V> MokaCacheExt<K, V> for Cache<K, V>
+where
+    K: Send + Sync + 'static,
+    V: Send + Sync + 'static,
+    K: Eq + Hash,
+    V: Clone,
+{
+    fn builder(max_capacity: usize) -> CacheBuilder<Cache<K, V>> {
+        CacheBuilder::new(max_capacity)
+    }
 }

@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::spotify::Artist as SpotifyArtist;
+use services::spotify::Artist as SpotifyArtist;
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct MusicArtist {

@@ -1,7 +1,7 @@
 use super::*;
 
-use crate::spotify::Album as SpotifyAlbum;
-use crate::spotify::Image as SpotifyImage;
+use services::spotify::Album as SpotifyAlbum;
+use services::spotify::Image as SpotifyImage;
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct MusicAlbum {

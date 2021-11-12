@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::lyricly::Lyrics as LyriclyLyrics;
+use services::lyricly::Lyrics as LyriclyLyrics;
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct Lyrics {

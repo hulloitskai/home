@@ -1,17 +1,7 @@
 use super::*;
 
-use std::fs::read_to_string;
-use std::fs::File;
-use std::io::ErrorKind as IoErrorKind;
-use std::path::Path;
-
-use yaml::Yaml;
-use yaml_front_matter::parse as parse_front_matter;
-
-use walkdir::WalkDir;
-
 #[derive(Debug, Clone, Builder)]
-pub struct ClientConfig {
+pub struct ServiceConfig {
     vault_path: String,
 
     #[builder(default = Duration::minutes(1))]
@@ -20,8 +10,8 @@ pub struct ClientConfig {
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Client {
-    reader: Arc<VaultReader>,
+pub struct Service {
+    reader: Arc<Reader>,
 
     #[derivative(Debug = "ignore")]
     notes_cache: Cache<String, Option<Note>>,
@@ -36,16 +26,16 @@ pub struct Client {
     notes_list_sem: Semaphore,
 }
 
-impl Client {
-    pub fn new(config: ClientConfig) -> Result<Self> {
-        let ClientConfig { vault_path, ttl } = config;
+impl Service {
+    pub fn new(config: ServiceConfig) -> Result<Self> {
+        let ServiceConfig { vault_path, ttl } = config;
         let ttl = ttl.to_std().context("invalid TTL")?;
         let client = Self {
             reader: {
-                let reader = VaultReader::new(&vault_path)?;
+                let reader = Reader::new(&vault_path)?;
                 Arc::new(reader)
             },
-            notes_cache: CacheBuilder::new(1000).time_to_live(ttl).build(),
+            notes_cache: Cache::builder(1000).time_to_live(ttl).build(),
             notes_sem: Semaphore::new(1),
             notes_list_cache: {
                 CacheBuilder::new(1000).time_to_live(ttl).build()
@@ -220,133 +210,4 @@ impl Client {
             .collect::<Vec<_>>();
         Ok(references)
     }
-}
-
-#[derive(Debug)]
-struct VaultReader {
-    path: String,
-    dir: File,
-}
-
-impl VaultReader {
-    fn new(path: &str) -> Result<Self> {
-        let path = if path.ends_with('/') {
-            path.to_owned()
-        } else {
-            path.to_owned() + "/"
-        };
-
-        let dir = File::open(&path).context("failed to open vault")?;
-        let dir_meta = dir.metadata().context("failed to read vault")?;
-        ensure!(dir_meta.is_dir(), "vault must be a directory");
-
-        let reader = Self { path, dir };
-        Ok(reader)
-    }
-
-    fn note_path(&self, note: &str) -> String {
-        let mut path = Path::new(&self.path).to_path_buf();
-        path.push(format!("{}.md", note));
-        path.to_string_lossy().into_owned()
-    }
-
-    fn list_notes(&self) -> Result<Set<String>> {
-        let mut notes: Set<String> = default();
-        for entry in WalkDir::new(&self.path) {
-            let entry = entry.context("failed to read directory entry")?;
-            let path = entry.path();
-            if path.extension().unwrap_or_default() != "md" {
-                continue;
-            }
-            let path = path.with_extension("").to_string_lossy().into_owned();
-            let id = path
-                .strip_prefix(&self.path)
-                .map(ToOwned::to_owned)
-                .unwrap_or(path);
-            notes.insert(id);
-        }
-        Ok(notes)
-    }
-
-    fn read_note(&self, id: &str) -> Result<Option<Note>> {
-        let path = self.note_path(id);
-        let text = match read_to_string(&path) {
-            Ok(text) => text,
-            Err(error) => {
-                if error.kind() == IoErrorKind::NotFound {
-                    return Ok(None);
-                }
-                return Err(error).context("failed to read file")?;
-            }
-        };
-
-        let names = {
-            let mut names: Set<String> = default();
-            let mut parts =
-                id.split('/').map(ToOwned::to_owned).collect::<Vec<_>>();
-            while !parts.is_empty() {
-                names.insert(parts.join("/"));
-                if let Some((_, tail)) = parts.split_first() {
-                    parts = tail.to_vec();
-                }
-            }
-            names
-        };
-
-        let links = {
-            lazy_static! {
-                static ref RE: Regex =
-                    Regex::new(r"\[\[([^\[\]]+)\]\]").unwrap();
-            }
-            RE.captures_iter(&text)
-                .map(|m| m.get(1).unwrap().as_str().to_owned())
-                .collect::<Set<_>>()
-        };
-        let tags = {
-            let matter = parse_front_matter(&text)
-                .context("failed to parse front matter")?;
-            matter
-                .map(Yaml::into_hash)
-                .flatten()
-                .map(|mut hash| {
-                    let key = Yaml::String("tags".to_owned());
-                    hash.remove(&key)
-                })
-                .flatten()
-                .map(|tags| {
-                    use Yaml::*;
-                    let tags = match tags {
-                        String(tag) => Set::from_iter([tag]),
-                        Array(tags) => tags
-                            .into_iter()
-                            .filter_map(Yaml::into_string)
-                            .collect::<Set<_>>(),
-                        _ => return None,
-                    };
-                    Some(tags)
-                })
-                .flatten()
-                .unwrap_or_default()
-        };
-
-        let note = Note::builder()
-            .id(id.to_owned())
-            .names(names)
-            .links(links)
-            .tags(tags)
-            .build();
-        Ok(Some(note))
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
-pub struct Note {
-    pub id: String,
-    pub names: Set<String>,
-
-    #[builder(default)]
-    pub links: Set<String>,
-
-    #[builder(default)]
-    pub tags: Set<String>,
 }
