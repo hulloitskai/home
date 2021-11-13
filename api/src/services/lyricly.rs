@@ -61,7 +61,6 @@ impl Service {
         };
         if let Some(lyrics) = cache.get(&key) {
             trace!(
-                target: "home-api::lyricly",
                 artist = artist_name,
                 track = track_name,
                 "got lyrics from cache",
@@ -96,12 +95,7 @@ impl Service {
                 .json()
                 .await
                 .context("failed to decode JSON response")?;
-            debug!(
-                target: "home-api::lyricly",
-                artist = artist_name,
-                track = track_name,
-                "got lyrics",
-            );
+            debug!(artist = artist_name, track = track_name, "got lyrics",);
             cache.insert(key, lyrics.clone()).await;
             lyrics
         };

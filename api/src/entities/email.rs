@@ -3,8 +3,21 @@ use super::*;
 use emails::is_valid as is_valid_email;
 
 // An `Email` is a structurally valid email address.
-#[derive(Debug, Display, Clone, Hash, Into, Serialize, Deserialize, AsRef)]
+#[derive(
+    Debug, Display, Clone, Into, Hash, PartialEq, Eq, Serialize, AsRef,
+)]
 pub struct Email(String);
+
+impl<'de> Deserialize<'de> for Email {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let email = String::deserialize(deserializer)?;
+        let email = Email::from_str(&email).map_err(D::Error::custom)?;
+        Ok(email)
+    }
+}
 
 impl Email {
     delegate! {

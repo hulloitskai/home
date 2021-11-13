@@ -41,6 +41,7 @@ use super::*;
 use entities::{Context as EntityContext, *};
 use entrust::{Comparison, Record, SortingDirection};
 use entrust::{Entity, EntityId};
+use services::auth0::Identity;
 use services::Services;
 
 use graphql::scalar;
@@ -57,9 +58,10 @@ use graphql::{MergedSubscription, Subscription, SubscriptionType};
 use graphql::{Scalar, ScalarType};
 use graphql::{Union, UnionType};
 
-#[async_trait]
-pub(super) trait ContextExt {
+trait ContextExt {
     fn services(&self) -> Services;
+
+    fn identity(&self) -> Option<&Identity>;
 
     // async fn transact<F, T, U>(&self, f: F) -> FieldResult<T>
     // where
@@ -79,6 +81,10 @@ impl<'a> ContextExt for Context<'a> {
     fn services(&self) -> Services {
         let services = self.data_unchecked::<Services>();
         services.to_owned()
+    }
+
+    fn identity(&self) -> Option<&Identity> {
+        self.data_opt()
     }
 }
 

@@ -97,8 +97,9 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
     });
   });
 
-  const transparentBlue = useTransparentize("blue.400", 0.25);
-  const transparentBlueBorder = useTransparentize("blue.400", 0.4);
+  const transparentBlueLight = useTransparentize("blue.400", 0.4);
+  const transparentBlueDark = useTransparentize("blue.400", 0.2);
+  const transparentBlack = useTransparentize("black", 0.5);
   return (
     <Layout badge="Research">
       <Container as="form" onSubmit={onSubmit} alignSelf="center">
@@ -174,8 +175,8 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
             bg="blue.50"
             p={4}
             _dark={{
-              bg: transparentBlue,
-              borderColor: transparentBlueBorder,
+              bg: transparentBlueDark,
+              borderColor: transparentBlueLight,
             }}
           >
             <FormControl isInvalid={!!formErrors.respondent}>
@@ -183,10 +184,10 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
                 {respondentLabel || "Name"}
               </FormLabel>
               <Input
-                bg="white"
+                _light={{ bg: "white" }}
                 _dark={{
-                  bg: transparentBlue,
-                  borderColor: transparentBlueBorder,
+                  bg: transparentBlack,
+                  borderColor: transparentBlueLight,
                 }}
                 {...register("respondent", {
                   required: {

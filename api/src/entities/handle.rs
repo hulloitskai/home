@@ -2,18 +2,20 @@ use super::*;
 
 /// A `Handle` is a URL-safe identifier.
 #[derive(
-    Debug,
-    Display,
-    Clone,
-    Hash,
-    Into,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    AsRef,
+    Debug, Display, Clone, Hash, Into, PartialEq, Eq, Serialize, AsRef,
 )]
 pub struct Handle(String);
+
+impl<'de> Deserialize<'de> for Handle {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let handle = String::deserialize(deserializer)?;
+        let handle = Handle::from_str(&handle).map_err(D::Error::custom)?;
+        Ok(handle)
+    }
+}
 
 impl Handle {
     pub fn new(s: &str) -> Result<Self> {

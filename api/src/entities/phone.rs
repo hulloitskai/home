@@ -4,8 +4,21 @@ use phones::country::CA;
 use phones::parse as parse_phone;
 
 /// A `Phone` is a structrually valid phone number.
-#[derive(Debug, Display, Clone, Hash, Into, Serialize, Deserialize, AsRef)]
+#[derive(
+    Debug, Display, Clone, Into, Hash, PartialEq, Eq, Serialize, AsRef,
+)]
 pub struct Phone(String);
+
+impl<'de> Deserialize<'de> for Phone {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let phone = String::deserialize(deserializer)?;
+        let phone = Phone::from_str(&phone).map_err(D::Error::custom)?;
+        Ok(phone)
+    }
+}
 
 impl Phone {
     delegate! {

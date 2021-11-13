@@ -1,7 +1,10 @@
+pub mod auth0;
 pub mod lyricly;
 pub mod obsidian;
 pub mod spotify;
 
+pub use auth0::Service as Auth0Service;
+pub use auth0::ServiceConfig as Auth0ServiceConfig;
 pub use lyricly::Service as LyriclyService;
 pub use obsidian::Service as ObsidianService;
 pub use obsidian::ServiceConfig as ObsidianServiceConfig;
@@ -21,6 +24,7 @@ pub struct Config {
     pub obsidian: ObsidianService,
     pub spotify: SpotifyService,
     pub lyricly: LyriclyService,
+    pub auth0: Auth0Service,
 }
 
 #[derive(Debug, Builder)]
@@ -31,6 +35,7 @@ struct ServicesInner {
     obsidian: ObsidianService,
     spotify: SpotifyService,
     lyricly: LyriclyService,
+    auth0: Auth0Service,
 }
 
 impl ServicesInner {
@@ -57,6 +62,10 @@ impl ServicesInner {
     pub fn lyricly(&self) -> &LyriclyService {
         &self.lyricly
     }
+
+    pub fn auth0(&self) -> &Auth0Service {
+        &self.auth0
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -71,6 +80,7 @@ impl Services {
             obsidian,
             spotify,
             lyricly,
+            auth0,
         } = config;
 
         let inner = ServicesInner {
@@ -80,6 +90,7 @@ impl Services {
             obsidian,
             spotify,
             lyricly,
+            auth0,
         };
         Services(inner.into())
     }
@@ -92,6 +103,7 @@ impl Services {
             pub fn obsidian(&self) -> &ObsidianService;
             pub fn spotify(&self) -> &SpotifyService;
             pub fn lyricly(&self) -> &LyriclyService;
+            pub fn auth0(&self) -> &Auth0Service;
         }
     }
 }
@@ -108,7 +120,8 @@ impl EntityServices for Services {
 
 #[derive(Debug, Clone, Builder)]
 pub struct Settings {
-    pub web_public_url: Url,
+    pub api_url: Url,
     pub api_public_url: Url,
-    pub api_secret: String,
+    pub web_url: Url,
+    pub web_public_url: Url,
 }

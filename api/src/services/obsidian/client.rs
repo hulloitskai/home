@@ -60,11 +60,7 @@ impl Service {
         let notes_ids = cache.get(&());
         let notes_ids = match notes_ids {
             Some(notes) => {
-                trace!(
-                    target: "home-api::obsidian",
-                    count = notes.len(),
-                    "got notes from cache"
-                );
+                trace!(count = notes.len(), "got notes from cache");
                 notes
             }
             None => {
@@ -75,11 +71,7 @@ impl Service {
                         .unwrap()?
                 };
                 cache.insert((), notes.clone()).await;
-                debug!(
-                    target: "home-api::obsidian",
-                    count = notes.len(),
-                    "got notes"
-                );
+                debug!(count = notes.len(), "got notes");
                 notes
             }
         };
@@ -112,11 +104,7 @@ impl Service {
         let note = cache.get(&String::from(id));
         let note = match note {
             Some(note) => {
-                trace!(
-                    target: "home-api::obsidian",
-                    note = id,
-                    "got note from cache"
-                );
+                trace!(note = id, "got note from cache");
                 note
             }
             None => {
@@ -130,11 +118,7 @@ impl Service {
                     .unwrap()?
                 };
                 cache.insert(id.to_owned(), note.clone()).await;
-                debug!(
-                    target: "home-api::obsidian",
-                    %id,
-                    "got note"
-                );
+                debug!(%id, "got note");
                 note
             }
         };

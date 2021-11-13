@@ -171,14 +171,18 @@ impl FormMutation {
         &self,
         ctx: &Context<'_>,
         input: CreateFormInput,
-        secret: String,
     ) -> FieldResult<CreateFormPayload> {
         let services = ctx.services();
-        let settings = services.settings();
+        let identity = ctx.identity();
         let ctx = EntityContext::new(services.clone());
 
-        if secret != settings.api_secret {
-            let error = FieldError::new("incorrect secret");
+        if let Some(identity) = identity {
+            if !identity.is_admin {
+                let error = FieldError::new("not authorized");
+                return Err(error);
+            }
+        } else {
+            let error = FieldError::new("not authenticated");
             return Err(error);
         }
 
@@ -264,14 +268,18 @@ impl FormMutation {
         &self,
         ctx: &Context<'_>,
         input: DeleteFormInput,
-        secret: String,
     ) -> FieldResult<DeleteFormPayload> {
         let services = ctx.services();
-        let settings = services.settings();
+        let identity = ctx.identity();
         let ctx = EntityContext::new(services.clone());
 
-        if secret != settings.api_secret {
-            let error = FieldError::new("incorrect secret");
+        if let Some(identity) = identity {
+            if !identity.is_admin {
+                let error = FieldError::new("not authorized");
+                return Err(error);
+            }
+        } else {
+            let error = FieldError::new("not authenticated");
             return Err(error);
         }
 

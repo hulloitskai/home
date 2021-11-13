@@ -1,26 +1,20 @@
 mod build;
-pub use build::*;
-
-mod handle;
-pub use handle::*;
-
 mod email;
-pub use email::*;
-
-mod phone;
-pub use phone::*;
-
-mod heart_rate;
-pub use heart_rate::*;
-
-mod knowledge_entry;
-pub use knowledge_entry::*;
-
 mod form;
-pub use form::*;
-
 mod form_response;
+mod handle;
+mod heart_rate;
+mod knowledge_entry;
+mod phone;
+
+pub use build::*;
+pub use email::*;
+pub use form::*;
 pub use form_response::*;
+pub use handle::*;
+pub use heart_rate::*;
+pub use knowledge_entry::*;
+pub use phone::*;
 
 use super::*;
 

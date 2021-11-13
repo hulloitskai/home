@@ -40,17 +40,16 @@ impl Service {
             ttl,
         } = config;
 
-        let authenticator = {
+        let authenticator = Authenticator::new({
             let token_endpoint: Url =
                 "https://accounts.spotify.com/api/token".parse().unwrap();
-            let config = AuthenticatorConfig::builder()
+            AuthenticatorConfig::builder()
                 .client_id(client_id)
                 .client_secret(client_secret)
                 .token_endpoint(token_endpoint)
                 .refresh_token(refresh_token)
-                .build();
-            Authenticator::new(config)
-        };
+                .build()
+        });
 
         Self {
             client: default(),
@@ -91,7 +90,6 @@ impl Service {
                 None => (None, None),
             };
             trace!(
-                target: "home-api::spotify",
                 artist = %artist_name.unwrap_or_default(),
                 track = %track_name.unwrap_or_default(),
                 "got currently-playing from cache",
@@ -136,17 +134,13 @@ impl Service {
                 let artist = track.artists.first();
                 if let Some(artist) = artist {
                     debug!(
-                        target: "home-api::spotify",
                         artist = %artist.name,
                         track = %track.name,
                         "got currently-playing",
                     );
                 };
             } else {
-                trace!(
-                    target: "home-api::spotify",
-                    "got currently-playing (none)",
-                );
+                trace!("got currently-playing (none)",);
             }
             cache
                 .insert(CurrentlyPlayingKey, currently_playing.clone())
