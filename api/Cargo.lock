@@ -76,8 +76,9 @@ checksum = "71938f30533e4d95a6d17aa530939da3842c2ab6f4f84b9dae68447e4129f74a"
 
 [[package]]
 name = "async-graphql"
-version = "2.11.0"
-source = "git+https://github.com/hulloitskai/async-graphql?rev=2f9b352#2f9b3521cd9c07af3d3e4a9c4121e86ec211ed70"
+version = "2.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e6a9edeab4427f8162ac1ccd49152fa656affab3ccfaed7eeaf8e2f9ce12ee0"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -107,8 +108,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-axum"
-version = "2.11.0"
-source = "git+https://github.com/hulloitskai/async-graphql?rev=2f9b352#2f9b3521cd9c07af3d3e4a9c4121e86ec211ed70"
+version = "2.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c8a8eeada647750b0ad1a244ef4e40f24d70adc7304f3e13ac549927d4192fb"
 dependencies = [
  "async-graphql",
  "async-trait",
@@ -125,8 +127,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "2.11.0"
-source = "git+https://github.com/hulloitskai/async-graphql?rev=2f9b352#2f9b3521cd9c07af3d3e4a9c4121e86ec211ed70"
+version = "2.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8be34933c1bca0b5aedb6d8b66ad3e27045eb8304f198cc1efaed6b6dd87835"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -140,8 +143,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "2.11.0"
-source = "git+https://github.com/hulloitskai/async-graphql?rev=2f9b352#2f9b3521cd9c07af3d3e4a9c4121e86ec211ed70"
+version = "2.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99841c1f890fda6712054e7e37b207738f4aa97870cb1bffcab2f09f2df0957a"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -152,8 +156,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "2.11.0"
-source = "git+https://github.com/hulloitskai/async-graphql?rev=2f9b352#2f9b3521cd9c07af3d3e4a9c4121e86ec211ed70"
+version = "2.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cecac7ab6737364cff7b16e9273dd51fac7cfbd14ab5d84127df5a56ca9d422"
 dependencies = [
  "bytes",
  "indexmap",
@@ -229,9 +234,9 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "axum"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5e874ee652f2ec443faed3073b80f0ac7a2042a3605fc0704d28bbbf22d623c"
+checksum = "ebef2d70f09908abd9bedd61f62db165e051eb7643c48ab1642b568b685752a0"
 dependencies = [
  "async-trait",
  "base64",
@@ -255,7 +260,7 @@ dependencies = [
  "tokio-tungstenite",
  "tokio-util",
  "tower",
- "tower-http 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-http",
  "tower-layer",
  "tower-service",
 ]
@@ -1011,7 +1016,7 @@ dependencies = [
 
 [[package]]
 name = "home-api"
-version = "0.6.5"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -1045,7 +1050,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tower",
- "tower-http 0.1.1 (git+https://github.com/tower-rs/tower-http?branch=cors)",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
  "typed-builder",
@@ -2641,24 +2646,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b7b56efe69aa0ad2b5da6b942e57ea9f6fe683b7a314d4ff48662e2c8838de1"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-util",
- "http",
- "http-body",
- "pin-project",
- "tower-layer",
- "tower-service",
-]
-
-[[package]]
-name = "tower-http"
-version = "0.1.1"
-source = "git+https://github.com/tower-rs/tower-http?branch=cors#2f9b5985f49f978a952c0dbc28594091c247f8ac"
+checksum = "6f70061b0592867f0a60e67a6e699da5fe000c88a360a5b92ebdba9d73b2238c"
 dependencies = [
  "bytes",
  "futures-core",

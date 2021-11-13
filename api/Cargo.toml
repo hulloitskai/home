@@ -1,6 +1,6 @@
 [package]
 name = "home-api"
-version = "0.6.6"
+version = "0.6.7"
 edition = "2021"
 rust-version = "1.56.0"
 
@@ -18,6 +18,7 @@ emails = { package = "mailchecker", version = "^4.0.12" }
 entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.6" }
 futures = { package = "futures-core", version = "^0.3.17" }
 futures_util = { package = "futures-util", version = "^0.3.17" }
+graphql_axum = { package = "async-graphql-axum", version = "^2.11.3" }
 headers = "^0.3.5"
 http = "^0.2.5"
 lazy_static = "^1.4.0"
@@ -46,14 +47,8 @@ features = ["http2", "ws", "headers", "json"]
 
 [dependencies.graphql]
 package = "async-graphql"
+version = "^2.11.3"
 features = ["chrono", "url", "apollo_persisted_queries"]
-git = "https://github.com/hulloitskai/async-graphql"
-rev = "2f9b352"
-
-[dependencies.graphql_axum]
-package = "async-graphql-axum"
-git = "https://github.com/hulloitskai/async-graphql"
-rev = "2f9b352"
 
 [dependencies.request]
 package = "reqwest"
@@ -76,9 +71,8 @@ features = [
 
 [dependencies.tower_http]
 package = "tower-http"
+version = "^0.1.2"
 features = ["trace", "cors"]
-git = "https://github.com/tower-rs/tower-http"
-branch = "cors"
 
 [dependencies.tracing_subscriber]
 package = "tracing-subscriber"
