@@ -49,6 +49,7 @@ const createTerminatingLink = (): ApolloLink => {
 
   const wsLink = new WsLink({
     uri: (() => {
+      console.log({ HOME_API_PUBLIC_BASE_URL });
       const { protocol, host, pathname } = new URL(HOME_API_PUBLIC_BASE_URL);
       const path = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
       switch (protocol) {

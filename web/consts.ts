@@ -2,7 +2,7 @@ import getConfig from "next/config";
 
 const { publicRuntimeConfig, serverRuntimeConfig } = getConfig();
 
-export const {
+const {
   HOME_VERSION,
   HOME_API_BASE_URL,
   HOME_API_PUBLIC_BASE_URL,
@@ -13,3 +13,12 @@ export const {
   ...publicRuntimeConfig,
   ...serverRuntimeConfig,
 } as any;
+
+export {
+  HOME_VERSION,
+  HOME_API_BASE_URL,
+  HOME_API_PUBLIC_BASE_URL,
+  SENTRY_DSN,
+  AUTH0_DOMAIN,
+  AUTH0_CLIENT_ID,
+};
