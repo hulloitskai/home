@@ -162,12 +162,12 @@ export const initializeApolloClient = (
   const { initialState } = options ?? {};
   const client = globalApolloClient ?? createApolloClient();
 
-  // Hydrate cache from initial state.
+  // Hydrate cache from initial state
   if (initialState) {
-    // Get existing cache, loaded during client side data fetching.
+    // Get existing cache, loaded during client side data fetching
     const cache = client.extract();
 
-    // Merge the existing cache with initial state.
+    // Merge the existing cache with initial state
     const state = merge(initialState, cache, {
       // combine arrays using object equality (like in sets)
       arrayMerge: (destinationArray, sourceArray) => [
@@ -176,11 +176,11 @@ export const initializeApolloClient = (
       ],
     });
 
-    // Restore the cache with the merged data.
+    // Restore the cache with the merged data
     client.restore(state);
   }
 
-  // For SSG and SSR always create a new client.
+  // For SSG and SSR always create a new client
   if (typeof window === "undefined") {
     return client;
   }
@@ -241,6 +241,6 @@ export const prefetchQueries = async (
     } catch (error) {
       console.error(`[Apollo] Error while pre-fetching queries: ${error}`);
     }
-    return { apolloState: client.extract() };
+    return client.extract();
   }
 };

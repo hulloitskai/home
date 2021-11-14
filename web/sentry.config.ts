@@ -10,5 +10,3 @@ init({
   tracesSampleRate: 0,
   beforeBreadcrumb: excludeGraphQLFetch,
 });
-
-console.info("[Sentry] Successfully initialized Sentry");

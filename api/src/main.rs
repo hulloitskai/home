@@ -1,5 +1,4 @@
 use home_api::entities::BuildInfo;
-use home_api::entities::Email;
 use home_api::env::load as load_env;
 use home_api::env::var as env_var;
 use home_api::env::var_or as env_var_or;
@@ -21,7 +20,6 @@ use home_api::util::default;
 
 use std::env::VarError as EnvVarError;
 use std::net::SocketAddr;
-use std::str::FromStr;
 
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
@@ -83,12 +81,12 @@ async fn main() -> Result<()> {
         .context("failed to initialize tracer")?;
 
     // Read environment name
-    let environment = match env_var("TEMPLATE_ENV") {
+    let environment = match env_var("HOME_ENV") {
         Ok(environment) => Some(environment),
         Err(EnvVarError::NotPresent) => None,
         Err(error) => {
             return Err(error)
-                .context("failed to read environment variable TEMPLATE_ENV")
+                .context("failed to read environment variable HOME_ENV")
         }
     };
 
@@ -188,20 +186,18 @@ async fn main() -> Result<()> {
     info!("initializing services");
 
     // Build Obsidian service
-    let obsidian = {
+    let obsidian = ObsidianService::new({
         let vault_path = env_var("OBSIDIAN_VAULT_PATH").context(
             "failed to read environment variable OBSIDIAN_VAULT_PATH",
         )?;
-        ObsidianService::new({
-            ObsidianServiceConfig::builder()
-                .vault_path(vault_path)
-                .build()
-        })
-        .context("failed to initialize Obsidian client")?
-    };
+        ObsidianServiceConfig::builder()
+            .vault_path(vault_path)
+            .build()
+    })
+    .context("failed to initialize Obsidian client")?;
 
     // Build Spotify service
-    let spotify = {
+    let spotify = SpotifyService::new({
         let client_id = env_var("SPOTIFY_CLIENT_ID")
             .context("failed to read environment variable SPOTIFY_CLIENT_ID")?;
         let client_secret = env_var("SPOTIFY_CLIENT_SECRET").context(
@@ -210,36 +206,27 @@ async fn main() -> Result<()> {
         let refresh_token = env_var("SPOTIFY_REFRESH_TOKEN").context(
             "failed to read environment variable SPOTIFY_REFRESH_TOKEN",
         )?;
-        SpotifyService::new({
-            SpotifyServiceConfig::builder()
-                .client_id(client_id)
-                .client_secret(client_secret)
-                .refresh_token(refresh_token)
-                .build()
-        })
-    };
+        SpotifyServiceConfig::builder()
+            .client_id(client_id)
+            .client_secret(client_secret)
+            .refresh_token(refresh_token)
+            .build()
+    });
 
     // Build Lyricly service
     let lyricly = LyriclyService::new();
 
     // Build Auth0 service
-    let auth0 = {
-        let admin_email = env_var("HOME_ADMIN_EMAIL")
-            .context("failed to read environment variable HOME_ADMIN_EMAIL")?;
-        let admin_email = Email::from_str(&admin_email)
-            .context("failed to parse admin email")?;
+    let auth0 = Auth0Service::new({
         let issuer_base_url = env_var("AUTH0_ISSUER_BASE_URL").context(
             "failed to read environment variable AUTH0_ISSUER_BASE_URL",
         )?;
         let issuer_base_url = Url::parse(&issuer_base_url)
             .context("failed to parse Auth0 issuer base URL")?;
-        Auth0Service::new({
-            Auth0ServiceConfig::builder()
-                .issuer_base_url(issuer_base_url)
-                .admin_email(admin_email)
-                .build()
-        })
-    };
+        Auth0ServiceConfig::builder()
+            .issuer_base_url(issuer_base_url)
+            .build()
+    });
 
     // Build services
     let services = Services::new({
@@ -377,10 +364,10 @@ async fn main() -> Result<()> {
         })
         .into_make_service();
 
-    let host = env_var_or("TEMPLATE_API_HOST", "0.0.0.0")
-        .context("failed to get environment variable TEMPLATE_API_HOST")?;
-    let port = env_var_or("TEMPLATE_API_PORT", "3000")
-        .context("failed to get environment variable TEMPLATE_API_PORT")?;
+    let host = env_var_or("HOME_API_HOST", "0.0.0.0")
+        .context("failed to get environment variable HOME_API_HOST")?;
+    let port = env_var_or("HOME_API_PORT", "3000")
+        .context("failed to get environment variable HOME_API_PORT")?;
     let addr: SocketAddr = format!("{}:{}", host, port)
         .parse()
         .context("failed to parse server address")?;
