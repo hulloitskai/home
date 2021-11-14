@@ -7,6 +7,7 @@ import { Heading, Text } from "@chakra-ui/react";
 import { Link } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 import { useToast } from "components/toast";
+import { ClientOnly } from "components/ssr";
 
 const TestPage: NextPage = () => {
   const toast = useToast();
@@ -29,11 +30,13 @@ const TestPage: NextPage = () => {
       <VStack align="stretch" spacing={8}>
         <VStack>
           <Heading size="md">Auth0 Integration</Heading>
-          {userJSON && (
-            <Box p={4} bg="gray.100" _dark={{ bg: "gray.800" }}>
-              <Text fontFamily="monospace">{userJSON}</Text>
-            </Box>
-          )}
+          <ClientOnly>
+            {userJSON && (
+              <Box p={4} bg="gray.100" _dark={{ bg: "gray.800" }}>
+                <Text fontFamily="monospace">{userJSON}</Text>
+              </Box>
+            )}
+          </ClientOnly>
           <HStack>
             <Link href={loginURL} _hover={{ textDecor: "none" }}>
               <Button>Sign In</Button>

@@ -1,5 +1,6 @@
 import { FC, ReactNode } from "react";
 import { useCallback, useContext, useMemo } from "react";
+import type { NextPageContext } from "next";
 import { isEqual } from "lodash";
 import merge from "deepmerge";
 
@@ -24,7 +25,6 @@ import { split as splitLinks } from "@apollo/client";
 import { from as mergeLinks } from "@apollo/client";
 
 import { HOME_API_BASE_URL, HOME_API_PUBLIC_BASE_URL } from "consts";
-import { NextPageContext } from "next";
 
 const typePolicies: TypePolicies = {
   KnowledgeEntryLinks: { keyFields: false },
@@ -100,7 +100,7 @@ const createApolloClient = (): Client<NormalizedCacheObject> => {
     link: mergeLinks([
       new RetryLink(),
       new SentryLink(),
-      createAuthLink(),
+      ...(typeof window !== "undefined" ? [createAuthLink()] : []),
       createTerminatingLink(),
     ]),
     cache: new InMemoryCache({ typePolicies }),
