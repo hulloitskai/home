@@ -7,11 +7,11 @@ import { Heading, Text } from "@chakra-ui/react";
 import { Link } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 import { useToast } from "components/toast";
-import { ClientOnly } from "components/ssr";
+import { ClientOnly } from "components/client-only";
 
 const TestPage: NextPage = () => {
   const toast = useToast();
-  const user = useUser();
+  const { user } = useUser();
   const userJSON = useMemo(() => {
     if (user) {
       return JSON.stringify(user, undefined, 2);
@@ -39,10 +39,10 @@ const TestPage: NextPage = () => {
           </ClientOnly>
           <HStack>
             <Link href={loginURL} _hover={{ textDecor: "none" }}>
-              <Button>Sign In</Button>
+              <Button isDisabled={!!user}>Sign In</Button>
             </Link>
             <Link href="/api/auth/logout" _hover={{ textDecor: "none" }}>
-              <Button>Sign Out</Button>
+              <Button isDisabled={!user}>Sign Out</Button>
             </Link>
           </HStack>
         </VStack>

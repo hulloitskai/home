@@ -9,7 +9,7 @@ import { Text, Link, Badge } from "@chakra-ui/react";
 import { IconButton, Icon } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
-import { ClientOnly } from "components/ssr";
+import { ClientOnly } from "components/client-only";
 
 import { HeartSection } from "components/heart-section";
 import { MusicSection } from "components/music-section";

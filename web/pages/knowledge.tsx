@@ -2,7 +2,7 @@ import React from "react";
 import type { NextPage } from "next";
 
 import { Center, Spinner } from "@chakra-ui/react";
-import { ClientOnly } from "components/ssr";
+import { ClientOnly } from "components/client-only";
 
 import { KnowledgeGraph } from "components/knowledge-graph";
 import { KnowledgeGraphEntryFragmentDoc } from "apollo";
