@@ -19,6 +19,7 @@ import { KnowledgeGraphEntryFragment } from "apollo";
 import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
 import { gql } from "@apollo/client";
+import { prefetchQueries, patchNodeFetchForSSR } from "components/apollo";
 import { useHandleQueryError } from "components/apollo";
 import { useHomePageQuery } from "apollo";
 
@@ -143,6 +144,12 @@ const HomePage: NextPage = () => {
       )}
     </VStack>
   );
+};
+
+HomePage.getInitialProps = async ctx => {
+  await patchNodeFetchForSSR();
+  const apolloState = await prefetchQueries(ctx);
+  return { apolloState };
 };
 
 export default HomePage;

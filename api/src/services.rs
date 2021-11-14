@@ -39,31 +39,31 @@ struct ServicesInner {
 }
 
 impl ServicesInner {
-    pub fn database(&self) -> &Database {
+    fn database(&self) -> &Database {
         &self.database
     }
 
-    pub fn database_client(&self) -> &DatabaseClient {
+    fn database_client(&self) -> &DatabaseClient {
         &self.database_client
     }
 
-    pub fn settings(&self) -> &Settings {
+    fn settings(&self) -> &Settings {
         &self.settings
     }
 
-    pub fn obsidian(&self) -> &ObsidianService {
+    fn obsidian(&self) -> &ObsidianService {
         &self.obsidian
     }
 
-    pub fn spotify(&self) -> &SpotifyService {
+    fn spotify(&self) -> &SpotifyService {
         &self.spotify
     }
 
-    pub fn lyricly(&self) -> &LyriclyService {
+    fn lyricly(&self) -> &LyriclyService {
         &self.lyricly
     }
 
-    pub fn auth0(&self) -> &Auth0Service {
+    fn auth0(&self) -> &Auth0Service {
         &self.auth0
     }
 }
@@ -120,8 +120,8 @@ impl EntityServices for Services {
 
 #[derive(Debug, Clone, Builder)]
 pub struct Settings {
-    pub api_url: Url,
-    pub api_public_url: Url,
-    pub web_url: Url,
-    pub web_public_url: Url,
+    pub api_base_url: Url,
+    pub api_public_base_url: Url,
+    pub web_base_url: Url,
+    pub web_public_base_url: Url,
 }

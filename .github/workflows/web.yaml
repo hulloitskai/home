@@ -38,6 +38,10 @@ jobs:
           context: ./web/
           push: true
           tags: ${{ steps.generate-tags.outputs.tags }}
+          build-args: |
+            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }}
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
           cache-from: |
             type=local,src=/tmp/.docker-cache
           cache-to: |

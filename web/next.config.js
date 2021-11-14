@@ -1,10 +1,12 @@
-const { HOME_API_URL, HOME_API_PUBLIC_URL } = process.env;
-const { AUTH0_DOMAIN, AUTH0_CLIENT_ID } = process.env;
-const { GCP_API_KEY } = process.env;
+const { withSentryConfig } = require("@sentry/nextjs");
 
-/**
- * @type {import('next').NextConfig}
- **/
+const HOME_VERSION = process.env.npm_package_version;
+const { HOME_API_BASE_URL, HOME_API_PUBLIC_BASE_URL } = process.env;
+const { AUTH0_DOMAIN, AUTH0_CLIENT_ID } = process.env;
+
+const { SENTRY_URL, SENTRY_ORG, SENTRY_PROJECT, SENTRY_DSN } = process.env;
+
+/** @type {import('next').NextConfig} */
 const config = {
   productionBrowserSourceMaps: true,
   headers: async () => [
@@ -19,17 +21,44 @@ const config = {
     },
   ],
   publicRuntimeConfig: {
+    HOME_VERSION,
+    HOME_API_PUBLIC_BASE_URL,
+    SENTRY_DSN,
     AUTH0_DOMAIN,
     AUTH0_CLIENT_ID,
-    GCP_API_KEY,
-    HOME_API_PUBLIC_URL,
   },
   serverRuntimeConfig: {
+    HOME_VERSION,
+    HOME_API_BASE_URL,
+    SENTRY_DSN,
     AUTH0_DOMAIN,
     AUTH0_CLIENT_ID,
-    GCP_API_KEY,
-    HOME_API_URL,
   },
 };
 
-module.exports = config;
+if (!!SENTRY_URL && !!SENTRY_ORG && !!SENTRY_PROJECT) {
+  const { name, version } = require("./package.json");
+
+  /** @type {import('@sentry/webpack-plugin').SentryCliPluginOptions} */
+  const sentryOptions = {
+    silent: true,
+    release: `${name}@${version}`,
+  };
+
+  module.exports = withSentryConfig(config, sentryOptions);
+} else {
+  const missingVariables = Object.entries({
+    SENTRY_URL,
+    SENTRY_ORG,
+    SENTRY_PROJECT,
+  })
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  console.warn(
+    `[Sentry] Skip uploading sourcemaps (missing variables: ${missingVariables.join(
+      ", ",
+    )})`,
+  );
+  module.exports = config;
+}

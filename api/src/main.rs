@@ -26,8 +26,8 @@ use std::str::FromStr;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 
-use http::header::CONTENT_TYPE;
-use http::header::{HeaderValue, InvalidHeaderValue};
+use http::header::{HeaderName, HeaderValue, InvalidHeaderValue};
+use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::Method;
 
 use tower::ServiceBuilder;
@@ -66,6 +66,7 @@ use sentry_tracing::layer as sentry_tracing_layer;
 use bson::doc;
 use chrono::{DateTime, FixedOffset};
 use tokio::main as tokio;
+use url::Url;
 
 #[tokio]
 async fn main() -> Result<()> {
@@ -106,7 +107,10 @@ async fn main() -> Result<()> {
         Ok(dsn) => {
             debug!("initializing Sentry");
             let dsn = dsn.into_dsn().context("failed to parse Sentry DSN")?;
-            let release = format!("template-api@{}", &build.version);
+            let release = {
+                let name = env!("CARGO_PKG_NAME");
+                format!("{}@{}", name, &build.version)
+            };
             let options = SentryOptions {
                 dsn,
                 release: Some(release.into()),
@@ -122,6 +126,36 @@ async fn main() -> Result<()> {
                 .context("failed to read environment variable SENTRY_DSN")
         }
     };
+
+    // Build settings
+    let settings = Settings::builder()
+        .web_base_url({
+            let url = env_var("HOME_WEB_BASE_URL").context(
+                "failed to read environment variable HOME_WEB_BASE_URL",
+            )?;
+            url.parse().context("failed to parse home-web base URL")?
+        })
+        .web_public_base_url({
+            let url = env_var("HOME_WEB_PUBLIC_BASE_URL").context(
+                "failed to read environment variable HOME_WEB_PUBLIC_BASE_URL",
+            )?;
+            url.parse()
+                .context("failed to parse home-web public base URL")?
+        })
+        .api_base_url({
+            let url = env_var("HOME_API_BASE_URL").context(
+                "failed to read environment variable HOME_API_BASE_URL",
+            )?;
+            url.parse().context("failed to parse home-api base URL")?
+        })
+        .api_public_base_url({
+            let url = env_var("HOME_API_PUBLIC_BASE_URL").context(
+                "failed to read environment variable HOME_API_PUBLIC_BASE_URL",
+            )?;
+            url.parse()
+                .context("failed to parse home-api public base URL")?
+        })
+        .build();
 
     // Connect to database
     let database_client = {
@@ -152,32 +186,6 @@ async fn main() -> Result<()> {
     };
 
     info!("initializing services");
-
-    // Build settings
-    let settings = Settings::builder()
-        .web_url({
-            let url = env_var("HOME_WEB_URL")
-                .context("failed to read environment variable HOME_WEB_URL")?;
-            url.parse().context("failed to parse home-web URL")?
-        })
-        .web_public_url({
-            let url = env_var("HOME_WEB_PUBLIC_URL").context(
-                "failed to read environment variable HOME_WEB_PUBLIC_URL",
-            )?;
-            url.parse().context("failed to parse home-web public URL")?
-        })
-        .api_url({
-            let url = env_var("HOME_API_URL")
-                .context("failed to read environment variable HOME_API_URL")?;
-            url.parse().context("failed to parse home-api URL")?
-        })
-        .api_public_url({
-            let url = env_var("HOME_API_PUBLIC_URL").context(
-                "failed to read environment variable HOME_API_PUBLIC_URL",
-            )?;
-            url.parse().context("failed to parse home-api public URL")?
-        })
-        .build();
 
     // Build Obsidian service
     let obsidian = {
@@ -220,11 +228,14 @@ async fn main() -> Result<()> {
             .context("failed to read environment variable HOME_ADMIN_EMAIL")?;
         let admin_email = Email::from_str(&admin_email)
             .context("failed to parse admin email")?;
-        let domain = env_var("AUTH0_DOMAIN")
-            .context("failed to read environment variable AUTH0_DOMAIN")?;
+        let issuer_base_url = env_var("AUTH0_ISSUER_BASE_URL").context(
+            "failed to read environment variable AUTH0_ISSUER_BASE_URL",
+        )?;
+        let issuer_base_url = Url::parse(&issuer_base_url)
+            .context("failed to parse Auth0 issuer base URL")?;
         Auth0Service::new({
             Auth0ServiceConfig::builder()
-                .domain(domain)
+                .issuer_base_url(issuer_base_url)
                 .admin_email(admin_email)
                 .build()
         })
@@ -271,7 +282,12 @@ async fn main() -> Result<()> {
             .context("failed to initialize GraphQL playground")?;
     let graphql_layer = CorsLayer::new()
         .allow_methods(vec![Method::GET, Method::POST])
-        .allow_headers(vec![CONTENT_TYPE])
+        .allow_headers(vec![
+            CONTENT_TYPE,
+            AUTHORIZATION,
+            HeaderName::from_static("sentry-trace"),
+        ])
+        .allow_credentials(true)
         .allow_origin({
             match env_var("HOME_API_CORS_ALLOW_ORIGIN") {
                 Ok(origin) => {
@@ -290,24 +306,28 @@ async fn main() -> Result<()> {
                 }
                 Err(EnvVarError::NotPresent) => {
                     let Settings {
-                        web_url,
-                        web_public_url,
-                        api_url,
-                        api_public_url,
+                        web_base_url,
+                        web_public_base_url,
+                        api_base_url,
+                        api_public_base_url,
                         ..
                     } = &settings;
-                    let origins =
-                        [web_url, web_public_url, api_url, api_public_url]
-                            .into_iter()
-                            .map(|url| {
-                                let mut url = url.to_owned();
-                                url.set_path("");
-                                let mut url = url.to_string();
-                                url.pop();
-                                HeaderValue::from_str(&url)
-                            })
-                            .collect::<Result<Vec<_>, InvalidHeaderValue>>()
-                            .context("failed to parse CORS origin")?;
+                    let origins = [
+                        web_base_url,
+                        web_public_base_url,
+                        api_base_url,
+                        api_public_base_url,
+                    ]
+                    .into_iter()
+                    .map(|url| {
+                        let mut url = url.to_owned();
+                        url.set_path("");
+                        let mut url = url.to_string();
+                        url.pop();
+                        HeaderValue::from_str(&url)
+                    })
+                    .collect::<Result<Vec<_>, InvalidHeaderValue>>()
+                    .context("failed to parse CORS origin")?;
                     CorsOrigin::list(origins).into()
                 }
                 Err(error) => {

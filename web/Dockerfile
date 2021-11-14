@@ -1,6 +1,12 @@
 # Builder:
 FROM node:14-alpine3.13 AS builder
 
+# Configure args
+ARG SENTRY_URL=https://sentry.io/
+ARG SENTRY_ORG=
+ARG SENTRY_PROJECT=
+ARG SENTRY_AUTH_TOKEN
+
 # Install dependencies
 WORKDIR /workspace/web
 COPY package.json yarn.lock ./

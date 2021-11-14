@@ -17,7 +17,7 @@ struct Claims {
 #[derivative(Debug)]
 pub struct Service {
     client: HttpClient,
-    domain: String,
+    issuer_base_url: Url,
     admin_email: Email,
 
     #[derivative(Debug = "ignore")]
@@ -26,7 +26,7 @@ pub struct Service {
 
 #[derive(Debug, Clone, Builder)]
 pub struct ServiceConfig {
-    domain: String,
+    issuer_base_url: Url,
     admin_email: Email,
 }
 
@@ -34,12 +34,12 @@ impl Service {
     pub fn new(config: ServiceConfig) -> Self {
         let ServiceConfig {
             admin_email,
-            domain,
+            issuer_base_url,
         } = config;
 
         Service {
             client: default(),
-            domain,
+            issuer_base_url,
             admin_email,
             cache: Cache::new(1000),
         }
@@ -50,7 +50,7 @@ impl Service {
     pub async fn identify(&self, token: &str) -> Result<Identity> {
         let Self {
             client,
-            domain,
+            issuer_base_url,
             admin_email,
             cache,
         } = self;
@@ -60,7 +60,14 @@ impl Service {
             return Ok(claims);
         };
 
-        let url = format!("https://{}/userinfo", domain);
+        let url = {
+            let mut url = issuer_base_url.to_owned();
+            {
+                let mut segments = url.path_segments_mut().unwrap();
+                segments.push("userinfo");
+            }
+            url
+        };
         let response = client
             .get(url)
             .bearer_auth(&token)

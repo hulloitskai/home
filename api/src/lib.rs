@@ -68,11 +68,11 @@ use tracing::{debug, error, info, trace, warn};
 use typed_builder::TypedBuilder as Builder;
 use url::Url;
 
-trait MokaCacheExt<K, V> {
+trait CacheExt<K, V> {
     fn builder(max_capacity: usize) -> CacheBuilder<Cache<K, V>>;
 }
 
-impl<K, V> MokaCacheExt<K, V> for Cache<K, V>
+impl<K, V> CacheExt<K, V> for Cache<K, V>
 where
     K: Send + Sync + 'static,
     V: Send + Sync + 'static,

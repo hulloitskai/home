@@ -12,7 +12,7 @@ pub struct GraphQLPlaygroundExtension {
 impl GraphQLPlaygroundExtension {
     pub fn new(services: &Services) -> Result<Self> {
         let endpoint = {
-            let mut endpoint = services.settings().api_public_url.clone();
+            let mut endpoint = services.settings().api_public_base_url.clone();
             if !matches!(endpoint.scheme(), "http" | "https") {
                 bail!("invalid GraphQL playground endpoint scheme");
             }

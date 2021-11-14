@@ -21,8 +21,10 @@ import {
 import { Layout } from "components/layout";
 import { TextareaAutosize } from "components/textarea";
 
-import { initializeApolloClient, useHandleQueryError } from "components/apollo";
+import { initializeApolloClient } from "components/apollo";
+import { patchNodeFetchForSSR } from "components/apollo";
 import { gql } from "@apollo/client";
+import { useHandleQueryError } from "components/apollo";
 
 import {
   ResearchPagePropsDocument,
@@ -255,6 +257,7 @@ export const getServerSideProps: GetServerSideProps<ResearchPageProps> =
       return { notFound: true };
     }
 
+    await patchNodeFetchForSSR();
     const client = initializeApolloClient();
     const { data } = await client.query<
       ResearchPagePropsQuery,

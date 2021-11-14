@@ -1,4 +1,5 @@
-import { FC, ReactNode, useCallback, useContext, useMemo } from "react";
+import { FC, ReactNode } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import { isEqual } from "lodash";
 import merge from "deepmerge";
 
@@ -11,13 +12,19 @@ import { ApolloError } from "@apollo/client";
 import { ServerError } from "@apollo/client";
 import { getApolloContext } from "@apollo/client";
 
-import { HttpLink, split } from "@apollo/client";
-import { WebSocketLink } from "@apollo/client/link/ws";
+import { HttpLink } from "@apollo/client";
+import { RetryLink } from "@apollo/client/link/retry";
+import { SentryLink } from "apollo-link-sentry";
+import { WebSocketLink as WsLink } from "@apollo/client/link/ws";
+import { setContext as setLinkContext } from "@apollo/client/link/context";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { InMemoryCache, NormalizedCacheObject } from "@apollo/client";
 import { TypedTypePolicies as TypePolicies } from "apollo/helpers";
+import { split as splitLinks } from "@apollo/client";
+import { from as mergeLinks } from "@apollo/client";
 
-import { HOME_API_URL, HOME_API_PUBLIC_URL } from "consts";
+import { HOME_API_BASE_URL, HOME_API_PUBLIC_BASE_URL } from "consts";
+import { NextPageContext } from "next";
 
 const typePolicies: TypePolicies = {
   KnowledgeEntryLinks: { keyFields: false },
@@ -29,20 +36,20 @@ const typePolicies: TypePolicies = {
   LyricLine: { keyFields: false },
 };
 
-const createLink = (): ApolloLink => {
+const createTerminatingLink = (): ApolloLink => {
   const httpLink = new HttpLink({
     uri:
       typeof window !== "undefined"
-        ? `${HOME_API_PUBLIC_URL}/graphql`
-        : `${HOME_API_URL}/graphql`,
+        ? `${HOME_API_PUBLIC_BASE_URL}/graphql`
+        : `${HOME_API_BASE_URL}/graphql`,
   });
   if (typeof window === "undefined") {
     return httpLink;
   }
 
-  const wsLink = new WebSocketLink({
+  const wsLink = new WsLink({
     uri: (() => {
-      const { protocol, host, pathname } = new URL(HOME_API_PUBLIC_URL);
+      const { protocol, host, pathname } = new URL(HOME_API_PUBLIC_BASE_URL);
       const path = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
       switch (protocol) {
         case "http:":
@@ -58,7 +65,7 @@ const createLink = (): ApolloLink => {
     },
   });
 
-  return split(
+  return splitLinks(
     ({ query }) => {
       const definition = getMainDefinition(query);
       return (
@@ -71,13 +78,32 @@ const createLink = (): ApolloLink => {
   );
 };
 
+const createAuthLink = (): ApolloLink => {
+  return setLinkContext(async (operation, { headers }) => {
+    const response = await fetch("/api/auth/token");
+    if (response.status === 200) {
+      const token = await response.text();
+      return {
+        headers: {
+          ...headers,
+          authorization: `Bearer ${token}`,
+        },
+      };
+    }
+    return headers;
+  });
+};
+
 const createApolloClient = (): Client<NormalizedCacheObject> => {
   return new Client({
     ssrMode: typeof window === "undefined",
-    link: createLink(),
-    cache: new InMemoryCache({
-      typePolicies,
-    }),
+    link: mergeLinks([
+      new RetryLink(),
+      new SentryLink(),
+      createAuthLink(),
+      createTerminatingLink(),
+    ]),
+    cache: new InMemoryCache({ typePolicies }),
   });
 };
 
@@ -90,24 +116,50 @@ export const ApolloProvider: FC<ApolloProviderProps> = ({
   initialState,
   children,
 }) => {
-  const context = useContext(getApolloContext());
-  const client = useMemo(
+  const apolloContext = useContext(getApolloContext());
+  const apolloClient = useMemo(
     () => {
-      if (context.client) {
-        return context.client;
+      if (apolloContext.client) {
+        return apolloContext.client;
       }
-      return initializeApolloClient(initialState);
+      return initializeApolloClient({ initialState });
     },
     [], // eslint-disable-line react-hooks/exhaustive-deps
   );
-  return <Provider client={client}>{children}</Provider>;
+
+  return <Provider client={apolloClient}>{children}</Provider>;
 };
 
 let globalApolloClient: Client<NormalizedCacheObject> | undefined;
 
+export type InitializeApolloClientOptions = {
+  initialState?: NormalizedCacheObject;
+};
+
+let globalFetchIsPatched = false;
+
+// Patch node-fetch to work with auth0
+//
+// See: https://github.com/apollographql/apollo-client/issues/6765
+// @ts-ignore
+export const patchNodeFetchForSSR = async () => {
+  if (typeof window === "undefined" && !globalFetchIsPatched) {
+    // @ts-ignore
+    const { default: fetch } = await import("node-fetch");
+    const { abortableFetch } = await import(
+      // @ts-ignore
+      "abortcontroller-polyfill/dist/cjs-ponyfill"
+    );
+
+    global.fetch = abortableFetch(fetch).fetch;
+    globalFetchIsPatched = true;
+  }
+};
+
 export const initializeApolloClient = (
-  initialState?: NormalizedCacheObject,
+  options?: InitializeApolloClientOptions,
 ): Client<NormalizedCacheObject> => {
+  const { initialState } = options ?? {};
   const client = globalApolloClient ?? createApolloClient();
 
   // Hydrate cache from initial state.
@@ -137,7 +189,6 @@ export const initializeApolloClient = (
   if (!globalApolloClient) {
     globalApolloClient = client;
   }
-
   return globalApolloClient;
 };
 
@@ -172,4 +223,24 @@ export const formatApolloError = (error: ApolloError): string => {
     }
   }
   return message;
+};
+
+export const prefetchQueries = async (
+  { AppTree, req, res }: NextPageContext,
+  pageProps: any = {},
+): Promise<NormalizedCacheObject | undefined> => {
+  if (req && !res?.writableEnded) {
+    const client = initializeApolloClient();
+    try {
+      const { getDataFromTree } = await import("@apollo/client/react/ssr");
+      await getDataFromTree(
+        <Provider client={client}>
+          <AppTree pageProps={pageProps} />
+        </Provider>,
+      );
+    } catch (error) {
+      console.error(`[Apollo] Error while pre-fetching queries: ${error}`);
+    }
+    return { apolloState: client.extract() };
+  }
 };
