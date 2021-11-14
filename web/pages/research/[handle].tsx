@@ -101,7 +101,7 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
   const transparentBlueDark = useTransparentize("blue.400", 0.2);
   const transparentBlack = useTransparentize("black", 0.5);
   return (
-    <Layout badge="Research">
+    <Layout badge="Research" badgeTooltip="Help me learn things!">
       <Container as="form" onSubmit={onSubmit} alignSelf="center">
         <VStack align="stretch" spacing={8}>
           <VStack align="stretch" spacing={1}>
