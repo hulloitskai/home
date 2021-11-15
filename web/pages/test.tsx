@@ -27,6 +27,13 @@ const TestPage: NextPage = () => {
     return "/api/auth/login?" + search.toString();
   }, []);
 
+  const logoutURL = useMemo(() => {
+    const search = new URLSearchParams({
+      returnTo: "/test",
+    });
+    return "/api/auth/logout?" + search.toString();
+  }, []);
+
   return (
     <Layout badge="Test" badgeTooltip="Is this thing on?">
       <Container flex={1} alignSelf="center">
@@ -44,7 +51,7 @@ const TestPage: NextPage = () => {
               <Link href={loginURL} _hover={{ textDecor: "none" }}>
                 <Button isDisabled={!!user}>Sign In</Button>
               </Link>
-              <Link href="/api/auth/logout" _hover={{ textDecor: "none" }}>
+              <Link href={logoutURL} _hover={{ textDecor: "none" }}>
                 <Button isDisabled={!user}>Sign Out</Button>
               </Link>
             </HStack>

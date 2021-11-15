@@ -15,7 +15,7 @@ import {
 
 import { ChakraProvider as Provider } from "@chakra-ui/react";
 import { ThemeConfig, useTheme, extendTheme } from "@chakra-ui/react";
-import { cookieStorageManager } from "@chakra-ui/react";
+import { StorageManager, ColorMode } from "@chakra-ui/react";
 
 import { StyleFunctionProps } from "@chakra-ui/theme-tools";
 import { transparentize, mode } from "@chakra-ui/theme-tools";
@@ -24,7 +24,7 @@ const config: ThemeConfig = {
   useSystemColorMode: true,
 };
 
-export const ChakraTheme = extendTheme({
+const theme = extendTheme({
   config,
   colors: {
     gray,
@@ -132,12 +132,9 @@ export const ChakraProvider: FC<ChakraProviderProps> = ({
   cookies,
   children,
 }) => {
-  const colorModeManager = useMemo(
-    () => cookieStorageManager(cookies),
-    [cookies],
-  );
+  const manager = useMemo(() => colorModeManager(cookies), [cookies]);
   return (
-    <Provider theme={ChakraTheme} colorModeManager={colorModeManager}>
+    <Provider theme={theme} colorModeManager={manager}>
       {children}
     </Provider>
   );
@@ -147,3 +144,21 @@ export const useTransparentize = (color: string, opacity: number): string => {
   const theme = useTheme();
   return transparentize(color, opacity)(theme);
 };
+
+const colorModeCookieName = "chakra_color_mode";
+
+const colorModeManager = (cookies = ""): StorageManager => ({
+  get(init) {
+    const match = cookies.match(
+      new RegExp(`(^| )${colorModeCookieName}=([^;]+)`),
+    );
+    if (match) {
+      return match[2] as ColorMode;
+    }
+    return init;
+  },
+  set(value) {
+    document.cookie = `${colorModeCookieName}=${value}; max-age=31536000; path=/`;
+  },
+  type: "cookie",
+});

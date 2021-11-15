@@ -80,7 +80,7 @@ impl Service {
         let identity = match from_json::<Claims>(data.clone()) {
             Ok(claims) => {
                 let identity = {
-                    let Claims { email, is_admin } = dbg!(claims);
+                    let Claims { email, is_admin } = claims;
                     Identity { email, is_admin }
                 };
                 self.cache.insert(token.clone(), identity.clone()).await;

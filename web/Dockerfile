@@ -39,9 +39,9 @@ USER docker
 
 # Run web
 ENV NODE_ENV=production
-ENV HOME_WEB_HOST=0.0.0.0
-ENV HOME_WEB_PORT=8000
-EXPOSE $HOME_WEB_PORT
+ENV WEB_HOST=0.0.0.0
+ENV WEB_PORT=8000
+EXPOSE $WEB_PORT
 ENTRYPOINT ["yarn"]
 CMD ["start"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$HOME_WEB_PORT
+HEALTHCHECK CMD curl --fail --head http://localhost:$WEB_PORT

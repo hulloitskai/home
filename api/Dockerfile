@@ -16,7 +16,7 @@ COPY ./build.rs ./build.rs
 COPY ./src/ ./src/
 RUN cargo build --release
 
-RUN mkdir -p /dist && mv ./target/release/home-api /dist/api
+RUN mkdir -p /dist && mv ./target/release/api /dist/api
 
 
 # Runner:
@@ -33,9 +33,9 @@ RUN addgroup -g 1001 -S docker && \
 USER docker
 
 # Run api
-ENV HOME_API_ENV=production
-ENV HOME_API_HOST=0.0.0.0
-ENV HOME_API_PORT=3000
-EXPOSE $HOME_API_PORT
+ENV API_ENV=production
+ENV API_HOST=0.0.0.0
+ENV API_PORT=3000
+EXPOSE $API_PORT
 ENTRYPOINT ["/app/api"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$HOME_API_PORT
+HEALTHCHECK CMD curl --fail --head http://localhost:$API_PORT

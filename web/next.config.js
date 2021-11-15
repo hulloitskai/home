@@ -1,8 +1,9 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 
-const HOME_VERSION = process.env.npm_package_version;
-const { HOME_API_BASE_URL, HOME_API_PUBLIC_BASE_URL } = process.env;
-const { AUTH0_DOMAIN, AUTH0_CLIENT_ID } = process.env;
+const { name: pkgName, version: pkgVersion } = require("./package.json");
+
+const { API_BASE_URL, API_PUBLIC_BASE_URL } = process.env;
+const { WEB_BASE_URL, WEB_PUBLIC_BASE_URL } = process.env;
 
 const { SENTRY_URL, SENTRY_ORG, SENTRY_PROJECT, SENTRY_DSN } = process.env;
 
@@ -21,28 +22,28 @@ const config = {
     },
   ],
   publicRuntimeConfig: {
-    HOME_VERSION,
-    HOME_API_PUBLIC_BASE_URL,
-    SENTRY_DSN,
-    AUTH0_DOMAIN,
-    AUTH0_CLIENT_ID,
+    pkgName,
+    pkgVersion,
+    apiPublicBaseURL: API_PUBLIC_BASE_URL,
+    webPublicBaseURL: WEB_PUBLIC_BASE_URL,
+    sentryDSN: SENTRY_DSN,
   },
   serverRuntimeConfig: {
-    HOME_VERSION,
-    HOME_API_BASE_URL,
-    SENTRY_DSN,
-    AUTH0_DOMAIN,
-    AUTH0_CLIENT_ID,
+    pkgName,
+    pkgVersion,
+    apiBaseURL: API_BASE_URL,
+    apiPublicBaseURL: API_PUBLIC_BASE_URL,
+    webBaseURL: WEB_BASE_URL,
+    webPublicBaseURL: WEB_PUBLIC_BASE_URL,
+    sentryDSN: SENTRY_DSN,
   },
 };
 
 if (!!SENTRY_URL && !!SENTRY_ORG && !!SENTRY_PROJECT) {
-  const { name, version } = require("./package.json");
-
   /** @type {import('@sentry/webpack-plugin').SentryCliPluginOptions} */
   const sentryOptions = {
     silent: true,
-    release: `${name}@${version}`,
+    release: `${pkgName}@${pkgVersion}`,
   };
 
   module.exports = withSentryConfig(config, sentryOptions);

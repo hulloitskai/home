@@ -29,12 +29,12 @@ pub fn load() -> Result<()> {
     }
 
     // Configure logging.
-    let log = var_or("HOME_API_LOG", "warn,home-api=info").unwrap();
+    let log = var_or("API_LOG", "info").unwrap();
     set_env_var("RUST_LOG", log);
 
     // Configure backtraces.
     remove_env_var("RUST_BACKTRACE");
-    if None == var("HOME_API_BACKTRACE").ok() {
+    if None == var("API_BACKTRACE").ok() {
         set_env_var("RUST_BACKTRACE", "1")
     }
     Ok(())

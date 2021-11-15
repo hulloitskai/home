@@ -1,22 +1,22 @@
-use home_api::entities::BuildInfo;
-use home_api::env::load as load_env;
-use home_api::env::var as env_var;
-use home_api::env::var_or as env_var_or;
-use home_api::graph::{Mutation, Query, Subscription};
-use home_api::handlers::graphql_handler;
-use home_api::handlers::graphql_playground_handler;
-use home_api::handlers::health_webhook_handler;
-use home_api::handlers::GraphQLExtension;
-use home_api::handlers::GraphQLPlaygroundExtension;
-use home_api::handlers::HealthWebhookExtension;
-use home_api::services::Config as ServicesConfig;
-use home_api::services::LyriclyService;
-use home_api::services::Services;
-use home_api::services::Settings;
-use home_api::services::{Auth0Service, Auth0ServiceConfig};
-use home_api::services::{ObsidianService, ObsidianServiceConfig};
-use home_api::services::{SpotifyService, SpotifyServiceConfig};
-use home_api::util::default;
+use api::entities::BuildInfo;
+use api::env::load as load_env;
+use api::env::var as env_var;
+use api::env::var_or as env_var_or;
+use api::graph::{Mutation, Query, Subscription};
+use api::handlers::graphql_handler;
+use api::handlers::graphql_playground_handler;
+use api::handlers::health_webhook_handler;
+use api::handlers::GraphQLExtension;
+use api::handlers::GraphQLPlaygroundExtension;
+use api::handlers::HealthWebhookExtension;
+use api::services::Config as ServicesConfig;
+use api::services::LyriclyService;
+use api::services::Services;
+use api::services::Settings;
+use api::services::{Auth0Service, Auth0ServiceConfig};
+use api::services::{ObsidianService, ObsidianServiceConfig};
+use api::services::{SpotifyService, SpotifyServiceConfig};
+use api::util::default;
 
 use std::env::VarError as EnvVarError;
 use std::net::SocketAddr;
@@ -81,12 +81,12 @@ async fn main() -> Result<()> {
         .context("failed to initialize tracer")?;
 
     // Read environment name
-    let environment = match env_var("HOME_ENV") {
+    let environment = match env_var("ENV") {
         Ok(environment) => Some(environment),
         Err(EnvVarError::NotPresent) => None,
         Err(error) => {
             return Err(error)
-                .context("failed to read environment variable HOME_ENV")
+                .context("failed to read environment variable ENV")
         }
     };
 
@@ -128,30 +128,26 @@ async fn main() -> Result<()> {
     // Build settings
     let settings = Settings::builder()
         .web_base_url({
-            let url = env_var("HOME_WEB_BASE_URL").context(
-                "failed to read environment variable HOME_WEB_BASE_URL",
-            )?;
-            url.parse().context("failed to parse home-web base URL")?
+            let url = env_var("WEB_BASE_URL")
+                .context("failed to read environment variable WEB_BASE_URL")?;
+            url.parse().context("failed to parse web base URL")?
         })
         .web_public_base_url({
-            let url = env_var("HOME_WEB_PUBLIC_BASE_URL").context(
-                "failed to read environment variable HOME_WEB_PUBLIC_BASE_URL",
+            let url = env_var("WEB_PUBLIC_BASE_URL").context(
+                "failed to read environment variable WEB_PUBLIC_BASE_URL",
             )?;
-            url.parse()
-                .context("failed to parse home-web public base URL")?
+            url.parse().context("failed to parse web public base URL")?
         })
         .api_base_url({
-            let url = env_var("HOME_API_BASE_URL").context(
-                "failed to read environment variable HOME_API_BASE_URL",
-            )?;
-            url.parse().context("failed to parse home-api base URL")?
+            let url = env_var("API_BASE_URL")
+                .context("failed to read environment variable API_BASE_URL")?;
+            url.parse().context("failed to parse api base URL")?
         })
         .api_public_base_url({
-            let url = env_var("HOME_API_PUBLIC_BASE_URL").context(
-                "failed to read environment variable HOME_API_PUBLIC_BASE_URL",
+            let url = env_var("API_PUBLIC_BASE_URL").context(
+                "failed to read environment variable API_PUBLIC_BASE_URL",
             )?;
-            url.parse()
-                .context("failed to parse home-api public base URL")?
+            url.parse().context("failed to parse api public base URL")?
         })
         .build();
 
@@ -173,7 +169,7 @@ async fn main() -> Result<()> {
     // Connect to MongoDB
     info!("connecting to database");
     let database = {
-        let name = env_var_or("MONGO_DATABASE", "home")
+        let name = env_var("MONGO_DATABASE")
             .context("failed to read environment variable MONGO_DATABASE")?;
         let database = database_client.database(&name);
         database
@@ -267,64 +263,62 @@ async fn main() -> Result<()> {
     let graphql_playground_extension =
         GraphQLPlaygroundExtension::new(&services)
             .context("failed to initialize GraphQL playground")?;
-    let graphql_layer = CorsLayer::new()
-        .allow_methods(vec![Method::GET, Method::POST])
-        .allow_headers(vec![
-            CONTENT_TYPE,
-            AUTHORIZATION,
-            HeaderName::from_static("sentry-trace"),
-        ])
-        .allow_credentials(true)
-        .allow_origin({
-            match env_var("HOME_API_CORS_ALLOW_ORIGIN") {
-                Ok(origin) => {
-                    let origin: CorsAnyOr<CorsOrigin> = if origin == "*" {
-                        cors_any().into()
-                    } else {
-                        let origins = origin
-                            .split(',')
-                            .map(HeaderValue::from_str)
-                            .collect::<Result<Vec<_>, InvalidHeaderValue>>()
-                            .context("failed to parse CORS origin")?;
-                        let list = CorsOrigin::list(origins);
-                        list.into()
-                    };
-                    origin
+    let graphql_layer =
+        CorsLayer::new()
+            .allow_methods(vec![Method::GET, Method::POST])
+            .allow_headers(vec![
+                CONTENT_TYPE,
+                AUTHORIZATION,
+                HeaderName::from_static("sentry-trace"),
+            ])
+            .allow_credentials(true)
+            .allow_origin({
+                match env_var("API_CORS_ALLOW_ORIGIN") {
+                    Ok(origin) => {
+                        let origin: CorsAnyOr<CorsOrigin> = if origin == "*" {
+                            cors_any().into()
+                        } else {
+                            let origins = origin
+                                .split(',')
+                                .map(HeaderValue::from_str)
+                                .collect::<Result<Vec<_>, InvalidHeaderValue>>()
+                                .context("failed to parse CORS origin")?;
+                            let list = CorsOrigin::list(origins);
+                            list.into()
+                        };
+                        origin
+                    }
+                    Err(EnvVarError::NotPresent) => {
+                        let Settings {
+                            web_base_url,
+                            web_public_base_url,
+                            api_base_url,
+                            api_public_base_url,
+                            ..
+                        } = &settings;
+                        let origins = [
+                            web_base_url,
+                            web_public_base_url,
+                            api_base_url,
+                            api_public_base_url,
+                        ]
+                        .into_iter()
+                        .map(|url| {
+                            let mut url = url.to_owned();
+                            url.set_path("");
+                            let mut url = url.to_string();
+                            url.pop();
+                            HeaderValue::from_str(&url)
+                        })
+                        .collect::<Result<Vec<_>, InvalidHeaderValue>>()
+                        .context("failed to parse CORS origin")?;
+                        CorsOrigin::list(origins).into()
+                    }
+                    Err(error) => return Err(error).context(
+                        "invalid environment variable API_CORS_ALLOW_ORIGIN",
+                    ),
                 }
-                Err(EnvVarError::NotPresent) => {
-                    let Settings {
-                        web_base_url,
-                        web_public_base_url,
-                        api_base_url,
-                        api_public_base_url,
-                        ..
-                    } = &settings;
-                    let origins = [
-                        web_base_url,
-                        web_public_base_url,
-                        api_base_url,
-                        api_public_base_url,
-                    ]
-                    .into_iter()
-                    .map(|url| {
-                        let mut url = url.to_owned();
-                        url.set_path("");
-                        let mut url = url.to_string();
-                        url.pop();
-                        HeaderValue::from_str(&url)
-                    })
-                    .collect::<Result<Vec<_>, InvalidHeaderValue>>()
-                    .context("failed to parse CORS origin")?;
-                    CorsOrigin::list(origins).into()
-                }
-                Err(error) => {
-                    return Err(error).context(
-                        "invalid environment variable \
-                            HOME_API_CORS_ALLOW_ORIGIN",
-                    )
-                }
-            }
-        });
+            });
 
     // Build routes
     let routes = Router::<Body>::new()
@@ -364,10 +358,10 @@ async fn main() -> Result<()> {
         })
         .into_make_service();
 
-    let host = env_var_or("HOME_API_HOST", "0.0.0.0")
-        .context("failed to get environment variable HOME_API_HOST")?;
-    let port = env_var_or("HOME_API_PORT", "3000")
-        .context("failed to get environment variable HOME_API_PORT")?;
+    let host = env_var_or("API_HOST", "0.0.0.0")
+        .context("failed to get environment variable API_HOST")?;
+    let port = env_var_or("API_PORT", "3000")
+        .context("failed to get environment variable API_PORT")?;
     let addr: SocketAddr = format!("{}:{}", host, port)
         .parse()
         .context("failed to parse server address")?;

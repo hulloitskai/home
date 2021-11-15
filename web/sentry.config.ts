@@ -2,10 +2,10 @@ import { init } from "@sentry/nextjs";
 import { CaptureConsole } from "@sentry/integrations";
 import { excludeGraphQLFetch } from "apollo-link-sentry";
 
-import { SENTRY_DSN } from "consts";
+import { sentryDSN } from "config";
 
 init({
-  dsn: SENTRY_DSN,
+  dsn: sentryDSN,
   integrations: [new CaptureConsole({ levels: ["error"] })],
   tracesSampleRate: 0,
   beforeBreadcrumb: excludeGraphQLFetch,
