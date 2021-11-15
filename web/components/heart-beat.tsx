@@ -33,28 +33,25 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
     }
   }, [bpm]);
 
-  useEffect(
-    () => {
-      if (bpm) {
-        const intensity =
-          typeof window !== "undefined" ? window.devicePixelRatio : 1;
-        {
-          const initial = 1;
-          const end = 1 + 0.05 * intensity;
-          fgControls.start({ scale: [initial, end, initial] });
-        }
-        {
-          const initial = 1.05;
-          const end = 1;
-          bgControls.start({ scale: [initial, end, initial] });
-        }
-      } else {
-        fgControls.stop();
-        bgControls.stop();
+  useEffect(() => {
+    if (bpm) {
+      const intensity =
+        typeof window !== "undefined" ? window.devicePixelRatio : 1;
+      {
+        const initial = 1;
+        const end = 1 + 0.05 * intensity;
+        fgControls.start({ scale: [initial, end, initial] });
       }
-    },
-    [bpm], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+      {
+        const initial = 1.05;
+        const end = 1;
+        bgControls.start({ scale: [initial, end, initial] });
+      }
+    } else {
+      fgControls.stop();
+      bgControls.stop();
+    }
+  }, [bpm]);
 
   return (
     <Box pos="relative" {...otherProps}>

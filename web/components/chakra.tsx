@@ -65,7 +65,7 @@ const theme = extendTheme({
       },
       body: {
         lineHeight: "normal",
-        bg: mode("white", "black")(props),
+        bg: mode("white", "gray.900")(props),
       },
     }),
   },

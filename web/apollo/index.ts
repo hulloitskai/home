@@ -260,6 +260,11 @@ export type HeartSectionQuery = { __typename?: 'Query', heartRate?: { __typename
 
 export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
 
+export type LayoutFooterViewerQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type LayoutFooterViewerQuery = { __typename?: 'Query', viewer?: { __typename?: 'User', id: string, email: string, isAdmin: boolean } | null | undefined };
+
 export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -357,6 +362,42 @@ export function useHeartSectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
 export type HeartSectionQueryHookResult = ReturnType<typeof useHeartSectionQuery>;
 export type HeartSectionLazyQueryHookResult = ReturnType<typeof useHeartSectionLazyQuery>;
 export type HeartSectionQueryResult = Apollo.QueryResult<HeartSectionQuery, HeartSectionQueryVariables>;
+export const LayoutFooterViewerDocument = gql`
+    query LayoutFooterViewer {
+  viewer {
+    id
+    email
+    isAdmin
+  }
+}
+    `;
+
+/**
+ * __useLayoutFooterViewerQuery__
+ *
+ * To run a query within a React component, call `useLayoutFooterViewerQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLayoutFooterViewerQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLayoutFooterViewerQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useLayoutFooterViewerQuery(baseOptions?: Apollo.QueryHookOptions<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>(LayoutFooterViewerDocument, options);
+      }
+export function useLayoutFooterViewerLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>(LayoutFooterViewerDocument, options);
+        }
+export type LayoutFooterViewerQueryHookResult = ReturnType<typeof useLayoutFooterViewerQuery>;
+export type LayoutFooterViewerLazyQueryHookResult = ReturnType<typeof useLayoutFooterViewerLazyQuery>;
+export type LayoutFooterViewerQueryResult = Apollo.QueryResult<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>;
 export const MusicLyricsDocument = gql`
     query MusicLyrics {
   musicInfo {

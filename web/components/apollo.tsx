@@ -95,12 +95,13 @@ const createAuthLink = (): ApolloLink => {
 };
 
 const createApolloClient = (): Client<NormalizedCacheObject> => {
+  const isClient = typeof window !== "undefined";
   return new Client({
-    ssrMode: typeof window === "undefined",
+    ssrMode: !isClient,
     link: mergeLinks([
-      new RetryLink(),
+      ...(isClient ? [new RetryLink()] : []),
       new SentryLink(),
-      ...(typeof window !== "undefined" ? [createAuthLink()] : []),
+      ...(isClient ? [createAuthLink()] : []),
       createTerminatingLink(),
     ]),
     cache: new InMemoryCache({ typePolicies }),
@@ -117,15 +118,12 @@ export const ApolloProvider: FC<ApolloProviderProps> = ({
   children,
 }) => {
   const apolloContext = useContext(getApolloContext());
-  const apolloClient = useMemo(
-    () => {
-      if (apolloContext.client) {
-        return apolloContext.client;
-      }
-      return initializeApolloClient({ initialState });
-    },
-    [], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const apolloClient = useMemo(() => {
+    if (apolloContext.client) {
+      return apolloContext.client;
+    }
+    return initializeApolloClient({ initialState });
+  }, [apolloContext]);
 
   return <Provider client={apolloClient}>{children}</Provider>;
 };

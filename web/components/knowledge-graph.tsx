@@ -54,190 +54,187 @@ export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const svgEl = svgRef.current;
 
-  useLayoutEffect(
-    () => {
-      if (svgEl && !svgEl.children.length && entries) {
-        let isDragging = false;
+  useLayoutEffect(() => {
+    if (svgEl && !svgEl.children.length && entries) {
+      let isDragging = false;
 
-        const nodesById: Record<
-          string,
-          {
-            id: string;
-            tags: string[];
-            links: { incoming: { id: string }[]; outgoing: { id: string }[] };
-            radius: number;
-          }
-        > = {};
-        const links: {
-          source: string;
-          target: string;
-        }[] = [];
-
+      const nodesById: Record<
+        string,
         {
-          const nodeRadius = (entry?: KnowledgeGraphEntryFragment): number => {
-            const { incoming, outgoing } = entry?.links ?? {};
-            const radius =
-              (incoming && outgoing ? incoming.length + outgoing.length : 0) *
-                0.25 +
-              4;
-            if (highlightedEntryId && entry) {
-              if (highlightedEntryId === entry.id && radius < 10) {
-                return 12;
-              }
+          id: string;
+          tags: string[];
+          links: { incoming: { id: string }[]; outgoing: { id: string }[] };
+          radius: number;
+        }
+      > = {};
+      const links: {
+        source: string;
+        target: string;
+      }[] = [];
+
+      {
+        const nodeRadius = (entry?: KnowledgeGraphEntryFragment): number => {
+          const { incoming, outgoing } = entry?.links ?? {};
+          const radius =
+            (incoming && outgoing ? incoming.length + outgoing.length : 0) *
+              0.25 +
+            4;
+          if (highlightedEntryId && entry) {
+            if (highlightedEntryId === entry.id && radius < 10) {
+              return 12;
             }
-            return radius;
-          };
-
-          for (const entry of entries) {
-            nodesById[entry.id] = {
-              ...entry,
-              radius: nodeRadius(entry),
-            };
           }
+          return radius;
+        };
 
-          for (const entry of entries) {
-            for (const linked of entry.links.outgoing) {
-              if (!nodesById[linked.id] && showOrphans) {
-                nodesById[linked.id] = {
-                  id: linked.id,
-                  tags: [],
-                  links: { incoming: [], outgoing: [] },
-                  radius: nodeRadius(),
-                };
-              }
-              if (nodesById[linked.id]) {
-                links.push({
-                  source: entry.id,
-                  target: linked.id,
-                });
-              }
+        for (const entry of entries) {
+          nodesById[entry.id] = {
+            ...entry,
+            radius: nodeRadius(entry),
+          };
+        }
+
+        for (const entry of entries) {
+          for (const linked of entry.links.outgoing) {
+            if (!nodesById[linked.id] && showOrphans) {
+              nodesById[linked.id] = {
+                id: linked.id,
+                tags: [],
+                links: { incoming: [], outgoing: [] },
+                radius: nodeRadius(),
+              };
+            }
+            if (nodesById[linked.id]) {
+              links.push({
+                source: entry.id,
+                target: linked.id,
+              });
             }
           }
         }
-        const nodes = Object.values(nodesById);
-
-        const { width, height } = containerSize;
-        const svg = select(svgEl).attr("viewBox", `0 0 ${width} ${height}`);
-        const link = svg
-          .selectAll(".link")
-          .data(links)
-          .join("line")
-          .classed("link", true);
-        const node = svg
-          .selectAll(".node")
-          .data(nodes)
-          .join("g")
-          .attr("class", d => ["node", ...d.tags].join(" "));
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const highlightedNode = highlightedEntryId
-          ? node
-              .filter(d => d.id === highlightedEntryId)
-              .classed("highlighted", true)
-          : undefined;
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const nodeCircle = node
-          .append("circle")
-          .attr("r", d => d.radius)
-          .on("mouseover", (event, d) => {
-            if (!isDragging) {
-              node.classed("focused", u => u.id === d.id);
-              link.classed("focused", (l: any) => {
-                return [l.source, l.target].includes(d);
-              });
-              node.classed(
-                "faded",
-                u =>
-                  u.id !== d.id &&
-                  !u.links.incoming.find(({ id }) => id === d.id) &&
-                  !u.links.outgoing.find(({ id }) => id === d.id) &&
-                  !d.links.incoming.find(({ id }) => id === d.id) &&
-                  !d.links.outgoing.find(({ id }) => id === d.id),
-              );
-              link.classed(
-                "faded",
-                (l: any) => ![l.source, l.target].includes(d),
-              );
-            }
-          })
-          .on("mouseout", () => {
-            if (!isDragging) {
-              node.classed("focused", false);
-              link.classed("focused", false);
-              node.classed("faded", false);
-              link.classed("faded", false);
-            }
-          });
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const nodeLabel = node
-          .append("text")
-          .text(d => d.id)
-          .attr("text-anchor", "middle")
-          .attr("dy", d => d.radius + 15);
-
-        const simulation = forceSimulation(nodes as any)
-          .force(
-            "link",
-            forceLink(links)
-              .id(d => (d as any).id)
-              .strength(linkForce),
-          )
-          .force(
-            "collide",
-            forceCollide(d => (d as any).radius)
-              .strength(0.5)
-              .iterations(1),
-          )
-          .force("charge", forceManyBody().strength(bodyForce).distanceMax(200))
-          .force("center", forceCenter(width / 2, height / 2))
-          .on("tick", () => {
-            node.attr("transform", (d: any) => `translate(${d.x}, ${d.y})`);
-            link
-              .attr("x1", (d: any) => d.source.x)
-              .attr("y1", (d: any) => d.source.y)
-              .attr("x2", (d: any) => d.target.x)
-              .attr("y2", (d: any) => d.target.y);
-          })
-          .alpha(1)
-          .restart();
-
-        type DragEvent = D3DragEvent<HTMLElement, any, any>;
-        node.call(
-          drag()
-            .on("start", ({ active, subject }: DragEvent) => {
-              isDragging = true;
-              if (!active) {
-                simulation.alphaTarget(0.3).restart();
-              }
-              subject.isDragging = true;
-              subject.fx = subject.x;
-              subject.fy = subject.y;
-            })
-            .on("drag", ({ subject, x, y }: DragEvent) => {
-              subject.fx = x;
-              subject.fy = y;
-            })
-            .on("end", ({ active, subject }: DragEvent) => {
-              isDragging = false;
-              if (!active) {
-                simulation.alphaTarget(0);
-              }
-              subject.isDragging = false;
-              subject.fx = null;
-              subject.fy = null;
-            }) as any,
-        );
-
-        return () => {
-          simulation.stop();
-          select(svgEl).selectChildren().remove();
-        };
       }
-    },
-    [svgEl, entries], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+      const nodes = Object.values(nodesById);
+
+      const { width, height } = containerSize;
+      const svg = select(svgEl).attr("viewBox", `0 0 ${width} ${height}`);
+      const link = svg
+        .selectAll(".link")
+        .data(links)
+        .join("line")
+        .classed("link", true);
+      const node = svg
+        .selectAll(".node")
+        .data(nodes)
+        .join("g")
+        .attr("class", d => ["node", ...d.tags].join(" "));
+
+      // highlightedNode
+      highlightedEntryId
+        ? node
+            .filter(d => d.id === highlightedEntryId)
+            .classed("highlighted", true)
+        : undefined;
+
+      // nodeCircle
+      node
+        .append("circle")
+        .attr("r", d => d.radius)
+        .on("mouseover", (event, d) => {
+          if (!isDragging) {
+            node.classed("focused", u => u.id === d.id);
+            link.classed("focused", (l: any) => {
+              return [l.source, l.target].includes(d);
+            });
+            node.classed(
+              "faded",
+              u =>
+                u.id !== d.id &&
+                !u.links.incoming.find(({ id }) => id === d.id) &&
+                !u.links.outgoing.find(({ id }) => id === d.id) &&
+                !d.links.incoming.find(({ id }) => id === d.id) &&
+                !d.links.outgoing.find(({ id }) => id === d.id),
+            );
+            link.classed(
+              "faded",
+              (l: any) => ![l.source, l.target].includes(d),
+            );
+          }
+        })
+        .on("mouseout", () => {
+          if (!isDragging) {
+            node.classed("focused", false);
+            link.classed("focused", false);
+            node.classed("faded", false);
+            link.classed("faded", false);
+          }
+        });
+
+      // nodeLabel
+      node
+        .append("text")
+        .text(d => d.id)
+        .attr("text-anchor", "middle")
+        .attr("dy", d => d.radius + 15);
+
+      const simulation = forceSimulation(nodes as any)
+        .force(
+          "link",
+          forceLink(links)
+            .id(d => (d as any).id)
+            .strength(linkForce),
+        )
+        .force(
+          "collide",
+          forceCollide(d => (d as any).radius)
+            .strength(0.5)
+            .iterations(1),
+        )
+        .force("charge", forceManyBody().strength(bodyForce).distanceMax(200))
+        .force("center", forceCenter(width / 2, height / 2))
+        .on("tick", () => {
+          node.attr("transform", (d: any) => `translate(${d.x}, ${d.y})`);
+          link
+            .attr("x1", (d: any) => d.source.x)
+            .attr("y1", (d: any) => d.source.y)
+            .attr("x2", (d: any) => d.target.x)
+            .attr("y2", (d: any) => d.target.y);
+        })
+        .alpha(1)
+        .restart();
+
+      type DragEvent = D3DragEvent<HTMLElement, any, any>;
+      node.call(
+        drag()
+          .on("start", ({ active, subject }: DragEvent) => {
+            isDragging = true;
+            if (!active) {
+              simulation.alphaTarget(0.3).restart();
+            }
+            subject.isDragging = true;
+            subject.fx = subject.x;
+            subject.fy = subject.y;
+          })
+          .on("drag", ({ subject, x, y }: DragEvent) => {
+            subject.fx = x;
+            subject.fy = y;
+          })
+          .on("end", ({ active, subject }: DragEvent) => {
+            isDragging = false;
+            if (!active) {
+              simulation.alphaTarget(0);
+            }
+            subject.isDragging = false;
+            subject.fx = null;
+            subject.fy = null;
+          }) as any,
+      );
+
+      return () => {
+        simulation.stop();
+        select(svgEl).selectChildren().remove();
+      };
+    }
+  }, [svgEl, entries]);
 
   const nodeCircleFill = useColorModeValue("gray.700", "gray.300");
   const nodeCircleFocusedFill = useColorModeValue("purple.500", "purple.300");

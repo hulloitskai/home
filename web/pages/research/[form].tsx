@@ -106,7 +106,7 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
   return (
     <Layout badge="Research" badgeTooltip="Help me learn things!">
       <Container as="form" onSubmit={onSubmit} alignSelf="center">
-        <VStack align="stretch" spacing={8}>
+        <VStack align="stretch" spacing={8} my={[2, 4, 8]}>
           <VStack align="stretch" spacing={4}>
             <VStack align="stretch" spacing={1}>
               <Heading>{name}</Heading>
@@ -117,8 +117,8 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
               rounded="md"
               p={3}
               bg="gray.100"
-              color="gray.500"
-              _dark={{ bg: "gray.900" }}
+              color="gray.600"
+              _dark={{ bg: "black" }}
             >
               <Icon as={HiEyeOff} fontSize="lg" />
               <Text fontSize="sm" fontWeight="medium">

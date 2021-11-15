@@ -63,10 +63,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
   const { musicInfo } = data ?? {};
 
   // Record data timestamp.
-  const dataTimestamp = useMemo(
-    () => DateTime.now(),
-    [data], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const dataTimestamp = useMemo(() => DateTime.now(), [data]);
 
   // Send heartbeat signal every 2.5 seconds.
   useMusicSectionHeartbeatQuery({
@@ -86,27 +83,24 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
       return progress - elapsed;
     }
   });
-  useEffect(
-    () => {
-      if (musicInfo) {
-        const { progress } = musicInfo;
-        const interval = setInterval(() => {
-          if (progress) {
-            const elapsed = dataTimestamp.diffNow().milliseconds;
-            setInterpolatedProgress(progress - elapsed);
-          } else {
-            setInterpolatedProgress(undefined);
-          }
-        }, 100);
-        return () => {
-          clearInterval(interval);
-        };
-      } else {
-        setInterpolatedProgress(undefined);
-      }
-    },
-    [musicInfo], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  useEffect(() => {
+    if (musicInfo) {
+      const { progress } = musicInfo;
+      const interval = setInterval(() => {
+        if (progress) {
+          const elapsed = dataTimestamp.diffNow().milliseconds;
+          setInterpolatedProgress(progress - elapsed);
+        } else {
+          setInterpolatedProgress(undefined);
+        }
+      }, 100);
+      return () => {
+        clearInterval(interval);
+      };
+    } else {
+      setInterpolatedProgress(undefined);
+    }
+  }, [musicInfo]);
 
   const render = (info: NonNullable<MusicSectionQuery["musicInfo"]>) => {
     const { isPlaying, track } = info;

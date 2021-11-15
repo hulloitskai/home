@@ -27,37 +27,34 @@ export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {
 
   // Update last-measured description every 5 seconds.
   const [lastMeasured, setLastMeasured] = useState<string | undefined>();
-  useEffect(
-    () => {
-      const humanizeDurationOptions: humanizeDuration.Options = {
-        largest: 1,
-        units: ["h", "m", "s"],
-        round: true,
-      };
-      if (timestampISO) {
-        const timestamp = DateTime.fromISO(timestampISO);
-        (() => {
-          const lastReported = humanizeDuration(
-            timestamp.diffNow().toMillis(),
-            humanizeDurationOptions,
-          );
-          setLastMeasured(lastReported);
-        })();
+  useEffect(() => {
+    const humanizeDurationOptions: humanizeDuration.Options = {
+      largest: 1,
+      units: ["h", "m", "s"],
+      round: true,
+    };
+    if (timestampISO) {
+      const timestamp = DateTime.fromISO(timestampISO);
+      (() => {
+        const lastReported = humanizeDuration(
+          timestamp.diffNow().toMillis(),
+          humanizeDurationOptions,
+        );
+        setLastMeasured(lastReported);
+      })();
 
-        const interval = setInterval(() => {
-          const value = humanizeDuration(
-            timestamp.diffNow().toMillis(),
-            humanizeDurationOptions,
-          );
-          if (value !== lastMeasured) {
-            setLastMeasured(value);
-          }
-        }, 5000);
-        return () => clearInterval(interval);
-      }
-    },
-    [timestampISO], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+      const interval = setInterval(() => {
+        const value = humanizeDuration(
+          timestamp.diffNow().toMillis(),
+          humanizeDurationOptions,
+        );
+        if (value !== lastMeasured) {
+          setLastMeasured(value);
+        }
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [timestampISO]);
 
   return (
     <VStack {...otherProps}>

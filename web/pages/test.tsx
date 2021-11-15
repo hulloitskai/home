@@ -62,7 +62,7 @@ const TestPage: NextPage = () => {
   return (
     <Layout badge="Test" badgeTooltip="Is this thing on?">
       <Container flex={1} alignSelf="center">
-        <VStack align="stretch" spacing={8}>
+        <VStack align="stretch" spacing={8} py={[2, 4, 8]}>
           <VStack>
             <Heading size="md">Auth0 Integration</Heading>
             <ClientOnly>
