@@ -38,4 +38,4 @@ ENV API_HOST=0.0.0.0
 ENV API_PORT=3000
 EXPOSE $API_PORT
 ENTRYPOINT ["/app/api"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$API_PORT
+HEALTHCHECK CMD curl --fail --head http://localhost:$API_PORT/health

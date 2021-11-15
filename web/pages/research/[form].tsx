@@ -4,8 +4,11 @@ import type { NextPage, GetServerSideProps } from "next";
 
 import { useForm, Controller } from "react-hook-form";
 
-import { Container, VStack } from "@chakra-ui/react";
+import { HiEyeOff } from "react-icons/hi";
+
+import { Container, VStack, HStack } from "@chakra-ui/react";
 import { Heading, Text } from "@chakra-ui/react";
+import { Icon } from "@chakra-ui/react";
 import { RadioGroup, Radio } from "@chakra-ui/react";
 import { CheckboxGroup, Checkbox } from "@chakra-ui/react";
 import { Input } from "@chakra-ui/react";
@@ -35,13 +38,8 @@ import {
 import { useSubmitFormMutation } from "apollo";
 import { useTransparentize } from "components/chakra";
 
-type ResearchPageParams = {
-  handle: string;
-};
-
 interface ResearchPageProps {
   form: NonNullable<ResearchPagePropsQuery["form"]>;
-  params: ResearchPageParams;
 }
 
 gql`
@@ -52,9 +50,10 @@ gql`
   }
 `;
 
-const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
+const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
   const {
     id: formId,
+    handle,
     name,
     description,
     fields,
@@ -79,8 +78,10 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
       onCompleted: ({ payload }) => {
         if (payload.ok) {
           router.push({
-            pathname: "/research/[handle]/complete",
-            query: params,
+            pathname: "/research/[form]/complete",
+            query: {
+              form: handle,
+            },
           });
         }
       },
@@ -106,9 +107,24 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form, params }) => {
     <Layout badge="Research" badgeTooltip="Help me learn things!">
       <Container as="form" onSubmit={onSubmit} alignSelf="center">
         <VStack align="stretch" spacing={8}>
-          <VStack align="stretch" spacing={1}>
-            <Heading>{name}</Heading>
-            {!!description && <Text color="gray.500">{description}</Text>}
+          <VStack align="stretch" spacing={4}>
+            <VStack align="stretch" spacing={1}>
+              <Heading>{name}</Heading>
+              {!!description && <Text color="gray.500">{description}</Text>}
+            </VStack>
+            <HStack
+              spacing={2}
+              rounded="md"
+              p={3}
+              bg="gray.100"
+              color="gray.500"
+              _dark={{ bg: "gray.900" }}
+            >
+              <Icon as={HiEyeOff} fontSize="lg" />
+              <Text fontSize="sm" fontWeight="medium">
+                Your response is confidential and will not be shared.
+              </Text>
+            </HStack>
           </VStack>
           {fields.map(({ question, input }, index) => {
             return (
@@ -229,6 +245,7 @@ gql`
   query ResearchPageProps($handle: String!) {
     form: formByHandle(handle: $handle) {
       id
+      handle
       name
       description
       fields {
@@ -251,9 +268,9 @@ gql`
 
 export const getServerSideProps: GetServerSideProps<ResearchPageProps> =
   async ({ query }) => {
-    const { handle: handleParam } = query;
-    const handle = Array.isArray(handleParam) ? handleParam[0] : handleParam;
-    if (!handle) {
+    const { form: formParam } = query;
+    const form = Array.isArray(formParam) ? formParam[0] : formParam;
+    if (!form) {
       return { notFound: true };
     }
 
@@ -265,19 +282,14 @@ export const getServerSideProps: GetServerSideProps<ResearchPageProps> =
     >({
       query: ResearchPagePropsDocument,
       variables: {
-        handle,
+        handle: form,
       },
     });
 
     if (data.form) {
       const { form } = data;
       return {
-        props: {
-          form,
-          params: {
-            handle,
-          },
-        },
+        props: { form },
       };
     }
     return { notFound: true };

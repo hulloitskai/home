@@ -1,5 +1,6 @@
 import type { NextApiHandler } from "next";
-import { getSession } from "@auth0/nextjs-auth0";
+
+import { getSession } from "components/auth0";
 
 const handler: NextApiHandler = async (req, res) => {
   const { accessToken, accessTokenExpiresAt } =

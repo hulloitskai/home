@@ -109,7 +109,7 @@ export type MutationFieldPolicy = {
 	submitForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	testFailure?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | QueryKeySpecifier)[];
+export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'viewer' | QueryKeySpecifier)[];
 export type QueryFieldPolicy = {
 	buildInfo?: FieldPolicy<any> | FieldReadFunction<any>,
 	form?: FieldPolicy<any> | FieldReadFunction<any>,
@@ -117,7 +117,8 @@ export type QueryFieldPolicy = {
 	heartRate?: FieldPolicy<any> | FieldReadFunction<any>,
 	knowledgeEntries?: FieldPolicy<any> | FieldReadFunction<any>,
 	knowledgeEntry?: FieldPolicy<any> | FieldReadFunction<any>,
-	musicInfo?: FieldPolicy<any> | FieldReadFunction<any>
+	musicInfo?: FieldPolicy<any> | FieldReadFunction<any>,
+	viewer?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type SubmitFormPayloadKeySpecifier = ('ok' | SubmitFormPayloadKeySpecifier)[];
 export type SubmitFormPayloadFieldPolicy = {
@@ -126,6 +127,12 @@ export type SubmitFormPayloadFieldPolicy = {
 export type TestFailurePayloadKeySpecifier = ('ok' | TestFailurePayloadKeySpecifier)[];
 export type TestFailurePayloadFieldPolicy = {
 	ok?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type UserKeySpecifier = ('email' | 'id' | 'isAdmin' | UserKeySpecifier)[];
+export type UserFieldPolicy = {
+	email?: FieldPolicy<any> | FieldReadFunction<any>,
+	id?: FieldPolicy<any> | FieldReadFunction<any>,
+	isAdmin?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type StrictTypedTypePolicies = {
 	BuildInfo?: Omit<TypePolicy, "fields" | "keyFields"> & {
@@ -211,6 +218,10 @@ export type StrictTypedTypePolicies = {
 	TestFailurePayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | TestFailurePayloadKeySpecifier | (() => undefined | TestFailurePayloadKeySpecifier),
 		fields?: TestFailurePayloadFieldPolicy,
+	},
+	User?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | UserKeySpecifier | (() => undefined | UserKeySpecifier),
+		fields?: UserFieldPolicy,
 	}
 };
 export type TypedTypePolicies = StrictTypedTypePolicies & TypePolicies;

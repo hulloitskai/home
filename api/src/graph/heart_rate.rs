@@ -39,7 +39,7 @@ impl HeartRateQuery {
         ctx: &Context<'_>,
     ) -> FieldResult<Option<HeartRateObject>> {
         let services = ctx.services();
-        let ctx = EntityContext::new(services);
+        let ctx = EntityContext::new(services.to_owned());
 
         let mut rates = HeartRate::find({
             let one_day_ago = now() - Duration::days(1);
@@ -50,7 +50,7 @@ impl HeartRateQuery {
         .sort(HeartRateSorting::Timestamp(SortingDirection::Desc))
         .load(&ctx)
         .await
-        .context("failed to lookup heart rates")
+        .context("failed to find heart rates")
         .into_field_result()?;
         let rate = rates
             .try_next()

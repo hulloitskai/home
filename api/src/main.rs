@@ -26,7 +26,7 @@ use anyhow::Result;
 
 use http::header::{HeaderName, HeaderValue, InvalidHeaderValue};
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
-use http::Method;
+use http::{Method, StatusCode};
 
 use tower::ServiceBuilder;
 use tower_http::cors::any as cors_any;
@@ -37,8 +37,8 @@ use tower_http::trace::TraceLayer;
 
 use axum::body::Body;
 use axum::handler::Handler;
-use axum::routing::on;
 use axum::routing::MethodFilter;
+use axum::routing::{get, on};
 use axum::{AddExtensionLayer, Router, Server};
 
 use graphql::extensions::apollo_persisted_queries as graphql_apq;
@@ -322,6 +322,7 @@ async fn main() -> Result<()> {
 
     // Build routes
     let routes = Router::<Body>::new()
+        .route("/health", get(|| async { (StatusCode::OK, "ok") }))
         .route(
             "/",
             on(

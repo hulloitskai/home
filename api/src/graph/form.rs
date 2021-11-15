@@ -123,7 +123,7 @@ impl FormQuery {
         let form_id = FormId::from(id);
 
         let services = ctx.services();
-        let ctx = EntityContext::new(services);
+        let ctx = EntityContext::new(services.to_owned());
 
         let form = Form::get(form_id)
             .optional()
@@ -146,7 +146,7 @@ impl FormQuery {
             .into_field_result()?;
 
         let services = ctx.services();
-        let ctx = EntityContext::new(services);
+        let ctx = EntityContext::new(services.to_owned());
 
         let form = Form::find_one({
             FormConditions::builder().handle(handle).build()
@@ -172,9 +172,27 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: CreateFormInput,
     ) -> FieldResult<CreateFormPayload> {
-        let services = ctx.services();
+        let CreateFormInput {
+            handle,
+            name,
+            description,
+            fields,
+            respondent_label,
+            respondent_helper,
+        } = input;
+        let handle = Handle::from_str(&handle)
+            .context("failed to parse handle")
+            .into_field_result()?;
+        let fields = fields
+            .into_iter()
+            .map(FormField::try_from)
+            .collect::<Result<Vec<_>>>()
+            .context("invalid form field")
+            .into_field_result()?;
+
         let identity = ctx.identity();
-        let ctx = EntityContext::new(services.clone());
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
 
         if let Some(identity) = identity {
             if !identity.is_admin {
@@ -185,25 +203,6 @@ impl FormMutation {
             let error = FieldError::new("not authenticated");
             return Err(error);
         }
-
-        let CreateFormInput {
-            handle,
-            name,
-            description,
-            fields,
-            respondent_label,
-            respondent_helper,
-        } = input;
-
-        let handle = Handle::from_str(&handle)
-            .context("failed to parse handle")
-            .into_field_result()?;
-        let fields = fields
-            .into_iter()
-            .map(FormField::try_from)
-            .collect::<Result<Vec<_>>>()
-            .context("invalid form field")
-            .into_field_result()?;
 
         let mut form = Record::new({
             Form::builder()
@@ -235,7 +234,6 @@ impl FormMutation {
             respondent,
             fields,
         } = input;
-
         let form_id = FormId::from(form_id);
         let fields = fields
             .into_iter()
@@ -245,7 +243,7 @@ impl FormMutation {
             .into_field_result()?;
 
         let services = ctx.services();
-        let ctx = EntityContext::new(services);
+        let ctx = EntityContext::new(services.to_owned());
 
         let mut response = Record::new({
             FormResponse::builder()
@@ -269,8 +267,11 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: DeleteFormInput,
     ) -> FieldResult<DeleteFormPayload> {
-        let services = ctx.services();
+        let DeleteFormInput { form_id } = input;
+        let form_id = FormId::from(form_id);
+
         let identity = ctx.identity();
+        let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
         if let Some(identity) = identity {
@@ -282,9 +283,6 @@ impl FormMutation {
             let error = FieldError::new("not authenticated");
             return Err(error);
         }
-
-        let DeleteFormInput { form_id } = input;
-        let form_id = FormId::from(form_id);
 
         ctx.transact(|ctx| async move {
             let mut form = Form::get(form_id)

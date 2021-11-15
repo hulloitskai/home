@@ -4,12 +4,15 @@ use entities::Email;
 
 #[derive(Debug, Clone, Hash, Serialize, Deserialize)]
 pub struct Identity {
+    pub id: String,
     pub email: Email,
     pub is_admin: bool,
 }
 
 #[derive(Debug, Deserialize)]
 struct Claims {
+    sub: String,
+
     email: Email,
 
     #[serde(rename(deserialize = "https://itskai.me/is_admin"))]
@@ -80,8 +83,16 @@ impl Service {
         let identity = match from_json::<Claims>(data.clone()) {
             Ok(claims) => {
                 let identity = {
-                    let Claims { email, is_admin } = claims;
-                    Identity { email, is_admin }
+                    let Claims {
+                        sub,
+                        email,
+                        is_admin,
+                    } = claims;
+                    Identity {
+                        id: sub,
+                        email,
+                        is_admin,
+                    }
                 };
                 self.cache.insert(token.clone(), identity.clone()).await;
                 identity

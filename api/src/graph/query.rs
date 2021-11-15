@@ -7,6 +7,7 @@ pub struct Query(
     MusicInfoQuery,
     KnowledgeEntryQuery,
     FormQuery,
+    UserQuery,
 );
 
 impl Query {
@@ -17,6 +18,7 @@ impl Query {
             MusicInfoQuery,
             KnowledgeEntryQuery,
             FormQuery,
+            UserQuery,
         )
     }
 }

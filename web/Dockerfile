@@ -44,4 +44,4 @@ ENV WEB_PORT=8000
 EXPOSE $WEB_PORT
 ENTRYPOINT ["yarn"]
 CMD ["start"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$WEB_PORT
+HEALTHCHECK CMD curl --fail --head http://localhost:$WEB_PORT/api/health

@@ -2,19 +2,10 @@ import type { NextApiResponse } from "next";
 import { serialize as serializeCookie } from "cookie";
 import type { CookieSerializeOptions as SerializeCookieOptions } from "cookie";
 
-import { initAuth0 } from "@auth0/nextjs-auth0";
+import { handleAuth, handleLogout, handleCallback } from "components/auth0";
+import { authRedirectCookieName } from "components/auth0";
 
 import { webPublicBaseURL } from "config";
-
-const authSessionCookieName = "auth_session";
-const authRedirectCookieName = "auth_redirect";
-
-const { handleAuth, handleLogout, handleCallback } = initAuth0({
-  baseURL: webPublicBaseURL,
-  session: {
-    name: authSessionCookieName,
-  },
-});
 
 export const setCookie = (
   res: NextApiResponse,

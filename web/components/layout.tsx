@@ -17,6 +17,7 @@ export interface LayoutProps extends Omit<StackProps, "direction"> {
 export const Layout: FC<LayoutProps> = ({
   badge,
   badgeTooltip,
+  spacing = 3,
   children,
   ...otherProps
 }) => {
@@ -29,7 +30,13 @@ export const Layout: FC<LayoutProps> = ({
     [tooltipBg],
   );
   return (
-    <VStack align="stretch" minH="100vh" pb={14} {...otherProps}>
+    <VStack
+      align="stretch"
+      minH="100vh"
+      pb={14}
+      {...{ spacing }}
+      {...otherProps}
+    >
       <HStack px={6} py={4}>
         <HStack spacing={3}>
           <Tooltip

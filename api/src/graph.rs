@@ -20,6 +20,7 @@ mod music_artist;
 mod music_info;
 mod music_track;
 mod test;
+mod user;
 
 use build::*;
 use date_time::*;
@@ -35,31 +36,33 @@ use music_artist::*;
 use music_info::*;
 use music_track::*;
 use test::*;
+use user::*;
 
 use super::*;
 
-use entities::{Context as EntityContext, *};
-use entrust::{Comparison, Record, SortingDirection};
-use entrust::{Entity, EntityId};
 use services::auth0::Identity;
 use services::Services;
 
+use entrust::{Comparison, Record, SortingDirection};
+use entrust::{Entity, EntityId};
+
 use graphql::scalar;
 use graphql::Context;
-use graphql::SimpleObject;
 use graphql::Value;
 use graphql::{Enum, EnumType};
 use graphql::{FieldError, FieldResult};
 use graphql::{InputObject, InputObjectType};
 use graphql::{InputValueError, InputValueResult};
 use graphql::{Interface, InterfaceType};
-use graphql::{MergedObject, Object, ObjectType};
+use graphql::{MergedObject, Object, ObjectType, SimpleObject};
 use graphql::{MergedSubscription, Subscription, SubscriptionType};
 use graphql::{Scalar, ScalarType};
 use graphql::{Union, UnionType};
 
+use entities::{Context as EntityContext, *};
+
 trait ContextExt {
-    fn services(&self) -> Services;
+    fn services(&self) -> &Services;
 
     fn identity(&self) -> Option<&Identity>;
 
@@ -78,9 +81,8 @@ trait ContextExt {
 }
 
 impl<'a> ContextExt for Context<'a> {
-    fn services(&self) -> Services {
-        let services = self.data_unchecked::<Services>();
-        services.to_owned()
+    fn services(&self) -> &Services {
+        self.data_unchecked::<Services>()
     }
 
     fn identity(&self) -> Option<&Identity> {

@@ -189,13 +189,11 @@ export type Mutation = {
 
 export type MutationCreateFormArgs = {
   input: CreateFormInput;
-  secret: Scalars['String'];
 };
 
 
 export type MutationDeleteFormArgs = {
   input: DeleteFormInput;
-  secret: Scalars['String'];
 };
 
 
@@ -212,6 +210,7 @@ export type Query = {
   knowledgeEntries: Array<KnowledgeEntry>;
   knowledgeEntry?: Maybe<KnowledgeEntry>;
   musicInfo?: Maybe<MusicInfo>;
+  viewer?: Maybe<User>;
 };
 
 
@@ -243,6 +242,13 @@ export type SubmitFormPayload = {
 export type TestFailurePayload = {
   __typename?: 'TestFailurePayload';
   ok: Scalars['Boolean'];
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String'];
+  id: Scalars['String'];
+  isAdmin: Scalars['Boolean'];
 };
 
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
@@ -293,7 +299,7 @@ export type ResearchPagePropsQueryVariables = Exact<{
 }>;
 
 
-export type ResearchPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
+export type ResearchPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
 
 export const HeartStatHeartRateFragmentDoc = gql`
     fragment HeartStatHeartRate on HeartRate {
@@ -600,6 +606,7 @@ export const ResearchPagePropsDocument = gql`
     query ResearchPageProps($handle: String!) {
   form: formByHandle(handle: $handle) {
     id
+    handle
     name
     description
     fields {
