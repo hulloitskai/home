@@ -110,7 +110,7 @@ impl From<FormFieldInputConfig> for FormFieldInputConfigObject {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct FormQuery;
 
 #[Object]
@@ -120,20 +120,8 @@ impl FormQuery {
         ctx: &Context<'_>,
         id: Id<Form>,
     ) -> FieldResult<Option<FormObject>> {
-        let form_id = FormId::from(id);
-
-        let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
-
-        let form = Form::get(form_id)
-            .optional()
-            .load(&ctx)
-            .await
-            .context("failed to load form")
-            .into_field_result()?;
-
-        let form = form.map(FormObject::from);
-        Ok(form)
+        let result = self.resolve_form(ctx, id).await;
+        into_field_result(result)
     }
 
     async fn form_by_handle(
@@ -141,37 +129,30 @@ impl FormQuery {
         ctx: &Context<'_>,
         handle: String,
     ) -> FieldResult<Option<FormObject>> {
-        let handle = Handle::from_str(&handle)
-            .context("failed to parse handle")
-            .into_field_result()?;
-
-        let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
-
-        let form = Form::find_one({
-            FormConditions::builder().handle(handle).build()
-        })
-        .optional()
-        .load(&ctx)
-        .await
-        .context("failed to load form")
-        .into_field_result()?;
-
-        let form = form.map(FormObject::from);
-        Ok(form)
+        let result = self.resolve_form_by_handle(ctx, handle).await;
+        into_field_result(result)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct FormMutation;
 
-#[Object]
 impl FormMutation {
-    async fn create_form(
+    async fn create_form_inner(
         &self,
         ctx: &Context<'_>,
         input: CreateFormInput,
-    ) -> FieldResult<CreateFormPayload> {
+    ) -> Result<CreateFormPayload> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+
         let CreateFormInput {
             handle,
             name,
@@ -180,29 +161,13 @@ impl FormMutation {
             respondent_label,
             respondent_helper,
         } = input;
-        let handle = Handle::from_str(&handle)
-            .context("failed to parse handle")
-            .into_field_result()?;
+        let handle =
+            Handle::from_str(&handle).context("failed to parse handle")?;
         let fields = fields
             .into_iter()
             .map(FormField::try_from)
             .collect::<Result<Vec<_>>>()
-            .context("invalid form field")
-            .into_field_result()?;
-
-        let identity = ctx.identity();
-        let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
-
-        if let Some(identity) = identity {
-            if !identity.is_admin {
-                let error = FieldError::new("not authorized");
-                return Err(error);
-            }
-        } else {
-            let error = FieldError::new("not authenticated");
-            return Err(error);
-        }
+            .context("invalid form field")?;
 
         let mut form = Record::new({
             Form::builder()
@@ -214,21 +179,21 @@ impl FormMutation {
                 .respondent_helper(respondent_helper)
                 .build()
         });
-        form.save(&ctx)
-            .await
-            .context("failed to save form")
-            .into_field_result()?;
+        form.save(&ctx).await.context("failed to save form")?;
 
         let form = FormObject::from(form);
         let payload = CreateFormPayload { form, ok: true };
         Ok(payload)
     }
 
-    async fn submit_form(
+    async fn submit_form_inner(
         &self,
         ctx: &Context<'_>,
         input: SubmitFormInput,
-    ) -> FieldResult<SubmitFormPayload> {
+    ) -> Result<SubmitFormPayload> {
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
         let SubmitFormInput {
             form_id,
             respondent,
@@ -239,11 +204,7 @@ impl FormMutation {
             .into_iter()
             .map(FormFieldResponse::try_from)
             .collect::<Result<Vec<_>>>()
-            .context("invalid field")
-            .into_field_result()?;
-
-        let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+            .context("invalid field")?;
 
         let mut response = Record::new({
             FormResponse::builder()
@@ -255,35 +216,29 @@ impl FormMutation {
         response
             .save(&ctx)
             .await
-            .context("failed to save response")
-            .into_field_result()?;
+            .context("failed to save response")?;
 
         let payload = SubmitFormPayload { ok: true };
         Ok(payload)
     }
 
-    async fn delete_form(
+    async fn delete_form_inner(
         &self,
         ctx: &Context<'_>,
         input: DeleteFormInput,
-    ) -> FieldResult<DeleteFormPayload> {
-        let DeleteFormInput { form_id } = input;
-        let form_id = FormId::from(form_id);
-
+    ) -> Result<DeleteFormPayload> {
         let identity = ctx.identity();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
         if let Some(identity) = identity {
-            if !identity.is_admin {
-                let error = FieldError::new("not authorized");
-                return Err(error);
-            }
+            ensure!(identity.is_admin, "not authorized");
         } else {
-            let error = FieldError::new("not authenticated");
-            return Err(error);
+            bail!("not authenticated");
         }
 
+        let DeleteFormInput { form_id } = input;
+        let form_id = FormId::from(form_id);
         ctx.transact(|ctx| async move {
             let mut form = Form::get(form_id)
                 .load(&ctx)
@@ -292,11 +247,40 @@ impl FormMutation {
             form.delete(&ctx).await.context("failed to delete form")?;
             Ok(())
         })
-        .await
-        .into_field_result()?;
+        .await?;
 
         let payload = DeleteFormPayload { ok: true };
         Ok(payload)
+    }
+}
+
+#[Object]
+impl FormMutation {
+    async fn create_form(
+        &self,
+        ctx: &Context<'_>,
+        input: CreateFormInput,
+    ) -> FieldResult<CreateFormPayload> {
+        let result = self.create_form_inner(ctx, input).await;
+        into_field_result(result)
+    }
+
+    async fn submit_form(
+        &self,
+        ctx: &Context<'_>,
+        input: SubmitFormInput,
+    ) -> FieldResult<SubmitFormPayload> {
+        let result = self.submit_form_inner(ctx, input).await;
+        into_field_result(result)
+    }
+
+    async fn delete_form(
+        &self,
+        ctx: &Context<'_>,
+        input: DeleteFormInput,
+    ) -> FieldResult<DeleteFormPayload> {
+        let result = self.delete_form_inner(ctx, input).await;
+        into_field_result(result)
     }
 }
 
@@ -431,4 +415,46 @@ pub(super) struct DeleteFormInput {
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct DeleteFormPayload {
     pub ok: bool,
+}
+impl FormQuery {
+    async fn resolve_form(
+        &self,
+        ctx: &Context<'_>,
+        id: Id<Form>,
+    ) -> Result<Option<FormObject>> {
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        let form_id = FormId::from(id);
+        let form = Form::get(form_id)
+            .optional()
+            .load(&ctx)
+            .await
+            .context("failed to load form")?;
+
+        let form = form.map(FormObject::from);
+        Ok(form)
+    }
+
+    async fn resolve_form_by_handle(
+        &self,
+        ctx: &Context<'_>,
+        handle: String,
+    ) -> Result<Option<FormObject>> {
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        let handle =
+            Handle::from_str(&handle).context("failed to parse handle")?;
+        let form = Form::find_one({
+            FormConditions::builder().handle(handle).build()
+        })
+        .optional()
+        .load(&ctx)
+        .await
+        .context("failed to load form")?;
+
+        let form = form.map(FormObject::from);
+        Ok(form)
+    }
 }

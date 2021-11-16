@@ -322,7 +322,7 @@ async fn main() -> Result<()> {
 
     // Build routes
     let routes = Router::<Body>::new()
-        .route("/health", get(|| async { (StatusCode::OK, "ok") }))
+        .route("/health", get(|| async { (StatusCode::OK, "OK") }))
         .route(
             "/",
             on(

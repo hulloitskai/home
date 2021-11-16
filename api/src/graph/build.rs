@@ -14,7 +14,7 @@ impl BuildInfoObject {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct BuildQuery;
 
 #[Object]

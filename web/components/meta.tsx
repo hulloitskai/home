@@ -54,16 +54,6 @@ export const MetaDescription: FC<MetaDescriptionProps> = ({ description }) => {
   );
 };
 
-// export interface SiteLogoProps {}
-
-// export const SiteLogo: FC<SiteLogoProps> = () => {
-//   return (
-//     <Head>
-//       <meta property="og:logo" content="" />
-//     </Head>
-//   );
-// };
-
 export interface MetaTypeProps {
   readonly type: "article" | "website";
 }

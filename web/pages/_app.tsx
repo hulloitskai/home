@@ -38,9 +38,9 @@ App.getInitialProps = async (
   appCtx: NextAppContext,
 ): Promise<NextAppInitialProps> => {
   const { pageProps } = await NextApp.getInitialProps(appCtx);
-  const { ctx } = appCtx;
-  if (ctx.req) {
-    const { cookie: cookieHeader } = ctx.req.headers;
+  const { req } = appCtx.ctx;
+  if (req) {
+    const { cookie: cookieHeader } = req.headers;
     return {
       pageProps: { ...pageProps, cookieHeader },
     };

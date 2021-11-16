@@ -25,12 +25,19 @@ impl From<Identity> for UserObject {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct UserQuery;
 
 #[Object]
 impl UserQuery {
     async fn viewer(&self, ctx: &Context<'_>) -> Option<UserObject> {
-        ctx.identity().map(ToOwned::to_owned).map(Into::into)
+        self.resolve_viewer(ctx).await
+    }
+}
+
+impl UserQuery {
+    async fn resolve_viewer(&self, ctx: &Context<'_>) -> Option<UserObject> {
+        let identity = ctx.identity();
+        identity.map(ToOwned::to_owned).map(Into::into)
     }
 }

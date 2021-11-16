@@ -12,8 +12,7 @@ impl HeartRateObject {
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        let created_at = self.record.created_at();
-        created_at.into()
+        self.record.created_at().into()
     }
 
     async fn updated_at(&self) -> DateTimeScalar {
@@ -29,7 +28,7 @@ impl HeartRateObject {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct HeartRateQuery;
 
 #[Object]
@@ -38,6 +37,16 @@ impl HeartRateQuery {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<HeartRateObject>> {
+        let result = self.resolve_heart_rate(ctx).await;
+        into_field_result(result)
+    }
+}
+
+impl HeartRateQuery {
+    async fn resolve_heart_rate(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Option<HeartRateObject>> {
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -50,13 +59,11 @@ impl HeartRateQuery {
         .sort(HeartRateSorting::Timestamp(SortingDirection::Desc))
         .load(&ctx)
         .await
-        .context("failed to find heart rates")
-        .into_field_result()?;
+        .context("failed to find heart rates")?;
         let rate = rates
             .try_next()
             .await
-            .context("failed to load heart rate")
-            .into_field_result()?;
+            .context("failed to load heart rate")?;
 
         let rate = rate.map(HeartRateObject::from);
         Ok(rate)

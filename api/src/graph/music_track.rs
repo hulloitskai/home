@@ -40,6 +40,16 @@ impl MusicTrack {
     }
 
     async fn lyrics(&self, ctx: &Context<'_>) -> FieldResult<Option<Lyrics>> {
+        let result = self.resolve_lyrics(ctx).await;
+        into_field_result(result)
+    }
+}
+
+impl MusicTrack {
+    async fn resolve_lyrics(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Option<Lyrics>> {
         let artist = match self.artists.first() {
             Some(artist) => artist,
             None => return Ok(None),
@@ -48,8 +58,7 @@ impl MusicTrack {
             .services()
             .lyricly()
             .get_lyrics(&self.name, &artist.name)
-            .await
-            .into_field_result()?;
+            .await?;
         let lyrics = lyrics
             .map(|lyrics| {
                 let LyriclyLyrics { lines } = &lyrics;
@@ -76,6 +85,7 @@ impl TryFrom<SpotifyTrack> for MusicTrack {
             album,
             artists,
         } = track;
+
         let album: MusicAlbum = album.try_into().context("invalid album")?;
         let artists = artists.into_iter().map(MusicArtist::from).collect();
 

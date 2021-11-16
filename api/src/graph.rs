@@ -63,21 +63,7 @@ use entities::{Context as EntityContext, *};
 
 trait ContextExt {
     fn services(&self) -> &Services;
-
     fn identity(&self) -> Option<&Identity>;
-
-    // async fn transact<F, T, U>(&self, f: F) -> FieldResult<T>
-    // where
-    //     F: Send,
-    //     F: FnOnce(EntityContext) -> U,
-    //     T: Send,
-    //     U: Send,
-    //     U: Future<Output = Result<T>>,
-    // {
-    //     let services = self.services();
-    //     let ctx = EntityContext::new(services);
-    //     ctx.transact(f).await.into_field_result()
-    // }
 }
 
 impl<'a> ContextExt for Context<'a> {
@@ -90,16 +76,10 @@ impl<'a> ContextExt for Context<'a> {
     }
 }
 
-pub(super) trait ResultExt<T> {
-    fn into_field_result(self) -> FieldResult<T>;
-}
-
-impl<T, E> ResultExt<T> for Result<T, E>
+fn into_field_result<T, E>(result: Result<T, E>) -> FieldResult<T>
 where
     Result<T, E>: AnyhowContext<T, E>,
     E: Display,
 {
-    fn into_field_result(self) -> FieldResult<T> {
-        self.map_err(|error| FieldError::new(format!("{:#}", error)))
-    }
+    result.map_err(|error| FieldError::new(format!("{:#}", error)))
 }

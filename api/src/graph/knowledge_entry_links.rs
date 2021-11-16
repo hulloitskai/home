@@ -13,12 +13,29 @@ impl KnowledgeEntryLinksObject {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntryObject>> {
+        let result = self.resolve_outgoing(ctx).await;
+        into_field_result(result)
+    }
+
+    async fn incoming(
+        &self,
+        ctx: &Context<'_>,
+    ) -> FieldResult<Vec<KnowledgeEntryObject>> {
+        let result = self.resolve_incoming(ctx).await;
+        into_field_result(result)
+    }
+}
+
+impl KnowledgeEntryLinksObject {
+    async fn resolve_outgoing(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Vec<KnowledgeEntryObject>> {
         let notes = ctx
             .services()
             .obsidian()
             .get_note_outgoing_references(&self.note.id)
-            .await
-            .into_field_result()?;
+            .await?;
         let mut entries = notes
             .into_iter()
             .map(KnowledgeEntryObject::from)
@@ -27,16 +44,15 @@ impl KnowledgeEntryLinksObject {
         Ok(entries)
     }
 
-    async fn incoming(
+    async fn resolve_incoming(
         &self,
         ctx: &Context<'_>,
-    ) -> FieldResult<Vec<KnowledgeEntryObject>> {
+    ) -> Result<Vec<KnowledgeEntryObject>> {
         let notes = ctx
             .services()
             .obsidian()
             .get_note_incoming_references(&self.note.id)
-            .await
-            .into_field_result()?;
+            .await?;
         let mut entries = notes
             .into_iter()
             .map(KnowledgeEntryObject::from)

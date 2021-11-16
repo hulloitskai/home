@@ -26,7 +26,7 @@ impl KnowledgeEntryObject {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct KnowledgeEntryQuery;
 
 #[Object]
@@ -35,12 +35,26 @@ impl KnowledgeEntryQuery {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntryObject>> {
-        let notes = ctx
-            .services()
-            .obsidian()
-            .list_notes()
-            .await
-            .into_field_result()?;
+        let result = self.resolve_knowledge_entries(ctx).await;
+        into_field_result(result)
+    }
+
+    async fn knowledge_entry(
+        &self,
+        ctx: &Context<'_>,
+        id: String,
+    ) -> FieldResult<Option<KnowledgeEntryObject>> {
+        let result = self.resolve_knowledge_entry(ctx, id).await;
+        into_field_result(result)
+    }
+}
+
+impl KnowledgeEntryQuery {
+    async fn resolve_knowledge_entries(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Vec<KnowledgeEntryObject>> {
+        let notes = ctx.services().obsidian().list_notes().await?;
         let mut entries = notes
             .into_iter()
             .map(KnowledgeEntryObject::from)
@@ -49,17 +63,12 @@ impl KnowledgeEntryQuery {
         Ok(entries)
     }
 
-    async fn knowledge_entry(
+    async fn resolve_knowledge_entry(
         &self,
         ctx: &Context<'_>,
         id: String,
-    ) -> FieldResult<Option<KnowledgeEntryObject>> {
-        let note = ctx
-            .services()
-            .obsidian()
-            .get_note(&id)
-            .await
-            .into_field_result()?;
+    ) -> Result<Option<KnowledgeEntryObject>> {
+        let note = ctx.services().obsidian().get_note(&id).await?;
         let entry = note.map(KnowledgeEntryObject::from);
         Ok(entry)
     }

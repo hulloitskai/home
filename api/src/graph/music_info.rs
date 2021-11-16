@@ -9,7 +9,7 @@ pub(super) struct MusicInfo {
     pub progress: u32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub(super) struct MusicInfoQuery;
 
 #[Object]
@@ -18,13 +18,22 @@ impl MusicInfoQuery {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<MusicInfo>> {
+        let result = self.resolve_music_info(ctx).await;
+        into_field_result(result)
+    }
+}
+
+impl MusicInfoQuery {
+    async fn resolve_music_info(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Option<MusicInfo>> {
         let currently_playing = ctx
             .services()
             .spotify()
             .get_currently_playing()
             .await
-            .context("failed to load currently playing track from Spotify")
-            .into_field_result()?;
+            .context("failed to load currently playing track from Spotify")?;
         let currently_playing = match currently_playing {
             Some(currently_playing) => currently_playing,
             None => return Ok(None),
