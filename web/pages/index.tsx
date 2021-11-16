@@ -5,14 +5,17 @@ import { DateTime } from "luxon";
 
 import { HiOutlineArrowsExpand } from "react-icons/hi";
 
-import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
+import { Box, Container, Center } from "@chakra-ui/react";
+import { VStack, HStack, Spacer } from "@chakra-ui/react";
 import { Text, Link, Badge } from "@chakra-ui/react";
 import { IconButton, Icon } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
+import { useColorModeValue } from "@chakra-ui/react";
 import { chakra } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
+import { Section } from "components/section";
 import { ClientOnly } from "components/client-only";
 import { HeartSection } from "components/heart-section";
 import { MusicSection } from "components/music-section";
@@ -65,12 +68,16 @@ const HomePage: NextPage = () => {
     }
   }, [dailyEntry]);
 
+  const tooltipBg = useColorModeValue("gray.900", undefined);
+  const tooltipStyles = useMemo(
+    () => ({
+      hasArrow: true,
+      bg: tooltipBg,
+    }),
+    [tooltipBg],
+  );
   return (
-    <Layout
-      badge="Home"
-      badgeTooltip="Where the heart is."
-      showGreeting={false}
-    >
+    <Layout badge="Home" badgeTooltip="Where the heart is.">
       <VStack align="stretch">
         <Container>
           <VStack spacing={[10, 12]} pt={[16, 20]} pb={[20, 24]}>
@@ -84,10 +91,7 @@ const HomePage: NextPage = () => {
                   Kai
                 </Text>
                 , your favorite{" "}
-                <Tooltip
-                  label="Non-Playable Character"
-                  _light={{ bg: "gray.900" }}
-                >
+                <Tooltip label="Non-Playable Character" {...tooltipStyles}>
                   <chakra.span>NPC</chakra.span>
                 </Tooltip>
                 .
@@ -95,18 +99,18 @@ const HomePage: NextPage = () => {
             </VStack>
             <MusicSection />
             <HeartSection />
-            {/* <Section>
-          <Center>
-            <Text fontSize="3xl">🚧</Text>
-          </Center>
-          <Text color="gray.500" fontSize="lg" fontWeight="semibold">
-            <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
-              This is a work-in-progress.
-            </Text>
-            <br />
-            Come back again later!
-          </Text>
-          </Section> */}
+            <Section>
+              <Center>
+                <Text fontSize="3xl">🚧</Text>
+              </Center>
+              <Text color="gray.500" fontSize="lg" fontWeight="semibold">
+                <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
+                  This is a work-in-progress.
+                </Text>
+                <br />
+                Come back again later!
+              </Text>
+            </Section>
           </VStack>
         </Container>
         {dailyEntry && entries && (

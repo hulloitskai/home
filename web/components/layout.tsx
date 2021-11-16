@@ -3,7 +3,7 @@ import NextLink from "next/link";
 
 import { HiChevronDown, HiLogout } from "react-icons/hi";
 
-import { BoxProps } from "@chakra-ui/react";
+import { BoxProps, Box } from "@chakra-ui/react";
 import { StackProps, VStack, HStack, Center, Spacer } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 import { Icon } from "@chakra-ui/react";
@@ -22,13 +22,11 @@ import { useLayoutFooterViewerQuery } from "apollo";
 export interface LayoutProps extends Omit<StackProps, "direction"> {
   badge: string;
   badgeTooltip?: string;
-  showGreeting?: boolean;
 }
 
 export const Layout: FC<LayoutProps> = ({
   badge,
   badgeTooltip,
-  showGreeting = true,
   children,
   ...otherProps
 }) => {
@@ -42,8 +40,8 @@ export const Layout: FC<LayoutProps> = ({
   );
   return (
     <VStack align="stretch" spacing={0} minH="100vh" {...otherProps}>
-      <HStack px={6} py={4}>
-        <HStack spacing={3}>
+      <HStack align="start" p={4}>
+        <Box px={0.5}>
           <Tooltip
             label="You are loved."
             placement="bottom-end"
@@ -71,16 +69,7 @@ export const Layout: FC<LayoutProps> = ({
               </Center>
             </LinkBox>
           </Tooltip>
-          {showGreeting && (
-            <Tooltip label="Hullo!" placement="bottom" {...tooltipStyles}>
-              <Badge fontSize="sm" colorScheme="red">
-                <NextLink href="/" passHref>
-                  <Link _hover={{ textDecor: "none" }}>It&apos;s Kai</Link>
-                </NextLink>
-              </Badge>
-            </Tooltip>
-          )}
-        </HStack>
+        </Box>
         <Spacer />
         {!!badge && (
           <Tooltip
@@ -99,8 +88,8 @@ export const Layout: FC<LayoutProps> = ({
           </Tooltip>
         )}
       </HStack>
-      {children}
-      <LayoutFooter />
+      <Box flex={1}>{children}</Box>
+      <LayoutFooter justifySelf="end" />
     </VStack>
   );
 };
@@ -138,9 +127,9 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
   );
 
   return (
-    <HStack p={4} color="gray.600" _dark={{ color: "gray.400" }}>
+    <HStack align="end" p={4} color="gray.600" _dark={{ color: "gray.400" }}>
       <Tooltip label="Thanks for coming!" placement="top" {...tooltipStyles}>
-        <Text fontSize={["sm", "md"]}>
+        <Text fontSize="sm">
           Made by <chakra.span fontWeight="semibold">Kai</chakra.span>
           <chakra.span display={["none", "initial"]}>, with ❤️</chakra.span>.
         </Text>
