@@ -4,6 +4,8 @@ _My personal homepage and API._
 
 > Home is where the heart is.
 
+[![Uptime][uptime-badge]][uptime]
+
 This is a place where you can learn more about me, whether or not I'm alive,
 and potentially how I might be doing! It's still very much a work-in-progress.
 
@@ -14,7 +16,6 @@ cover:_
 - [x] What is this person listening to?
 - [ ] Where is this person?
 - [ ] How is this person doing today?
-- [ ] How do I meet this person?
 - [x] What's this person been up to?
 
 > This site is currently live at [itskai.me](https://itskai.me)!
@@ -78,3 +79,6 @@ cover:_
    ```bash
    docker compose down
    ```
+
+[uptime]: https://betteruptime.com
+[uptime-badge]: https://betteruptime.com/status-badges/v1/monitor/a2in.svg

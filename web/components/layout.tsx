@@ -127,7 +127,7 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
   );
 
   return (
-    <HStack align="end" p={4} color="gray.600" _dark={{ color: "gray.400" }}>
+    <HStack p={4} color="gray.600" _dark={{ color: "gray.400" }}>
       <Tooltip label="Thanks for coming!" placement="top" {...tooltipStyles}>
         <Text fontSize="sm">
           Made by <chakra.span fontWeight="semibold">Kai</chakra.span>

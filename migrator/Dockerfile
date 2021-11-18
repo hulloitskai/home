@@ -16,5 +16,7 @@ COPY migrate-mongo-config.js ./
 COPY --from=builder /dist/migrator/node_modules/ node_modules/
 COPY --from=builder /dist/migrator/package.json package.json
 
+# Run migrator
+ENV NODE_ENV=production
 ENTRYPOINT ["yarn"]
 CMD ["up"]
