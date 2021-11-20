@@ -24,8 +24,8 @@ import {
 import { Layout } from "components/layout";
 import { TextareaAutosize } from "components/textarea";
 
-import { initializeApolloClient } from "components/apollo";
 import { patchNodeFetchForSSR } from "components/apollo";
+import { initializeApolloClient } from "components/apollo";
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
 

@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { NextPage } from "next";
 import { useUser } from "@auth0/nextjs-auth0";
 
+import { HiClipboardCopy } from "react-icons/hi";
+
 import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
-import { Heading, Text } from "@chakra-ui/react";
-import { Badge } from "@chakra-ui/react";
-import { Link } from "@chakra-ui/react";
+import { Heading, Text, Link } from "@chakra-ui/react";
 import { Icon, IconButton } from "@chakra-ui/react";
+import { Badge } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
@@ -15,7 +16,6 @@ import { useToast } from "components/toast";
 
 import { Layout } from "components/layout";
 import { ClientOnly } from "components/client-only";
-import { HiClipboardCopy } from "react-icons/hi";
 
 const TestPage: NextPage = () => {
   const toast = useToast();
@@ -61,7 +61,7 @@ const TestPage: NextPage = () => {
 
   return (
     <Layout badge="Test" badgeTooltip="Is this thing on?">
-      <Container flex={1} alignSelf="center">
+      <Container>
         <VStack align="stretch" spacing={8} py={[2, 4, 8]}>
           <VStack>
             <Heading size="md">Auth0 Integration</Heading>

@@ -78,84 +78,82 @@ const HomePage: NextPage = () => {
   );
   return (
     <Layout badge="Home" badgeTooltip="Where the heart is.">
-      <VStack align="stretch">
-        <Container>
-          <VStack spacing={[10, 12]} pt={[16, 20]} pb={[20, 24]}>
-            <VStack>
-              <Text fontSize="6xl" fontWeight="bold">
-                Hullo!
+      <Container>
+        <VStack spacing={[10, 12]} pt={[16, 20]} pb={[20, 24]}>
+          <VStack>
+            <Text fontSize="6xl" fontWeight="bold">
+              Hullo!
+            </Text>
+            <Text color="gray.500" fontSize="2xl" fontWeight="bold">
+              It&apos;s me,{" "}
+              <Text as="span" color="gray.800" _dark={{ color: "gray.300" }}>
+                Kai
               </Text>
-              <Text color="gray.500" fontSize="2xl" fontWeight="bold">
-                It&apos;s me,{" "}
-                <Text as="span" color="gray.800" _dark={{ color: "gray.300" }}>
-                  Kai
-                </Text>
-                , your favorite{" "}
-                <Tooltip label="Non-Playable Character" {...tooltipStyles}>
-                  <chakra.span>NPC</chakra.span>
-                </Tooltip>
-                .
-              </Text>
-            </VStack>
-            <MusicSection />
-            <HeartSection />
-            <Section>
-              <Center>
-                <Text fontSize="3xl">🚧</Text>
-              </Center>
-              <Text color="gray.500" fontSize="lg" fontWeight="semibold">
-                <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
-                  This is a work-in-progress.
-                </Text>
-                <br />
-                Come back again later!
-              </Text>
-            </Section>
+              , your favorite{" "}
+              <Tooltip label="Non-Playable Character" {...tooltipStyles}>
+                <chakra.span>NPC</chakra.span>
+              </Tooltip>
+              .
+            </Text>
           </VStack>
-        </Container>
-        {dailyEntry && entries && (
-          <DarkMode>
-            <Box pos="relative">
-              <ClientOnly>
-                <KnowledgeGraph
-                  entries={entries}
-                  highlightedEntryId={dailyEntry.id}
-                  linkForce={0.05}
-                  bodyForce={-75}
-                  h={96}
-                  bg="black"
-                />
-                <HStack
-                  align="start"
-                  spacing={1}
-                  pos="absolute"
-                  inset={4}
-                  bottom="unset"
-                >
-                  <Badge colorScheme="yellow">Day Graph</Badge>
-                  <Spacer />
-                  <NextLink href="/knowledge" passHref>
-                    <Link
-                      target="_blank"
-                      tabIndex={-1}
-                      _hover={{ textDecor: "none" }}
-                    >
-                      <Tooltip label="Open Full Graph">
-                        <IconButton
-                          icon={<Icon as={HiOutlineArrowsExpand} />}
-                          aria-label="Open Full Graph"
-                          size="xs"
-                          colorScheme="yellow"
-                        />
-                      </Tooltip>
-                    </Link>
-                  </NextLink>
-                </HStack>
-              </ClientOnly>
-            </Box>
-          </DarkMode>
-        )}
-      </VStack>
+          <MusicSection />
+          <HeartSection />
+          <Section>
+            <Center>
+              <Text fontSize="3xl">🚧</Text>
+            </Center>
+            <Text color="gray.500" fontSize="lg" fontWeight="semibold">
+              <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
+                This is a work-in-progress.
+              </Text>
+              <br />
+              Come back again later!
+            </Text>
+          </Section>
+        </VStack>
+      </Container>
+      {dailyEntry && entries && (
+        <DarkMode>
+          <Box pos="relative">
+            <ClientOnly>
+              <KnowledgeGraph
+                entries={entries}
+                highlightedEntryId={dailyEntry.id}
+                linkForce={0.05}
+                bodyForce={-75}
+                h={96}
+                bg="black"
+              />
+              <HStack
+                align="start"
+                spacing={1}
+                pos="absolute"
+                inset={4}
+                bottom="unset"
+              >
+                <Badge colorScheme="yellow">Day Graph</Badge>
+                <Spacer />
+                <NextLink href="/knowledge" passHref>
+                  <Link
+                    target="_blank"
+                    tabIndex={-1}
+                    _hover={{ textDecor: "none" }}
+                  >
+                    <Tooltip label="Open Full Graph">
+                      <IconButton
+                        icon={<Icon as={HiOutlineArrowsExpand} />}
+                        aria-label="Open Full Graph"
+                        size="xs"
+                        colorScheme="yellow"
+                      />
+                    </Tooltip>
+                  </Link>
+                </NextLink>
+              </HStack>
+            </ClientOnly>
+          </Box>
+        </DarkMode>
+      )}
     </Layout>
   );
 };

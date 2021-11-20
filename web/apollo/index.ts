@@ -306,6 +306,13 @@ export type ResearchPagePropsQueryVariables = Exact<{
 
 export type ResearchPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
 
+export type ResearchCompletePagePropsQueryVariables = Exact<{
+  handle: Scalars['String'];
+}>;
+
+
+export type ResearchCompletePagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string } | null | undefined };
+
 export const HeartStatHeartRateFragmentDoc = gql`
     fragment HeartStatHeartRate on HeartRate {
   id
@@ -695,3 +702,38 @@ export function useResearchPagePropsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type ResearchPagePropsQueryHookResult = ReturnType<typeof useResearchPagePropsQuery>;
 export type ResearchPagePropsLazyQueryHookResult = ReturnType<typeof useResearchPagePropsLazyQuery>;
 export type ResearchPagePropsQueryResult = Apollo.QueryResult<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>;
+export const ResearchCompletePagePropsDocument = gql`
+    query ResearchCompletePageProps($handle: String!) {
+  form: formByHandle(handle: $handle) {
+    id
+  }
+}
+    `;
+
+/**
+ * __useResearchCompletePagePropsQuery__
+ *
+ * To run a query within a React component, call `useResearchCompletePagePropsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useResearchCompletePagePropsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useResearchCompletePagePropsQuery({
+ *   variables: {
+ *      handle: // value for 'handle'
+ *   },
+ * });
+ */
+export function useResearchCompletePagePropsQuery(baseOptions: Apollo.QueryHookOptions<ResearchCompletePagePropsQuery, ResearchCompletePagePropsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ResearchCompletePagePropsQuery, ResearchCompletePagePropsQueryVariables>(ResearchCompletePagePropsDocument, options);
+      }
+export function useResearchCompletePagePropsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ResearchCompletePagePropsQuery, ResearchCompletePagePropsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ResearchCompletePagePropsQuery, ResearchCompletePagePropsQueryVariables>(ResearchCompletePagePropsDocument, options);
+        }
+export type ResearchCompletePagePropsQueryHookResult = ReturnType<typeof useResearchCompletePagePropsQuery>;
+export type ResearchCompletePagePropsLazyQueryHookResult = ReturnType<typeof useResearchCompletePagePropsLazyQuery>;
+export type ResearchCompletePagePropsQueryResult = Apollo.QueryResult<ResearchCompletePagePropsQuery, ResearchCompletePagePropsQueryVariables>;

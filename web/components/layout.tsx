@@ -27,6 +27,29 @@ export interface LayoutProps extends Omit<StackProps, "direction"> {
 export const Layout: FC<LayoutProps> = ({
   badge,
   badgeTooltip,
+  p,
+  px,
+  py,
+  pl,
+  pr,
+  pt,
+  pb,
+  padding,
+  paddingX,
+  paddingY,
+  paddingLeft,
+  paddingRight,
+  paddingTop,
+  paddingBottom,
+  flexDir,
+  flexDirection,
+  align = "stretch",
+  alignContent,
+  alignItems,
+  justify,
+  justifyContent,
+  justifyItems,
+  spacing,
   children,
   ...otherProps
 }) => {
@@ -88,7 +111,33 @@ export const Layout: FC<LayoutProps> = ({
           </Tooltip>
         )}
       </HStack>
-      <Box flex={1}>{children}</Box>
+      <VStack
+        flex={1}
+        flexDir={flexDir ?? flexDirection}
+        align={align ?? alignItems}
+        alignContent={alignContent}
+        justify={justify ?? justifyContent}
+        justifyItems={justifyItems}
+        {...{
+          p,
+          px,
+          py,
+          pl,
+          pr,
+          pt,
+          pb,
+          padding,
+          paddingX,
+          paddingY,
+          paddingLeft,
+          paddingRight,
+          paddingTop,
+          paddingBottom,
+          spacing,
+        }}
+      >
+        {children}
+      </VStack>
       <LayoutFooter justifySelf="end" />
     </VStack>
   );
