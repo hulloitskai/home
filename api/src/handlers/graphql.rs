@@ -42,7 +42,7 @@ pub async fn graphql_handler(
             })
             .into_response();
         let (head, body) = response.into_parts();
-        let response = Response::from_parts(head, box_body(body));
+        let response = Response::from_parts(head, boxed(body));
         return Ok(response);
     }
 
@@ -89,7 +89,7 @@ pub async fn graphql_handler(
             });
         let response = GraphQLResponse::from(response).into_response();
         let (head, body) = response.into_parts();
-        let response = Response::from_parts(head, box_body(body));
+        let response = Response::from_parts(head, boxed(body));
         return Ok(response);
     }
 
@@ -97,7 +97,7 @@ pub async fn graphql_handler(
     {
         let response = StatusCode::BAD_REQUEST.into_response();
         let (head, body) = response.into_parts();
-        let response = Response::from_parts(head, box_body(body));
+        let response = Response::from_parts(head, boxed(body));
         Ok(response)
     }
 }

@@ -35,8 +35,9 @@ impl KnowledgeEntryQuery {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntryObject>> {
-        let result = self.resolve_knowledge_entries(ctx).await;
-        into_field_result(result)
+        self.resolve_knowledge_entries(ctx)
+            .await
+            .map_err(format_error)
     }
 
     async fn knowledge_entry(
@@ -44,8 +45,9 @@ impl KnowledgeEntryQuery {
         ctx: &Context<'_>,
         id: String,
     ) -> FieldResult<Option<KnowledgeEntryObject>> {
-        let result = self.resolve_knowledge_entry(ctx, id).await;
-        into_field_result(result)
+        self.resolve_knowledge_entry(ctx, id)
+            .await
+            .map_err(format_error)
     }
 }
 

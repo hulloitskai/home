@@ -2,8 +2,12 @@ import type { NextApiResponse } from "next";
 import { serialize as serializeCookie } from "cookie";
 import type { CookieSerializeOptions as SerializeCookieOptions } from "cookie";
 
-import { handleAuth, handleLogout, handleCallback } from "components/auth0";
-import { authRedirectCookieName } from "components/auth0";
+import {
+  handleAuth,
+  handleLogout,
+  handleCallback,
+} from "components/auth0-handler";
+import { authRedirectCookieName } from "components/auth0-handler";
 
 import { webPublicBaseURL } from "config";
 

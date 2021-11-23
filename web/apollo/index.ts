@@ -18,6 +18,18 @@ export type Scalars = {
    * The input/output is a string in RFC3339 format.
    */
   DateTime: any;
+  /** URL is a String implementing the [URL Standard](http://url.spec.whatwg.org/) */
+  Url: any;
+};
+
+export type ArchiveFormInput = {
+  formId: Scalars['ID'];
+};
+
+export type ArchiveFormPayload = {
+  __typename?: 'ArchiveFormPayload';
+  form: Form;
+  ok: Scalars['Boolean'];
 };
 
 export type BuildInfo = {
@@ -52,14 +64,18 @@ export type DeleteFormPayload = {
 
 export type Form = {
   __typename?: 'Form';
+  archivedAt?: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
   description?: Maybe<Scalars['String']>;
   fields: Array<FormField>;
   handle: Scalars['String'];
   id: Scalars['ID'];
+  isArchived: Scalars['Boolean'];
   name: Scalars['String'];
   respondentHelper?: Maybe<Scalars['String']>;
   respondentLabel?: Maybe<Scalars['String']>;
+  responses: Array<FormResponse>;
+  responsesCount: Scalars['Int'];
   updatedAt: Scalars['DateTime'];
 };
 
@@ -111,6 +127,22 @@ export type FormFieldSingleChoiceInputConfigInput = {
   options: Array<Scalars['String']>;
 };
 
+export type FormResponse = {
+  __typename?: 'FormResponse';
+  createdAt: Scalars['DateTime'];
+  fields: Array<FormResponseField>;
+  id: Scalars['ID'];
+  respondent: Scalars['String'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type FormResponseField = {
+  __typename?: 'FormResponseField';
+  multipleChoice?: Maybe<Array<Scalars['String']>>;
+  singleChoice?: Maybe<Scalars['String']>;
+  text?: Maybe<Scalars['String']>;
+};
+
 export type HeartRate = {
   __typename?: 'HeartRate';
   createdAt: Scalars['DateTime'];
@@ -147,17 +179,17 @@ export type Lyrics = {
 
 export type MusicAlbum = {
   __typename?: 'MusicAlbum';
-  imageUrl: Scalars['String'];
+  imageUrl: Scalars['Url'];
   name: Scalars['String'];
   spotifyId: Scalars['String'];
-  spotifyUrl: Scalars['String'];
+  spotifyUrl: Scalars['Url'];
 };
 
 export type MusicArtist = {
   __typename?: 'MusicArtist';
   name: Scalars['String'];
   spotifyId: Scalars['String'];
-  spotifyUrl: Scalars['String'];
+  spotifyUrl: Scalars['Url'];
 };
 
 export type MusicInfo = {
@@ -175,15 +207,21 @@ export type MusicTrack = {
   lyrics?: Maybe<Lyrics>;
   name: Scalars['String'];
   spotifyId: Scalars['String'];
-  spotifyUrl: Scalars['String'];
+  spotifyUrl: Scalars['Url'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
+  archiveForm: ArchiveFormPayload;
   createForm: CreateFormPayload;
   deleteForm: DeleteFormPayload;
   submitForm: SubmitFormPayload;
   testFailure: TestFailurePayload;
+};
+
+
+export type MutationArchiveFormArgs = {
+  input: ArchiveFormInput;
 };
 
 
@@ -206,6 +244,7 @@ export type Query = {
   buildInfo: BuildInfo;
   form?: Maybe<Form>;
   formByHandle?: Maybe<Form>;
+  forms: Array<Form>;
   heartRate?: Maybe<HeartRate>;
   knowledgeEntries: Array<KnowledgeEntry>;
   knowledgeEntry?: Maybe<KnowledgeEntry>;
@@ -224,6 +263,13 @@ export type QueryFormByHandleArgs = {
 };
 
 
+export type QueryFormsArgs = {
+  includeArchived?: Scalars['Boolean'];
+  skip?: Scalars['Int'];
+  take?: Scalars['Int'];
+};
+
+
 export type QueryKnowledgeEntryArgs = {
   id: Scalars['String'];
 };
@@ -237,6 +283,7 @@ export type SubmitFormInput = {
 export type SubmitFormPayload = {
   __typename?: 'SubmitFormPayload';
   ok: Scalars['Boolean'];
+  response: FormResponse;
 };
 
 export type TestFailurePayload = {
@@ -251,12 +298,29 @@ export type User = {
   isAdmin: Scalars['Boolean'];
 };
 
+export type AdminResearchSectionQueryVariables = Exact<{
+  skip?: Maybe<Scalars['Int']>;
+}>;
+
+
+export type AdminResearchSectionQuery = { __typename?: 'Query', forms: Array<{ __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responsesCount: number, isArchived: boolean }> };
+
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
-export type HeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
+export type HomeHeartSectionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type HeartSectionQuery = { __typename?: 'Query', heartRate?: { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any } | null | undefined };
+export type HomeHeartSectionQuery = { __typename?: 'Query', heartRate?: { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any } | null | undefined };
+
+export type HomeMusicSectionQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HomeMusicSectionQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string, spotifyUrl: any, name: string, duration: number, album: { __typename?: 'MusicAlbum', spotifyId: string, spotifyUrl: any, name: string }, artists: Array<{ __typename?: 'MusicArtist', spotifyId: string, spotifyUrl: any, name: string }> } } | null | undefined };
+
+export type HomeMusicSectionHeartbeatQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HomeMusicSectionHeartbeatQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string } } | null | undefined };
 
 export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
 
@@ -270,15 +334,19 @@ export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: { __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> } | null | undefined } } | null | undefined };
 
-export type MusicSectionQueryVariables = Exact<{ [key: string]: never; }>;
+export type SubmitFormMutationVariables = Exact<{
+  input: SubmitFormInput;
+}>;
 
 
-export type MusicSectionQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string, spotifyUrl: string, name: string, duration: number, album: { __typename?: 'MusicAlbum', spotifyId: string, spotifyUrl: string, name: string }, artists: Array<{ __typename?: 'MusicArtist', spotifyId: string, spotifyUrl: string, name: string }> } } | null | undefined };
+export type SubmitFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'SubmitFormPayload', ok: boolean } };
 
-export type MusicSectionHeartbeatQueryVariables = Exact<{ [key: string]: never; }>;
+export type AdminFormPagePropsQueryVariables = Exact<{
+  formId: Scalars['ID'];
+}>;
 
 
-export type MusicSectionHeartbeatQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', isPlaying: boolean, progress: number, track: { __typename?: 'MusicTrack', spotifyId: string } } | null | undefined };
+export type AdminFormPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined } | null | undefined };
 
 export type HomePageQueryVariables = Exact<{
   dailyNoteId: Scalars['String'];
@@ -292,22 +360,15 @@ export type KnowledgePageQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type KnowledgePageQuery = { __typename?: 'Query', entries: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> };
 
-export type SubmitFormMutationVariables = Exact<{
-  input: SubmitFormInput;
-}>;
-
-
-export type SubmitFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'SubmitFormPayload', ok: boolean } };
-
 export type ResearchPagePropsQueryVariables = Exact<{
-  handle: Scalars['String'];
+  formHandle: Scalars['String'];
 }>;
 
 
 export type ResearchPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
 
 export type ResearchCompletePagePropsQueryVariables = Exact<{
-  handle: Scalars['String'];
+  formHandle: Scalars['String'];
 }>;
 
 
@@ -334,8 +395,48 @@ export const KnowledgeGraphEntryFragmentDoc = gql`
   }
 }
     `;
-export const HeartSectionDocument = gql`
-    query HeartSection {
+export const AdminResearchSectionDocument = gql`
+    query AdminResearchSection($skip: Int = 0) {
+  forms(skip: $skip) {
+    id
+    handle
+    name
+    description
+    responsesCount
+    isArchived
+  }
+}
+    `;
+
+/**
+ * __useAdminResearchSectionQuery__
+ *
+ * To run a query within a React component, call `useAdminResearchSectionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminResearchSectionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminResearchSectionQuery({
+ *   variables: {
+ *      skip: // value for 'skip'
+ *   },
+ * });
+ */
+export function useAdminResearchSectionQuery(baseOptions?: Apollo.QueryHookOptions<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>(AdminResearchSectionDocument, options);
+      }
+export function useAdminResearchSectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>(AdminResearchSectionDocument, options);
+        }
+export type AdminResearchSectionQueryHookResult = ReturnType<typeof useAdminResearchSectionQuery>;
+export type AdminResearchSectionLazyQueryHookResult = ReturnType<typeof useAdminResearchSectionLazyQuery>;
+export type AdminResearchSectionQueryResult = Apollo.QueryResult<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>;
+export const HomeHeartSectionDocument = gql`
+    query HomeHeartSection {
   heartRate {
     id
     ...HeartStatHeartRate
@@ -344,31 +445,120 @@ export const HeartSectionDocument = gql`
     ${HeartStatHeartRateFragmentDoc}`;
 
 /**
- * __useHeartSectionQuery__
+ * __useHomeHeartSectionQuery__
  *
- * To run a query within a React component, call `useHeartSectionQuery` and pass it any options that fit your needs.
- * When your component renders, `useHeartSectionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useHomeHeartSectionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHomeHeartSectionQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useHeartSectionQuery({
+ * const { data, loading, error } = useHomeHeartSectionQuery({
  *   variables: {
  *   },
  * });
  */
-export function useHeartSectionQuery(baseOptions?: Apollo.QueryHookOptions<HeartSectionQuery, HeartSectionQueryVariables>) {
+export function useHomeHeartSectionQuery(baseOptions?: Apollo.QueryHookOptions<HomeHeartSectionQuery, HomeHeartSectionQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<HeartSectionQuery, HeartSectionQueryVariables>(HeartSectionDocument, options);
+        return Apollo.useQuery<HomeHeartSectionQuery, HomeHeartSectionQueryVariables>(HomeHeartSectionDocument, options);
       }
-export function useHeartSectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HeartSectionQuery, HeartSectionQueryVariables>) {
+export function useHomeHeartSectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomeHeartSectionQuery, HomeHeartSectionQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<HeartSectionQuery, HeartSectionQueryVariables>(HeartSectionDocument, options);
+          return Apollo.useLazyQuery<HomeHeartSectionQuery, HomeHeartSectionQueryVariables>(HomeHeartSectionDocument, options);
         }
-export type HeartSectionQueryHookResult = ReturnType<typeof useHeartSectionQuery>;
-export type HeartSectionLazyQueryHookResult = ReturnType<typeof useHeartSectionLazyQuery>;
-export type HeartSectionQueryResult = Apollo.QueryResult<HeartSectionQuery, HeartSectionQueryVariables>;
+export type HomeHeartSectionQueryHookResult = ReturnType<typeof useHomeHeartSectionQuery>;
+export type HomeHeartSectionLazyQueryHookResult = ReturnType<typeof useHomeHeartSectionLazyQuery>;
+export type HomeHeartSectionQueryResult = Apollo.QueryResult<HomeHeartSectionQuery, HomeHeartSectionQueryVariables>;
+export const HomeMusicSectionDocument = gql`
+    query HomeMusicSection {
+  musicInfo {
+    isPlaying
+    track {
+      spotifyId
+      spotifyUrl
+      name
+      album {
+        spotifyId
+        spotifyUrl
+        name
+      }
+      artists {
+        spotifyId
+        spotifyUrl
+        name
+      }
+      duration
+    }
+    progress
+  }
+}
+    `;
+
+/**
+ * __useHomeMusicSectionQuery__
+ *
+ * To run a query within a React component, call `useHomeMusicSectionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHomeMusicSectionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useHomeMusicSectionQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useHomeMusicSectionQuery(baseOptions?: Apollo.QueryHookOptions<HomeMusicSectionQuery, HomeMusicSectionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<HomeMusicSectionQuery, HomeMusicSectionQueryVariables>(HomeMusicSectionDocument, options);
+      }
+export function useHomeMusicSectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomeMusicSectionQuery, HomeMusicSectionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<HomeMusicSectionQuery, HomeMusicSectionQueryVariables>(HomeMusicSectionDocument, options);
+        }
+export type HomeMusicSectionQueryHookResult = ReturnType<typeof useHomeMusicSectionQuery>;
+export type HomeMusicSectionLazyQueryHookResult = ReturnType<typeof useHomeMusicSectionLazyQuery>;
+export type HomeMusicSectionQueryResult = Apollo.QueryResult<HomeMusicSectionQuery, HomeMusicSectionQueryVariables>;
+export const HomeMusicSectionHeartbeatDocument = gql`
+    query HomeMusicSectionHeartbeat {
+  musicInfo {
+    isPlaying
+    track {
+      spotifyId
+    }
+    progress
+  }
+}
+    `;
+
+/**
+ * __useHomeMusicSectionHeartbeatQuery__
+ *
+ * To run a query within a React component, call `useHomeMusicSectionHeartbeatQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHomeMusicSectionHeartbeatQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useHomeMusicSectionHeartbeatQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useHomeMusicSectionHeartbeatQuery(baseOptions?: Apollo.QueryHookOptions<HomeMusicSectionHeartbeatQuery, HomeMusicSectionHeartbeatQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<HomeMusicSectionHeartbeatQuery, HomeMusicSectionHeartbeatQueryVariables>(HomeMusicSectionHeartbeatDocument, options);
+      }
+export function useHomeMusicSectionHeartbeatLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomeMusicSectionHeartbeatQuery, HomeMusicSectionHeartbeatQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<HomeMusicSectionHeartbeatQuery, HomeMusicSectionHeartbeatQueryVariables>(HomeMusicSectionHeartbeatDocument, options);
+        }
+export type HomeMusicSectionHeartbeatQueryHookResult = ReturnType<typeof useHomeMusicSectionHeartbeatQuery>;
+export type HomeMusicSectionHeartbeatLazyQueryHookResult = ReturnType<typeof useHomeMusicSectionHeartbeatLazyQuery>;
+export type HomeMusicSectionHeartbeatQueryResult = Apollo.QueryResult<HomeMusicSectionHeartbeatQuery, HomeMusicSectionHeartbeatQueryVariables>;
 export const LayoutFooterViewerDocument = gql`
     query LayoutFooterViewer {
   viewer {
@@ -447,95 +637,77 @@ export function useMusicLyricsLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type MusicLyricsQueryHookResult = ReturnType<typeof useMusicLyricsQuery>;
 export type MusicLyricsLazyQueryHookResult = ReturnType<typeof useMusicLyricsLazyQuery>;
 export type MusicLyricsQueryResult = Apollo.QueryResult<MusicLyricsQuery, MusicLyricsQueryVariables>;
-export const MusicSectionDocument = gql`
-    query MusicSection {
-  musicInfo {
-    isPlaying
-    track {
-      spotifyId
-      spotifyUrl
-      name
-      album {
-        spotifyId
-        spotifyUrl
-        name
+export const SubmitFormDocument = gql`
+    mutation SubmitForm($input: SubmitFormInput!) {
+  payload: submitForm(input: $input) {
+    ok
+  }
+}
+    `;
+export type SubmitFormMutationFn = Apollo.MutationFunction<SubmitFormMutation, SubmitFormMutationVariables>;
+
+/**
+ * __useSubmitFormMutation__
+ *
+ * To run a mutation, you first call `useSubmitFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubmitFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [submitFormMutation, { data, loading, error }] = useSubmitFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSubmitFormMutation(baseOptions?: Apollo.MutationHookOptions<SubmitFormMutation, SubmitFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SubmitFormMutation, SubmitFormMutationVariables>(SubmitFormDocument, options);
       }
-      artists {
-        spotifyId
-        spotifyUrl
-        name
-      }
-      duration
-    }
-    progress
+export type SubmitFormMutationHookResult = ReturnType<typeof useSubmitFormMutation>;
+export type SubmitFormMutationResult = Apollo.MutationResult<SubmitFormMutation>;
+export type SubmitFormMutationOptions = Apollo.BaseMutationOptions<SubmitFormMutation, SubmitFormMutationVariables>;
+export const AdminFormPagePropsDocument = gql`
+    query AdminFormPageProps($formId: ID!) {
+  form(id: $formId) {
+    id
+    handle
+    name
+    description
   }
 }
     `;
 
 /**
- * __useMusicSectionQuery__
+ * __useAdminFormPagePropsQuery__
  *
- * To run a query within a React component, call `useMusicSectionQuery` and pass it any options that fit your needs.
- * When your component renders, `useMusicSectionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useAdminFormPagePropsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminFormPagePropsQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useMusicSectionQuery({
+ * const { data, loading, error } = useAdminFormPagePropsQuery({
  *   variables: {
+ *      formId: // value for 'formId'
  *   },
  * });
  */
-export function useMusicSectionQuery(baseOptions?: Apollo.QueryHookOptions<MusicSectionQuery, MusicSectionQueryVariables>) {
+export function useAdminFormPagePropsQuery(baseOptions: Apollo.QueryHookOptions<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MusicSectionQuery, MusicSectionQueryVariables>(MusicSectionDocument, options);
+        return Apollo.useQuery<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>(AdminFormPagePropsDocument, options);
       }
-export function useMusicSectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MusicSectionQuery, MusicSectionQueryVariables>) {
+export function useAdminFormPagePropsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MusicSectionQuery, MusicSectionQueryVariables>(MusicSectionDocument, options);
+          return Apollo.useLazyQuery<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>(AdminFormPagePropsDocument, options);
         }
-export type MusicSectionQueryHookResult = ReturnType<typeof useMusicSectionQuery>;
-export type MusicSectionLazyQueryHookResult = ReturnType<typeof useMusicSectionLazyQuery>;
-export type MusicSectionQueryResult = Apollo.QueryResult<MusicSectionQuery, MusicSectionQueryVariables>;
-export const MusicSectionHeartbeatDocument = gql`
-    query MusicSectionHeartbeat {
-  musicInfo {
-    isPlaying
-    track {
-      spotifyId
-    }
-    progress
-  }
-}
-    `;
-
-/**
- * __useMusicSectionHeartbeatQuery__
- *
- * To run a query within a React component, call `useMusicSectionHeartbeatQuery` and pass it any options that fit your needs.
- * When your component renders, `useMusicSectionHeartbeatQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useMusicSectionHeartbeatQuery({
- *   variables: {
- *   },
- * });
- */
-export function useMusicSectionHeartbeatQuery(baseOptions?: Apollo.QueryHookOptions<MusicSectionHeartbeatQuery, MusicSectionHeartbeatQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MusicSectionHeartbeatQuery, MusicSectionHeartbeatQueryVariables>(MusicSectionHeartbeatDocument, options);
-      }
-export function useMusicSectionHeartbeatLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MusicSectionHeartbeatQuery, MusicSectionHeartbeatQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MusicSectionHeartbeatQuery, MusicSectionHeartbeatQueryVariables>(MusicSectionHeartbeatDocument, options);
-        }
-export type MusicSectionHeartbeatQueryHookResult = ReturnType<typeof useMusicSectionHeartbeatQuery>;
-export type MusicSectionHeartbeatLazyQueryHookResult = ReturnType<typeof useMusicSectionHeartbeatLazyQuery>;
-export type MusicSectionHeartbeatQueryResult = Apollo.QueryResult<MusicSectionHeartbeatQuery, MusicSectionHeartbeatQueryVariables>;
+export type AdminFormPagePropsQueryHookResult = ReturnType<typeof useAdminFormPagePropsQuery>;
+export type AdminFormPagePropsLazyQueryHookResult = ReturnType<typeof useAdminFormPagePropsLazyQuery>;
+export type AdminFormPagePropsQueryResult = Apollo.QueryResult<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>;
 export const HomePageDocument = gql`
     query HomePage($dailyNoteId: String!) {
   dailyEntry: knowledgeEntry(id: $dailyNoteId) {
@@ -617,42 +789,9 @@ export function useKnowledgePageLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type KnowledgePageQueryHookResult = ReturnType<typeof useKnowledgePageQuery>;
 export type KnowledgePageLazyQueryHookResult = ReturnType<typeof useKnowledgePageLazyQuery>;
 export type KnowledgePageQueryResult = Apollo.QueryResult<KnowledgePageQuery, KnowledgePageQueryVariables>;
-export const SubmitFormDocument = gql`
-    mutation SubmitForm($input: SubmitFormInput!) {
-  payload: submitForm(input: $input) {
-    ok
-  }
-}
-    `;
-export type SubmitFormMutationFn = Apollo.MutationFunction<SubmitFormMutation, SubmitFormMutationVariables>;
-
-/**
- * __useSubmitFormMutation__
- *
- * To run a mutation, you first call `useSubmitFormMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSubmitFormMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [submitFormMutation, { data, loading, error }] = useSubmitFormMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useSubmitFormMutation(baseOptions?: Apollo.MutationHookOptions<SubmitFormMutation, SubmitFormMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SubmitFormMutation, SubmitFormMutationVariables>(SubmitFormDocument, options);
-      }
-export type SubmitFormMutationHookResult = ReturnType<typeof useSubmitFormMutation>;
-export type SubmitFormMutationResult = Apollo.MutationResult<SubmitFormMutation>;
-export type SubmitFormMutationOptions = Apollo.BaseMutationOptions<SubmitFormMutation, SubmitFormMutationVariables>;
 export const ResearchPagePropsDocument = gql`
-    query ResearchPageProps($handle: String!) {
-  form: formByHandle(handle: $handle) {
+    query ResearchPageProps($formHandle: String!) {
+  form: formByHandle(handle: $formHandle) {
     id
     handle
     name
@@ -687,7 +826,7 @@ export const ResearchPagePropsDocument = gql`
  * @example
  * const { data, loading, error } = useResearchPagePropsQuery({
  *   variables: {
- *      handle: // value for 'handle'
+ *      formHandle: // value for 'formHandle'
  *   },
  * });
  */
@@ -703,8 +842,8 @@ export type ResearchPagePropsQueryHookResult = ReturnType<typeof useResearchPage
 export type ResearchPagePropsLazyQueryHookResult = ReturnType<typeof useResearchPagePropsLazyQuery>;
 export type ResearchPagePropsQueryResult = Apollo.QueryResult<ResearchPagePropsQuery, ResearchPagePropsQueryVariables>;
 export const ResearchCompletePagePropsDocument = gql`
-    query ResearchCompletePageProps($handle: String!) {
-  form: formByHandle(handle: $handle) {
+    query ResearchCompletePageProps($formHandle: String!) {
+  form: formByHandle(handle: $formHandle) {
     id
   }
 }
@@ -722,7 +861,7 @@ export const ResearchCompletePagePropsDocument = gql`
  * @example
  * const { data, loading, error } = useResearchCompletePagePropsQuery({
  *   variables: {
- *      handle: // value for 'handle'
+ *      formHandle: // value for 'formHandle'
  *   },
  * });
  */

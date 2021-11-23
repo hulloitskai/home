@@ -4,7 +4,7 @@ use super::*;
 pub struct FormResponse {
     pub form_id: EntityId<Form>,
     pub respondent: String,
-    pub fields: Vec<FormFieldResponse>,
+    pub fields: Vec<FormResponseField>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -12,7 +12,7 @@ pub struct FormResponse {
 struct FormResponseDocument {
     pub form_id: ObjectId,
     pub respondent: String,
-    pub fields: Vec<FormFieldResponse>,
+    pub fields: Vec<FormResponseField>,
 }
 
 impl Object for FormResponse {
@@ -50,7 +50,7 @@ impl Object for FormResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]
-pub enum FormFieldResponse {
+pub enum FormResponseField {
     Text(String),
     SingleChoice(String),
     MultipleChoice(Set<String>),

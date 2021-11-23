@@ -37,8 +37,7 @@ impl HeartRateQuery {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<HeartRateObject>> {
-        let result = self.resolve_heart_rate(ctx).await;
-        into_field_result(result)
+        self.resolve_heart_rate(ctx).await.map_err(format_error)
     }
 }
 

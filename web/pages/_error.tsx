@@ -1,14 +1,13 @@
 import React, { useMemo } from "react";
 import { NextPage, NextPageContext } from "next";
-import NextLink from "next/link";
-import NextErrorComponent, { ErrorProps } from "next/error";
+import ErrorComponent, { ErrorProps } from "next/error";
 
 import { captureException, flush } from "@sentry/nextjs";
 
 import { HiClipboardCopy } from "react-icons/hi";
 
 import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
-import { Text, Link, Code } from "@chakra-ui/react";
+import { Text, Code } from "@chakra-ui/react";
 import { Icon, IconButton } from "@chakra-ui/react";
 import { Badge } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
@@ -17,6 +16,7 @@ import { Tooltip } from "@chakra-ui/react";
 import { useClipboard } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
+import { InternalLink } from "components/internal-link";
 
 export interface ErrorPageProps extends ErrorProps {
   hasGetInitialPropsRun: boolean;
@@ -49,7 +49,7 @@ const ErrorPage: NextPage<ErrorPageProps> = ({
 
   return (
     <Layout
-      badge="Oops!"
+      badge="Error"
       badgeTooltip="Something went wrong :("
       spacing={1.5}
       justify="center"
@@ -89,20 +89,18 @@ const ErrorPage: NextPage<ErrorPageProps> = ({
           </VStack>
         </DarkMode>
       </Container>
-      <NextLink href="/" passHref>
-        <Link _hover={{ textDecor: "unset" }}>
-          <Button variant="outline" size="sm">
-            Return Home
-          </Button>
-        </Link>
-      </NextLink>
+      <InternalLink href="/" _hover={{ textDecor: "none" }}>
+        <Button variant="outline" size="sm">
+          Return Home
+        </Button>
+      </InternalLink>
     </Layout>
   );
 };
 
 ErrorPage.getInitialProps = async props => {
   const { err, asPath } = props;
-  const errorInitialProps = await NextErrorComponent.getInitialProps(props);
+  const errorInitialProps = await ErrorComponent.getInitialProps(props);
   const initialProps: ErrorPageProps = {
     ...errorInitialProps,
     err,

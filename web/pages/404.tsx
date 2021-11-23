@@ -1,16 +1,16 @@
 import React from "react";
 import { NextPage } from "next";
-import NextLink from "next/link";
 
 import { Box } from "@chakra-ui/react";
-import { Text, Link } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
+import { InternalLink } from "components/internal-link";
 
 const NotFoundPage: NextPage = () => (
   <Layout
-    badge="404"
+    badge="Missing"
     badgeTooltip="Page not found! Where did it go?"
     spacing={1.5}
     justify="center"
@@ -21,13 +21,11 @@ const NotFoundPage: NextPage = () => (
     </Text>
     <Text color="gray.500">Sorry about that! 😣</Text>
     <Box h={2} />
-    <NextLink href="/" passHref>
-      <Link _hover={{ textDecor: "unset" }}>
-        <Button variant="outline" size="sm">
-          Return Home
-        </Button>
-      </Link>
-    </NextLink>
+    <InternalLink href="/" _hover={{ textDecor: "unset" }}>
+      <Button variant="outline" size="sm">
+        Return Home
+      </Button>
+    </InternalLink>
   </Layout>
 );
 

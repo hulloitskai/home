@@ -1,6 +1,6 @@
 import type { NextApiHandler } from "next";
 
-import { getSession } from "components/auth0";
+import { getSession } from "components/auth0-handler";
 
 const handler: NextApiHandler = async (req, res) => {
   const session = await getSession(req, res);

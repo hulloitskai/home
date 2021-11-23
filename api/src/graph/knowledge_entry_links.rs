@@ -13,16 +13,14 @@ impl KnowledgeEntryLinksObject {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntryObject>> {
-        let result = self.resolve_outgoing(ctx).await;
-        into_field_result(result)
+        self.resolve_outgoing(ctx).await.map_err(format_error)
     }
 
     async fn incoming(
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Vec<KnowledgeEntryObject>> {
-        let result = self.resolve_incoming(ctx).await;
-        into_field_result(result)
+        self.resolve_incoming(ctx).await.map_err(format_error)
     }
 }
 

@@ -8,10 +8,26 @@ pub type FormId = EntityId<Form>;
 pub struct Form {
     pub handle: Handle,
     pub name: String,
+
+    #[builder(default)]
     pub description: Option<String>,
-    pub fields: Vec<FormField>,
+
+    #[builder(default)]
     pub respondent_label: Option<String>,
+
+    #[builder(default)]
     pub respondent_helper: Option<String>,
+
+    pub fields: Vec<FormField>,
+
+    #[builder(default)]
+    pub archived_at: Option<DateTime>,
+}
+
+impl Form {
+    pub fn is_archived(&self) -> bool {
+        self.archived_at.is_some()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -96,17 +112,31 @@ impl Entity for Form {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct FormConditions {
-    #[builder(setter(into))]
+    #[builder(default, setter(into))]
     pub handle: Option<Handle>,
+
+    #[builder(default, setter(into))]
+    pub is_archived: Option<bool>,
 }
 
 impl EntityConditions for FormConditions {
     fn into_document(self) -> Document {
-        let FormConditions { handle } = self;
+        let FormConditions {
+            handle,
+            is_archived,
+        } = self;
 
         let mut doc = Document::new();
         if let Some(handle) = handle {
             doc.insert("handle", handle);
+        }
+        if let Some(is_archived) = is_archived {
+            use Bson::Null;
+            if is_archived {
+                doc.insert("archivedAt", doc! { "$ne": Null });
+            } else {
+                doc.insert("archivedAt", Null);
+            }
         }
 
         doc

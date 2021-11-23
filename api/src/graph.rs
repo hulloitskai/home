@@ -9,6 +9,7 @@ pub use subscription::*;
 mod build;
 mod date_time;
 mod form;
+mod form_response;
 mod heart_rate;
 mod id;
 mod knowledge_entry;
@@ -25,6 +26,7 @@ mod user;
 use build::*;
 use date_time::*;
 use form::*;
+use form_response::*;
 use heart_rate::*;
 use id::*;
 use knowledge_entry::*;
@@ -76,10 +78,6 @@ impl<'a> ContextExt for Context<'a> {
     }
 }
 
-fn into_field_result<T, E>(result: Result<T, E>) -> FieldResult<T>
-where
-    Result<T, E>: AnyhowContext<T, E>,
-    E: Display,
-{
-    result.map_err(|error| FieldError::new(format!("{:#}", error)))
+fn format_error(error: Error) -> FieldError {
+    FieldError::new(format!("{:#}", error))
 }

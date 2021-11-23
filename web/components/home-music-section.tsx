@@ -11,13 +11,13 @@ import { MusicLyrics } from "components/music-lyrics";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useMusicSectionQuery } from "apollo";
-import { useMusicSectionHeartbeatQuery } from "apollo";
+import { useHomeMusicSectionQuery } from "apollo";
+import { useHomeMusicSectionHeartbeatQuery } from "apollo";
 
-import type { MusicSectionQuery } from "apollo";
+import type { HomeMusicSectionQuery } from "apollo";
 
 gql`
-  query MusicSection {
+  query HomeMusicSection {
     musicInfo {
       isPlaying
       track {
@@ -42,7 +42,7 @@ gql`
 `;
 
 gql`
-  query MusicSectionHeartbeat {
+  query HomeMusicSectionHeartbeat {
     musicInfo {
       isPlaying
       track {
@@ -53,11 +53,13 @@ gql`
   }
 `;
 
-export type MusicSectionProps = SectionProps;
+export type HomeMusicSectionProps = SectionProps;
 
-export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
+export const HomeMusicSection: FC<HomeMusicSectionProps> = ({
+  ...otherProps
+}) => {
   const handleQueryError = useHandleQueryError("Failed to load music info");
-  const { data } = useMusicSectionQuery({
+  const { data } = useHomeMusicSectionQuery({
     onError: handleQueryError,
   });
   const { musicInfo } = data ?? {};
@@ -66,7 +68,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
   const dataTimestamp = useMemo(() => DateTime.now(), [data]);
 
   // Send heartbeat signal every 2.5 seconds.
-  useMusicSectionHeartbeatQuery({
+  useHomeMusicSectionHeartbeatQuery({
     fetchPolicy: "network-only",
     pollInterval: 2500,
     ssr: false,
@@ -102,7 +104,7 @@ export const MusicSection: FC<MusicSectionProps> = ({ ...otherProps }) => {
     }
   }, [musicInfo]);
 
-  const render = (info: NonNullable<MusicSectionQuery["musicInfo"]>) => {
+  const render = (info: NonNullable<HomeMusicSectionQuery["musicInfo"]>) => {
     const { isPlaying, track } = info;
     const { duration, artists } = track;
     const artist = first(artists);

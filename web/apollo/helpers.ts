@@ -1,4 +1,9 @@
 import { FieldPolicy, FieldReadFunction, TypePolicies, TypePolicy } from '@apollo/client/cache';
+export type ArchiveFormPayloadKeySpecifier = ('form' | 'ok' | ArchiveFormPayloadKeySpecifier)[];
+export type ArchiveFormPayloadFieldPolicy = {
+	form?: FieldPolicy<any> | FieldReadFunction<any>,
+	ok?: FieldPolicy<any> | FieldReadFunction<any>
+};
 export type BuildInfoKeySpecifier = ('timestamp' | 'version' | BuildInfoKeySpecifier)[];
 export type BuildInfoFieldPolicy = {
 	timestamp?: FieldPolicy<any> | FieldReadFunction<any>,
@@ -13,16 +18,20 @@ export type DeleteFormPayloadKeySpecifier = ('ok' | DeleteFormPayloadKeySpecifie
 export type DeleteFormPayloadFieldPolicy = {
 	ok?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type FormKeySpecifier = ('createdAt' | 'description' | 'fields' | 'handle' | 'id' | 'name' | 'respondentHelper' | 'respondentLabel' | 'updatedAt' | FormKeySpecifier)[];
+export type FormKeySpecifier = ('archivedAt' | 'createdAt' | 'description' | 'fields' | 'handle' | 'id' | 'isArchived' | 'name' | 'respondentHelper' | 'respondentLabel' | 'responses' | 'responsesCount' | 'updatedAt' | FormKeySpecifier)[];
 export type FormFieldPolicy = {
+	archivedAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	description?: FieldPolicy<any> | FieldReadFunction<any>,
 	fields?: FieldPolicy<any> | FieldReadFunction<any>,
 	handle?: FieldPolicy<any> | FieldReadFunction<any>,
 	id?: FieldPolicy<any> | FieldReadFunction<any>,
+	isArchived?: FieldPolicy<any> | FieldReadFunction<any>,
 	name?: FieldPolicy<any> | FieldReadFunction<any>,
 	respondentHelper?: FieldPolicy<any> | FieldReadFunction<any>,
 	respondentLabel?: FieldPolicy<any> | FieldReadFunction<any>,
+	responses?: FieldPolicy<any> | FieldReadFunction<any>,
+	responsesCount?: FieldPolicy<any> | FieldReadFunction<any>,
 	updatedAt?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type FormFieldKeySpecifier = ('input' | 'question' | FormFieldKeySpecifier)[];
@@ -43,6 +52,20 @@ export type FormFieldMultipleChoiceInputConfigFieldPolicy = {
 export type FormFieldSingleChoiceInputConfigKeySpecifier = ('options' | FormFieldSingleChoiceInputConfigKeySpecifier)[];
 export type FormFieldSingleChoiceInputConfigFieldPolicy = {
 	options?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type FormResponseKeySpecifier = ('createdAt' | 'fields' | 'id' | 'respondent' | 'updatedAt' | FormResponseKeySpecifier)[];
+export type FormResponseFieldPolicy = {
+	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
+	fields?: FieldPolicy<any> | FieldReadFunction<any>,
+	id?: FieldPolicy<any> | FieldReadFunction<any>,
+	respondent?: FieldPolicy<any> | FieldReadFunction<any>,
+	updatedAt?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type FormResponseFieldKeySpecifier = ('multipleChoice' | 'singleChoice' | 'text' | FormResponseFieldKeySpecifier)[];
+export type FormResponseFieldFieldPolicy = {
+	multipleChoice?: FieldPolicy<any> | FieldReadFunction<any>,
+	singleChoice?: FieldPolicy<any> | FieldReadFunction<any>,
+	text?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type HeartRateKeySpecifier = ('createdAt' | 'id' | 'measurement' | 'timestamp' | 'updatedAt' | HeartRateKeySpecifier)[];
 export type HeartRateFieldPolicy = {
@@ -102,27 +125,30 @@ export type MusicTrackFieldPolicy = {
 	spotifyId?: FieldPolicy<any> | FieldReadFunction<any>,
 	spotifyUrl?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type MutationKeySpecifier = ('createForm' | 'deleteForm' | 'submitForm' | 'testFailure' | MutationKeySpecifier)[];
+export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'submitForm' | 'testFailure' | MutationKeySpecifier)[];
 export type MutationFieldPolicy = {
+	archiveForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	createForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	deleteForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	submitForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	testFailure?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'viewer' | QueryKeySpecifier)[];
+export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'forms' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'viewer' | QueryKeySpecifier)[];
 export type QueryFieldPolicy = {
 	buildInfo?: FieldPolicy<any> | FieldReadFunction<any>,
 	form?: FieldPolicy<any> | FieldReadFunction<any>,
 	formByHandle?: FieldPolicy<any> | FieldReadFunction<any>,
+	forms?: FieldPolicy<any> | FieldReadFunction<any>,
 	heartRate?: FieldPolicy<any> | FieldReadFunction<any>,
 	knowledgeEntries?: FieldPolicy<any> | FieldReadFunction<any>,
 	knowledgeEntry?: FieldPolicy<any> | FieldReadFunction<any>,
 	musicInfo?: FieldPolicy<any> | FieldReadFunction<any>,
 	viewer?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type SubmitFormPayloadKeySpecifier = ('ok' | SubmitFormPayloadKeySpecifier)[];
+export type SubmitFormPayloadKeySpecifier = ('ok' | 'response' | SubmitFormPayloadKeySpecifier)[];
 export type SubmitFormPayloadFieldPolicy = {
-	ok?: FieldPolicy<any> | FieldReadFunction<any>
+	ok?: FieldPolicy<any> | FieldReadFunction<any>,
+	response?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type TestFailurePayloadKeySpecifier = ('ok' | TestFailurePayloadKeySpecifier)[];
 export type TestFailurePayloadFieldPolicy = {
@@ -135,6 +161,10 @@ export type UserFieldPolicy = {
 	isAdmin?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type StrictTypedTypePolicies = {
+	ArchiveFormPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | ArchiveFormPayloadKeySpecifier | (() => undefined | ArchiveFormPayloadKeySpecifier),
+		fields?: ArchiveFormPayloadFieldPolicy,
+	},
 	BuildInfo?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | BuildInfoKeySpecifier | (() => undefined | BuildInfoKeySpecifier),
 		fields?: BuildInfoFieldPolicy,
@@ -166,6 +196,14 @@ export type StrictTypedTypePolicies = {
 	FormFieldSingleChoiceInputConfig?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | FormFieldSingleChoiceInputConfigKeySpecifier | (() => undefined | FormFieldSingleChoiceInputConfigKeySpecifier),
 		fields?: FormFieldSingleChoiceInputConfigFieldPolicy,
+	},
+	FormResponse?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | FormResponseKeySpecifier | (() => undefined | FormResponseKeySpecifier),
+		fields?: FormResponseFieldPolicy,
+	},
+	FormResponseField?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | FormResponseFieldKeySpecifier | (() => undefined | FormResponseFieldKeySpecifier),
+		fields?: FormResponseFieldFieldPolicy,
 	},
 	HeartRate?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | HeartRateKeySpecifier | (() => undefined | HeartRateKeySpecifier),

@@ -12,8 +12,7 @@ impl FormObject {
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        let created_at = self.record.created_at();
-        created_at.into()
+        self.record.created_at().into()
     }
 
     async fn updated_at(&self) -> DateTimeScalar {
@@ -32,16 +31,85 @@ impl FormObject {
         self.record.description.as_deref()
     }
 
-    async fn fields(&self) -> Vec<FormFieldObject> {
-        self.record.fields.iter().cloned().map(Into::into).collect()
-    }
-
     async fn respondent_label(&self) -> Option<&str> {
         self.record.respondent_label.as_deref()
     }
 
     async fn respondent_helper(&self) -> Option<&str> {
         self.record.respondent_helper.as_deref()
+    }
+
+    async fn fields(&self) -> Vec<FormFieldObject> {
+        self.record.fields.iter().cloned().map(Into::into).collect()
+    }
+
+    async fn archived_at(&self) -> Option<DateTimeScalar> {
+        self.record.archived_at.map(Into::into)
+    }
+
+    async fn is_archived(&self) -> bool {
+        self.record.is_archived()
+    }
+
+    async fn responses(
+        &self,
+        ctx: &Context<'_>,
+    ) -> FieldResult<Vec<FormResponseObject>> {
+        self.resolve_responses(ctx).await.map_err(format_error)
+    }
+
+    async fn responses_count(&self, ctx: &Context<'_>) -> FieldResult<u64> {
+        self.resolve_responses_count(ctx)
+            .await
+            .map_err(format_error)
+    }
+}
+
+impl FormObject {
+    async fn resolve_responses(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Vec<FormResponseObject>> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.clone());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+
+        let responses = Form::responses(&self.record)
+            .load(&ctx)
+            .await
+            .context("failed to find responses")?;
+        let responses = responses
+            .try_collect::<Vec<_>>()
+            .await
+            .context("failed to load responses")?;
+        let responses = responses
+            .into_iter()
+            .map(FormResponseObject::from)
+            .collect::<Vec<_>>();
+        Ok(responses)
+    }
+    async fn resolve_responses_count(&self, ctx: &Context<'_>) -> Result<u64> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.clone());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+
+        let count = Form::responses(&self.record)
+            .count(&ctx)
+            .await
+            .context("failed to count responses")?;
+        Ok(count)
     }
 }
 
@@ -120,8 +188,7 @@ impl FormQuery {
         ctx: &Context<'_>,
         id: Id<Form>,
     ) -> FieldResult<Option<FormObject>> {
-        let result = self.resolve_form(ctx, id).await;
-        into_field_result(result)
+        self.resolve_form(ctx, id).await.map_err(format_error)
     }
 
     async fn form_by_handle(
@@ -129,16 +196,152 @@ impl FormQuery {
         ctx: &Context<'_>,
         handle: String,
     ) -> FieldResult<Option<FormObject>> {
-        let result = self.resolve_form_by_handle(ctx, handle).await;
-        into_field_result(result)
+        self.resolve_form_by_handle(ctx, handle)
+            .await
+            .map_err(format_error)
+    }
+
+    async fn forms(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default)] skip: u64,
+        #[graphql(default = 25)] take: u64,
+        #[graphql(default = false)] include_archived: bool,
+    ) -> FieldResult<Vec<FormObject>> {
+        self.resolve_forms(ctx, skip, take, include_archived)
+            .await
+            .map_err(format_error)
+    }
+}
+
+impl FormQuery {
+    async fn resolve_form(
+        &self,
+        ctx: &Context<'_>,
+        id: Id<Form>,
+    ) -> Result<Option<FormObject>> {
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        let form_id = FormId::from(id);
+        let form = Form::get(form_id)
+            .optional()
+            .load(&ctx)
+            .await
+            .context("failed to load form")?;
+
+        let form = form.map(FormObject::from);
+        Ok(form)
+    }
+
+    async fn resolve_form_by_handle(
+        &self,
+        ctx: &Context<'_>,
+        handle: String,
+    ) -> Result<Option<FormObject>> {
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        let handle =
+            Handle::from_str(&handle).context("failed to parse handle")?;
+        let form = Form::find_one({
+            FormConditions::builder().handle(handle).build()
+        })
+        .optional()
+        .load(&ctx)
+        .await
+        .context("failed to load form")?;
+
+        let form = form.map(FormObject::from);
+        Ok(form)
+    }
+
+    async fn resolve_forms(
+        &self,
+        ctx: &Context<'_>,
+        skip: u64,
+        take: u64,
+        include_archived: bool,
+    ) -> Result<Vec<FormObject>> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+        ensure!(take <= 25, "can only take up to 25 forms");
+
+        let forms = Form::find({
+            FormConditions::builder()
+                .is_archived(if include_archived { None } else { Some(false) })
+                .build()
+        })
+        .skip(skip)
+        .take(take)
+        .load(&ctx)
+        .await
+        .context("failed to find forms")?;
+        let forms = forms
+            .try_collect::<Vec<_>>()
+            .await
+            .context("failed to load forms")?;
+
+        let forms = forms.into_iter().map(FormObject::from).collect::<Vec<_>>();
+        Ok(forms)
     }
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub(super) struct FormMutation;
 
+#[Object]
 impl FormMutation {
-    async fn create_form_inner(
+    async fn create_form(
+        &self,
+        ctx: &Context<'_>,
+        input: CreateFormInput,
+    ) -> FieldResult<CreateFormPayload> {
+        self.resolve_create_form(ctx, input)
+            .await
+            .map_err(format_error)
+    }
+
+    async fn submit_form(
+        &self,
+        ctx: &Context<'_>,
+        input: SubmitFormInput,
+    ) -> FieldResult<SubmitFormPayload> {
+        self.resolve_submit_form(ctx, input)
+            .await
+            .map_err(format_error)
+    }
+
+    async fn delete_form(
+        &self,
+        ctx: &Context<'_>,
+        input: DeleteFormInput,
+    ) -> FieldResult<DeleteFormPayload> {
+        self.resolve_delete_form(ctx, input)
+            .await
+            .map_err(format_error)
+    }
+
+    async fn archive_form(
+        &self,
+        ctx: &Context<'_>,
+        input: ArchiveFormInput,
+    ) -> FieldResult<ArchiveFormPayload> {
+        self.resolve_archive_form(ctx, input)
+            .await
+            .map_err(format_error)
+    }
+}
+
+impl FormMutation {
+    async fn resolve_create_form(
         &self,
         ctx: &Context<'_>,
         input: CreateFormInput,
@@ -186,7 +389,7 @@ impl FormMutation {
         Ok(payload)
     }
 
-    async fn submit_form_inner(
+    async fn resolve_submit_form(
         &self,
         ctx: &Context<'_>,
         input: SubmitFormInput,
@@ -202,7 +405,7 @@ impl FormMutation {
         let form_id = FormId::from(form_id);
         let fields = fields
             .into_iter()
-            .map(FormFieldResponse::try_from)
+            .map(FormResponseField::try_from)
             .collect::<Result<Vec<_>>>()
             .context("invalid field")?;
 
@@ -218,11 +421,12 @@ impl FormMutation {
             .await
             .context("failed to save response")?;
 
-        let payload = SubmitFormPayload { ok: true };
+        let response = FormResponseObject::from(response);
+        let payload = SubmitFormPayload { ok: true, response };
         Ok(payload)
     }
 
-    async fn delete_form_inner(
+    async fn resolve_delete_form(
         &self,
         ctx: &Context<'_>,
         input: DeleteFormInput,
@@ -252,35 +456,39 @@ impl FormMutation {
         let payload = DeleteFormPayload { ok: true };
         Ok(payload)
     }
-}
 
-#[Object]
-impl FormMutation {
-    async fn create_form(
+    async fn resolve_archive_form(
         &self,
         ctx: &Context<'_>,
-        input: CreateFormInput,
-    ) -> FieldResult<CreateFormPayload> {
-        let result = self.create_form_inner(ctx, input).await;
-        into_field_result(result)
-    }
+        input: ArchiveFormInput,
+    ) -> Result<ArchiveFormPayload> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.clone());
 
-    async fn submit_form(
-        &self,
-        ctx: &Context<'_>,
-        input: SubmitFormInput,
-    ) -> FieldResult<SubmitFormPayload> {
-        let result = self.submit_form_inner(ctx, input).await;
-        into_field_result(result)
-    }
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
 
-    async fn delete_form(
-        &self,
-        ctx: &Context<'_>,
-        input: DeleteFormInput,
-    ) -> FieldResult<DeleteFormPayload> {
-        let result = self.delete_form_inner(ctx, input).await;
-        into_field_result(result)
+        let ArchiveFormInput { form_id } = input;
+        let form_id = FormId::from(form_id);
+        let form = ctx
+            .transact(|ctx| async move {
+                let mut form = Form::get(form_id)
+                    .load(&ctx)
+                    .await
+                    .context("failed to load form")?;
+                form.archived_at = Some(now());
+                form.save(&ctx).await.context("failed to save form")?;
+                Ok(form)
+            })
+            .await?;
+
+        let form = FormObject::from(form);
+        let payload = ArchiveFormPayload { ok: true, form };
+        Ok(payload)
     }
 }
 
@@ -361,8 +569,8 @@ pub(super) struct FormFieldMultipleChoiceInputConfigInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct CreateFormPayload {
-    pub form: FormObject,
     pub ok: bool,
+    pub form: FormObject,
 }
 
 #[derive(Debug, Clone, InputObject)]
@@ -379,11 +587,11 @@ pub(super) struct FormFieldResponseInput {
     pub multiple_choice: Option<Set<String>>,
 }
 
-impl TryFrom<FormFieldResponseInput> for FormFieldResponse {
+impl TryFrom<FormFieldResponseInput> for FormResponseField {
     type Error = Error;
 
     fn try_from(input: FormFieldResponseInput) -> Result<Self, Self::Error> {
-        use FormFieldResponse::*;
+        use FormResponseField::*;
         let FormFieldResponseInput {
             text,
             single_choice,
@@ -405,6 +613,7 @@ impl TryFrom<FormFieldResponseInput> for FormFieldResponse {
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct SubmitFormPayload {
     pub ok: bool,
+    pub response: FormResponseObject,
 }
 
 #[derive(Debug, Clone, InputObject)]
@@ -416,45 +625,14 @@ pub(super) struct DeleteFormInput {
 pub(super) struct DeleteFormPayload {
     pub ok: bool,
 }
-impl FormQuery {
-    async fn resolve_form(
-        &self,
-        ctx: &Context<'_>,
-        id: Id<Form>,
-    ) -> Result<Option<FormObject>> {
-        let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
 
-        let form_id = FormId::from(id);
-        let form = Form::get(form_id)
-            .optional()
-            .load(&ctx)
-            .await
-            .context("failed to load form")?;
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct ArchiveFormInput {
+    pub form_id: Id<Form>,
+}
 
-        let form = form.map(FormObject::from);
-        Ok(form)
-    }
-
-    async fn resolve_form_by_handle(
-        &self,
-        ctx: &Context<'_>,
-        handle: String,
-    ) -> Result<Option<FormObject>> {
-        let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
-
-        let handle =
-            Handle::from_str(&handle).context("failed to parse handle")?;
-        let form = Form::find_one({
-            FormConditions::builder().handle(handle).build()
-        })
-        .optional()
-        .load(&ctx)
-        .await
-        .context("failed to load form")?;
-
-        let form = form.map(FormObject::from);
-        Ok(form)
-    }
+#[derive(Debug, Clone, SimpleObject)]
+pub(super) struct ArchiveFormPayload {
+    pub ok: bool,
+    pub form: FormObject,
 }

@@ -5,7 +5,7 @@ use services::spotify::CurrentlyPlaying;
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct MusicInfo {
     pub is_playing: bool,
-    pub track: MusicTrack,
+    pub track: MusicTrackObject,
     pub progress: u32,
 }
 
@@ -18,8 +18,7 @@ impl MusicInfoQuery {
         &self,
         ctx: &Context<'_>,
     ) -> FieldResult<Option<MusicInfo>> {
-        let result = self.resolve_music_info(ctx).await;
-        into_field_result(result)
+        self.resolve_music_info(ctx).await.map_err(format_error)
     }
 }
 

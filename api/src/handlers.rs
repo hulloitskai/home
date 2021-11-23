@@ -16,7 +16,7 @@ use entrust::Record;
 use entrust::{Entity, EntityId};
 use entrust::{Object, ObjectId};
 
-use axum::body::box_body;
+use axum::body::boxed;
 use axum::body::{Body, BoxBody, Bytes, Full};
 use axum::extract::Extension;
 use axum::extract::Json as JsonExtractor;

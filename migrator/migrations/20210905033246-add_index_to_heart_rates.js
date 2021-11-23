@@ -1,5 +1,5 @@
 module.exports = {
-  async up(db, client) {
+  async up(db) {
     const rates = db.collection("heart_rates");
     await rates.createIndex({ measurement: 1 }, { name: "measurement" });
     await rates.createIndex(
@@ -8,7 +8,7 @@ module.exports = {
     );
   },
 
-  async down(db, client) {
+  async down(db) {
     const rates = db.collection("heart_rates");
     await rates.dropIndex(["measurement", "timestamp"]);
   },

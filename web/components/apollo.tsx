@@ -1,6 +1,5 @@
 import { FC, ReactNode } from "react";
 import { useCallback, useContext, useMemo } from "react";
-import type { NextPageContext } from "next";
 import { isEqual } from "lodash";
 import merge from "deepmerge";
 
@@ -221,24 +220,4 @@ export const formatApolloError = (error: ApolloError): string => {
     }
   }
   return message;
-};
-
-export const prefetchQueries = async (
-  { AppTree, req, res }: NextPageContext,
-  pageProps: any = {},
-): Promise<NormalizedCacheObject | undefined> => {
-  if (req && !res?.writableEnded) {
-    const client = initializeApolloClient();
-    try {
-      const { getDataFromTree } = await import("@apollo/client/react/ssr");
-      await getDataFromTree(
-        <Provider client={client}>
-          <AppTree pageProps={pageProps} />
-        </Provider>,
-      );
-    } catch (error) {
-      console.error(`[Apollo] Error while pre-fetching queries: ${error}`);
-    }
-    return client.extract();
-  }
 };

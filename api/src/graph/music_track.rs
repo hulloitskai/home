@@ -3,61 +3,69 @@ use super::*;
 use services::lyricly::Lyrics as LyriclyLyrics;
 use services::spotify::Track as SpotifyTrack;
 
-#[derive(Debug, Clone)]
-pub(super) struct MusicTrack {
-    pub spotify_id: String,
-    pub spotify_url: String,
-    pub name: String,
-    pub duration: u32,
-    pub album: MusicAlbum,
-    pub artists: Vec<MusicArtist>,
-}
+#[derive(Debug, Clone, From)]
+pub(super) struct MusicTrackObject(SpotifyTrack);
 
-#[Object]
-impl MusicTrack {
-    async fn spotify_id(&self) -> &String {
-        &self.spotify_id
+#[Object(name = "MusicTrack")]
+impl MusicTrackObject {
+    async fn spotify_id(&self) -> &str {
+        let MusicTrackObject(track) = self;
+        track.id.as_str()
     }
 
-    async fn spotify_url(&self) -> &String {
-        &self.spotify_url
+    async fn spotify_url(&self) -> FieldResult<Url> {
+        self.resolve_spotify_url().await.map_err(format_error)
     }
 
-    async fn name(&self) -> &String {
-        &self.name
+    async fn name(&self) -> &str {
+        let MusicTrackObject(track) = self;
+        track.name.as_str()
     }
 
     async fn duration(&self) -> u32 {
-        self.duration
+        let MusicTrackObject(track) = self;
+        track.duration
     }
 
-    async fn album(&self) -> &MusicAlbum {
-        &self.album
+    async fn album(&self) -> MusicAlbumObject {
+        let MusicTrackObject(track) = self;
+        track.album.clone().into()
     }
 
-    async fn artists(&self) -> &Vec<MusicArtist> {
-        &self.artists
+    async fn artists(&self) -> Vec<MusicArtistObject> {
+        let MusicTrackObject(track) = self;
+        track.artists.iter().cloned().map(Into::into).collect()
     }
 
     async fn lyrics(&self, ctx: &Context<'_>) -> FieldResult<Option<Lyrics>> {
-        let result = self.resolve_lyrics(ctx).await;
-        into_field_result(result)
+        self.resolve_lyrics(ctx).await.map_err(format_error)
     }
 }
 
-impl MusicTrack {
+impl MusicTrackObject {
+    async fn resolve_spotify_url(&self) -> Result<Url> {
+        let MusicTrackObject(track) = self;
+        let url: Url = track
+            .external_urls
+            .spotify
+            .parse()
+            .context("failed to parse URL")?;
+        Ok(url)
+    }
+
     async fn resolve_lyrics(
         &self,
         ctx: &Context<'_>,
     ) -> Result<Option<Lyrics>> {
-        let artist = match self.artists.first() {
+        let MusicTrackObject(track) = self;
+        let artist = match track.artists.first() {
             Some(artist) => artist,
             None => return Ok(None),
         };
         let lyrics = ctx
             .services()
             .lyricly()
-            .get_lyrics(&self.name, &artist.name)
+            .get_lyrics(&track.name, &artist.name)
             .await?;
         let lyrics = lyrics
             .map(|lyrics| {
@@ -70,33 +78,5 @@ impl MusicTrack {
             })
             .flatten();
         Ok(lyrics)
-    }
-}
-
-impl TryFrom<SpotifyTrack> for MusicTrack {
-    type Error = Error;
-
-    fn try_from(track: SpotifyTrack) -> Result<Self, Self::Error> {
-        let SpotifyTrack {
-            id: spotify_id,
-            external_urls,
-            name,
-            duration,
-            album,
-            artists,
-        } = track;
-
-        let album: MusicAlbum = album.try_into().context("invalid album")?;
-        let artists = artists.into_iter().map(MusicArtist::from).collect();
-
-        let track = Self {
-            spotify_id,
-            spotify_url: external_urls.spotify,
-            name,
-            duration,
-            album,
-            artists,
-        };
-        Ok(track)
     }
 }

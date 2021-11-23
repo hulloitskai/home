@@ -1,7 +1,8 @@
 import React from "react";
+
 import { LinkProps, Link } from "@chakra-ui/react";
-import { forwardRef } from "@chakra-ui/react";
 import { LinkOverlayProps, LinkOverlay } from "@chakra-ui/react";
+import { forwardRef } from "@chakra-ui/react";
 
 export type ExternalLinkProps = LinkProps;
 

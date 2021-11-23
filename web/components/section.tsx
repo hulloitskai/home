@@ -1,14 +1,14 @@
 import React, { FC } from "react";
 
-import { StackProps, VStack } from "@chakra-ui/react";
+import { StackProps, Container, VStack } from "@chakra-ui/react";
 import { TextProps, Text } from "@chakra-ui/react";
 
 export type SectionProps = StackProps;
 
 export const Section: FC<SectionProps> = ({ children, ...otherProps }) => (
-  <VStack spacing={3} {...otherProps}>
+  <Container as={VStack} spacing={3} {...otherProps}>
     {children}
-  </VStack>
+  </Container>
 );
 
 export type SectionTextProps = TextProps;

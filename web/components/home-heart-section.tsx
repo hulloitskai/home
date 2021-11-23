@@ -8,7 +8,7 @@ import { HeartStatHeartRateFragmentDoc } from "apollo";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useHeartSectionQuery } from "apollo";
+import { useHomeHeartSectionQuery } from "apollo";
 
 gql`
   fragment HeartStatHeartRate on HeartRate {
@@ -19,7 +19,7 @@ gql`
 `;
 
 gql`
-  query HeartSection {
+  query HomeHeartSection {
     heartRate {
       id
       ...HeartStatHeartRate
@@ -29,11 +29,13 @@ gql`
   ${HeartStatHeartRateFragmentDoc}
 `;
 
-export type HeartSectionProps = SectionProps;
+export type HomeHeartSectionProps = SectionProps;
 
-export const HeartSection: FC<HeartSectionProps> = ({ ...otherProps }) => {
+export const HomeHeartSection: FC<HomeHeartSectionProps> = ({
+  ...otherProps
+}) => {
   const handleQueryError = useHandleQueryError("Failed to load heart rate");
-  const { data, error } = useHeartSectionQuery({
+  const { data, error } = useHomeHeartSectionQuery({
     pollInterval: 5000,
     onError: handleQueryError,
   });

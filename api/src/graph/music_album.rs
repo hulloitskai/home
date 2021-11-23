@@ -3,32 +3,45 @@ use super::*;
 use services::spotify::Album as SpotifyAlbum;
 use services::spotify::Image as SpotifyImage;
 
-#[derive(Debug, Clone, SimpleObject)]
-pub(super) struct MusicAlbum {
-    pub spotify_id: String,
-    pub spotify_url: String,
-    pub name: String,
-    pub image_url: String,
+#[derive(Debug, Clone, From)]
+pub(super) struct MusicAlbumObject(SpotifyAlbum);
+
+#[Object(name = "MusicAlbum")]
+impl MusicAlbumObject {
+    async fn spotify_id(&self) -> &str {
+        let MusicAlbumObject(album) = self;
+        album.id.as_str()
+    }
+
+    async fn spotify_url(&self) -> FieldResult<Url> {
+        self.resolve_spotify_url().await.map_err(format_error)
+    }
+
+    async fn name(&self) -> &str {
+        let MusicAlbumObject(album) = self;
+        album.name.as_str()
+    }
+
+    async fn image_url(&self) -> FieldResult<Url> {
+        self.resolve_image_url().await.map_err(format_error)
+    }
 }
 
-impl TryFrom<SpotifyAlbum> for MusicAlbum {
-    type Error = Error;
+impl MusicAlbumObject {
+    async fn resolve_spotify_url(&self) -> Result<Url> {
+        let MusicAlbumObject(album) = self;
+        let url: Url = album
+            .external_urls
+            .spotify
+            .parse()
+            .context("failed to parse URL")?;
+        Ok(url)
+    }
 
-    fn try_from(album: SpotifyAlbum) -> Result<Self, Self::Error> {
-        let SpotifyAlbum {
-            id: spotify_id,
-            external_urls,
-            name,
-            images,
-        } = album;
-        let SpotifyImage { url: image_url, .. } =
-            images.into_iter().next().context("missing album image")?;
-        let album = Self {
-            spotify_id,
-            spotify_url: external_urls.spotify,
-            name,
-            image_url,
-        };
-        Ok(album)
+    async fn resolve_image_url(&self) -> Result<Url> {
+        let MusicAlbumObject(album) = self;
+        let image = album.images.first().context("missing album image")?;
+        let url: Url = image.url.parse().context("failed to parse URL")?;
+        Ok(url)
     }
 }

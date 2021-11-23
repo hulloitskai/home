@@ -1,16 +1,18 @@
-import { initAuth0 } from "@auth0/nextjs-auth0";
+import { useEffect } from "react";
+import { useUser, UserContext } from "@auth0/nextjs-auth0";
 
-import { webPublicBaseURL } from "config";
-
-export const authSessionCookieName = "auth_session";
-export const authRedirectCookieName = "auth_redirect";
-
-const { handleAuth, handleLogin, handleLogout, handleCallback, getSession } =
-  initAuth0({
-    baseURL: webPublicBaseURL,
-    session: {
-      name: authSessionCookieName,
-    },
-  });
-
-export { handleAuth, handleLogin, handleLogout, handleCallback, getSession };
+export const useAuthentication = (): UserContext => {
+  const context = useUser();
+  const { user, isLoading: userIsLoading } = context;
+  useEffect(() => {
+    if (!userIsLoading && !user) {
+      if (typeof window !== "undefined") {
+        const search = new URLSearchParams({
+          returnTo: window.location.pathname,
+        });
+        window.location.href = "api/auth/login?" + search.toString();
+      }
+    }
+  }, [user, userIsLoading]);
+  return context;
+};

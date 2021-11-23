@@ -1,12 +1,12 @@
 import React from "react";
 import { NextPage, GetServerSideProps } from "next";
-import NextLink from "next/link";
 
 import { Box } from "@chakra-ui/react";
-import { Text, Link } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
+import { InternalLink } from "components/internal-link";
 
 import { patchNodeFetchForSSR } from "components/apollo";
 import { initializeApolloClient } from "components/apollo";
@@ -30,20 +30,18 @@ const ResearchCompletePage: NextPage = () => {
       </Text>
       <Text color="gray.500">I appreciate you.</Text>
       <Box h={2} />
-      <NextLink href="/" passHref>
-        <Link _hover={{ textDecor: "unset" }}>
-          <Button variant="outline" size="sm">
-            Return Home
-          </Button>
-        </Link>
-      </NextLink>
+      <InternalLink href="/" _hover={{ textDecor: "unset" }}>
+        <Button variant="outline" size="sm">
+          Return Home
+        </Button>
+      </InternalLink>
     </Layout>
   );
 };
 
 gql`
-  query ResearchCompletePageProps($handle: String!) {
-    form: formByHandle(handle: $handle) {
+  query ResearchCompletePageProps($formHandle: String!) {
+    form: formByHandle(handle: $formHandle) {
       id
     }
   }
@@ -51,9 +49,11 @@ gql`
 
 export const getServerSideProps: GetServerSideProps<ResearchCompletePageProps> =
   async ({ query }) => {
-    const { form: formParam } = query;
-    const form = Array.isArray(formParam) ? formParam[0] : formParam;
-    if (!form) {
+    const { formHandle: formHandleParam } = query;
+    const formHandle = Array.isArray(formHandleParam)
+      ? formHandleParam[0]
+      : formHandleParam;
+    if (!formHandle) {
       return { notFound: true };
     }
 
@@ -65,7 +65,7 @@ export const getServerSideProps: GetServerSideProps<ResearchCompletePageProps> =
     >({
       query: ResearchCompletePagePropsDocument,
       variables: {
-        handle: form,
+        formHandle,
       },
     });
 

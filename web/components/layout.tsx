@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useMemo } from "react";
-import NextLink from "next/link";
 
-import { HiChevronDown, HiLogout } from "react-icons/hi";
+import { HiChevronDown, HiLogout, HiTerminal } from "react-icons/hi";
 
 import { BoxProps, Box } from "@chakra-ui/react";
 import { StackProps, VStack, HStack, Center, Spacer } from "@chakra-ui/react";
@@ -9,11 +8,13 @@ import { Button } from "@chakra-ui/react";
 import { Icon } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/react";
 import { Badge } from "@chakra-ui/react";
-import { LinkBox, LinkOverlay, Link } from "@chakra-ui/react";
+import { LinkBox, Link } from "@chakra-ui/react";
 import { Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
 import { chakra } from "@chakra-ui/react";
+
+import { InternalLink, InternalLinkOverlay } from "components/internal-link";
 
 import { gql } from "@apollo/client";
 import { useUser } from "@auth0/nextjs-auth0";
@@ -79,16 +80,11 @@ export const Layout: FC<LayoutProps> = ({
                 ❤️
               </Text>
               <Center pos="absolute" inset={0}>
-                <NextLink href="/" passHref>
-                  <LinkOverlay>
-                    <Text
-                      fontFamily="AppleColorEmoji, sans-serif"
-                      fontSize="2xl"
-                    >
-                      ❤️
-                    </Text>
-                  </LinkOverlay>
-                </NextLink>
+                <InternalLinkOverlay href="/">
+                  <Text fontFamily="AppleColorEmoji, sans-serif" fontSize="2xl">
+                    ❤️
+                  </Text>
+                </InternalLinkOverlay>
               </Center>
             </LinkBox>
           </Tooltip>
@@ -161,10 +157,11 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
   const { data, refetch } = useLayoutFooterViewerQuery({
     skip: userIsLoading,
   });
+  const { viewer } = data ?? {};
+  const { email, isAdmin } = viewer ?? {};
   useEffect(() => {
     refetch();
   }, [user]);
-  const { email, isAdmin } = data?.viewer ?? {};
 
   const tooltipBg = useColorModeValue("gray.900", undefined);
   const tooltipStyles = useMemo(
@@ -196,6 +193,8 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
               variant="outline"
               size="sm"
               rightIcon={<Icon as={HiChevronDown} />}
+              isLoading={!viewer}
+              isDisabled={!viewer}
             >
               <Text
                 maxW={[24, 44, 56]}
@@ -203,11 +202,19 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
                 whiteSpace="nowrap"
                 overflowX="hidden"
               >
-                {email}
+                {email || "example@example.com"}
               </Text>
             </MenuButton>
           </Tooltip>
           <MenuList>
+            <InternalLink href="/admin" _hover={{ textDecor: "none" }}>
+              <MenuItem
+                icon={<Icon as={HiTerminal} fontSize="md" color="red.600" />}
+                iconSpacing={2}
+              >
+                Manage
+              </MenuItem>
+            </InternalLink>
             <Link href="/api/auth/logout" _hover={{ textDecor: "none" }}>
               <MenuItem
                 icon={<Icon as={HiLogout} fontSize="md" color="red.600" />}

@@ -104,9 +104,14 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
   const transparentBlueDark = useTransparentize("blue.400", 0.2);
   const transparentBlack = useTransparentize("black", 0.5);
   return (
-    <Layout badge="Research" badgeTooltip="Help me learn things!">
-      <Container as="form" onSubmit={onSubmit} alignSelf="center">
-        <VStack align="stretch" spacing={8} my={[2, 4, 8]}>
+    <Layout
+      badge="Research"
+      badgeTooltip="Help me learn things!"
+      align="center"
+      py={[2, 4, 8]}
+    >
+      <Container as="form" onSubmit={onSubmit}>
+        <VStack align="stretch" spacing={8}>
           <VStack align="stretch" spacing={4}>
             <VStack align="stretch" spacing={1}>
               <Heading>{name}</Heading>
@@ -242,8 +247,8 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
 export default ResearchPage;
 
 gql`
-  query ResearchPageProps($handle: String!) {
-    form: formByHandle(handle: $handle) {
+  query ResearchPageProps($formHandle: String!) {
+    form: formByHandle(handle: $formHandle) {
       id
       handle
       name
@@ -268,9 +273,11 @@ gql`
 
 export const getServerSideProps: GetServerSideProps<ResearchPageProps> =
   async ({ query }) => {
-    const { form: formParam } = query;
-    const form = Array.isArray(formParam) ? formParam[0] : formParam;
-    if (!form) {
+    const { formHandle: formHandleParam } = query;
+    const formHandle = Array.isArray(formHandleParam)
+      ? formHandleParam[0]
+      : formHandleParam;
+    if (!formHandle) {
       return { notFound: true };
     }
 
@@ -282,7 +289,7 @@ export const getServerSideProps: GetServerSideProps<ResearchPageProps> =
     >({
       query: ResearchPagePropsDocument,
       variables: {
-        handle: form,
+        formHandle,
       },
     });
 
