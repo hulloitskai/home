@@ -207,14 +207,16 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
             </MenuButton>
           </Tooltip>
           <MenuList>
-            <InternalLink href="/admin" _hover={{ textDecor: "none" }}>
-              <MenuItem
-                icon={<Icon as={HiTerminal} fontSize="md" color="red.600" />}
-                iconSpacing={2}
-              >
-                Manage
-              </MenuItem>
-            </InternalLink>
+            {isAdmin && (
+              <InternalLink href="/admin" _hover={{ textDecor: "none" }}>
+                <MenuItem
+                  icon={<Icon as={HiTerminal} fontSize="md" color="red.600" />}
+                  iconSpacing={2}
+                >
+                  Manage
+                </MenuItem>
+              </InternalLink>
+            )}
             <Link href="/api/auth/logout" _hover={{ textDecor: "none" }}>
               <MenuItem
                 icon={<Icon as={HiLogout} fontSize="md" color="red.600" />}
