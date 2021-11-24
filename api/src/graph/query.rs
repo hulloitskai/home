@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Debug, Clone, Copy, Default, MergedObject)]
 pub struct Query(
+    TestQuery,
     BuildQuery,
     HeartRateQuery,
     MusicInfoQuery,

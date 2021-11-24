@@ -6,34 +6,35 @@ rust-version = "1.56.0"
 
 
 [dependencies]
-anyhow = "^1.0.45"
+anyhow = "^1.0.48"
 async_trait = { package = "async-trait", version = "^0.1.51" }
-bson = { version = "^2.0.1", features = ["chrono-0_4"] }
+bson = { version = "2.1.0-beta", features = ["chrono-0_4"] }
 chrono = { version = "^0.4.19", features = ["serde"] }
 delegate = "^0.6.1"
 derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
-emails = { package = "mailchecker", version = "^4.0.16" }
-entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.7" }
-futures = { package = "futures-core", version = "^0.3.17" }
-futures_util = { package = "futures-util", version = "^0.3.17" }
-graphql_axum = { package = "async-graphql-axum", version = "^2.11.3" }
+emails = { package = "mailchecker", version = "^4.1.0" }
+entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.8" }
+futures = { package = "futures-core", version = "^0.3.18" }
+futures_util = { package = "futures-util", version = "^0.3.18" }
+graphql_axum = { package = "async-graphql-axum", version = "^3.0.7" }
 headers = "^0.3.5"
 http = "^0.2.5"
 lazy_static = "^1.4.0"
 moka = { version = "^0.6.1", features = ["future"] }
-mongodb = { version = "^2.0.2", features = ["bson-chrono-0_4"] }
+mongodb = { version = "2.1.0-beta", features = ["bson-chrono-0_4"] }
 oauth2 = "^4.1.0"
 phones = { package = "phonenumber", version = "^0.3.1" }
 regex = "^1.5.4"
 sentry_tracing = { package = "sentry-tracing", version = "^0.23.0" }
 serde = { version = "^1.0.130", features = ["derive"] }
-serde_json = "^1.0.70"
+serde_json = "^1.0.71"
 thiserror = "^1.0.30"
-tokio = { version = "^1.13.0", features = ["rt-multi-thread", "macros"] }
-tower = "^0.4.10"
-tracing = "^0.1.28"
+tokio = { version = "^1.14.0", features = ["rt-multi-thread", "macros"] }
+tokio_stream = { package = "tokio-stream", version = "^0.1.8" }
+tower = "^0.4.11"
+tracing = "^0.1.29"
 typed_builder = { package = "typed-builder", version = "^0.9.1" }
 url = { version = "^2.2.2", features = ["serde"] }
 walkdir = "^2.3.2"
@@ -41,13 +42,13 @@ yaml = { package = "yaml-rust", version = "^0.4.5" }
 yaml_front_matter = { package = "frontmatter", version = "^0.4.0" }
 
 [dependencies.axum]
-version = "^0.3.3"
+version = "^0.3.4"
 default-features = false
 features = ["http2", "ws", "headers", "json"]
 
 [dependencies.graphql]
 package = "async-graphql"
-version = "^2.11.3"
+version = "^3.0.7"
 features = ["chrono", "url", "apollo_persisted_queries"]
 
 [dependencies.request]
@@ -74,6 +75,7 @@ package = "tower-http"
 version = "^0.1.2"
 features = ["trace", "cors"]
 
+# Must stay on version 0.2 due to Sentry integration.
 [dependencies.tracing_subscriber]
 package = "tracing-subscriber"
 version = "^0.2.24"
@@ -81,7 +83,7 @@ features = ["env-filter", "json"]
 
 
 [build-dependencies]
-anyhow = "^1.0.45"
+anyhow = "^1.0.48"
 chrono = { version = "^0.4.19" }
 
 

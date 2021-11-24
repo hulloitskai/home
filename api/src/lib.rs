@@ -25,9 +25,10 @@ use derives::Display;
 use derives::{AsRef, Deref};
 use derives::{From, Into};
 
-use futures::Future;
+use futures::{Future, Stream, TryFuture, TryStream};
 use futures_util::future::try_join_all;
-use futures_util::stream::TryStreamExt;
+use futures_util::future::{FutureExt, TryFutureExt};
+use futures_util::stream::{StreamExt, TryStreamExt};
 
 use tokio::sync::Mutex as AsyncMutex;
 use tokio::sync::RwLock as AsyncRwLock;
