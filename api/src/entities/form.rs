@@ -19,15 +19,6 @@ pub struct Form {
     pub respondent_helper: Option<String>,
 
     pub fields: Vec<FormField>,
-
-    #[builder(default)]
-    pub archived_at: Option<DateTime>,
-}
-
-impl Form {
-    pub fn is_archived(&self) -> bool {
-        self.archived_at.is_some()
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -52,7 +43,7 @@ impl Form {
         })
     }
 
-    pub async fn delete_responses(
+    pub async fn destroy_responses(
         record: &Record<Self>,
         ctx: &Context,
     ) -> Result<Vec<Record<FormResponse>>> {
@@ -70,9 +61,9 @@ impl Form {
                 .map(|mut response| {
                     let ctx = ctx.clone();
                     async move {
-                        response.delete(&ctx).await.with_context(|| {
+                        response.destroy(&ctx).await.with_context(|| {
                             format!(
-                                "failed to delete response {}",
+                                "failed to destroy response {}",
                                 response.id()
                             )
                         })?;
@@ -99,13 +90,13 @@ impl Entity for Form {
     type Conditions = FormConditions;
     type Sorting = EmptySorting;
 
-    async fn before_delete(
+    async fn before_destroy(
         record: &mut Record<Self>,
         ctx: &EntityContext<Self::Services>,
     ) -> Result<()> {
-        Self::delete_responses(record, ctx)
+        Self::destroy_responses(record, ctx)
             .await
-            .context("failed to delete responses")?;
+            .context("failed to destroy responses")?;
         Ok(())
     }
 }
@@ -114,29 +105,15 @@ impl Entity for Form {
 pub struct FormConditions {
     #[builder(default, setter(into))]
     pub handle: Option<Handle>,
-
-    #[builder(default, setter(into))]
-    pub is_archived: Option<bool>,
 }
 
 impl EntityConditions for FormConditions {
     fn into_document(self) -> Document {
-        let FormConditions {
-            handle,
-            is_archived,
-        } = self;
+        let FormConditions { handle } = self;
 
         let mut doc = Document::new();
         if let Some(handle) = handle {
             doc.insert("handle", handle);
-        }
-        if let Some(is_archived) = is_archived {
-            use Bson::Null;
-            if is_archived {
-                doc.insert("archivedAt", doc! { "$ne": Null });
-            } else {
-                doc.insert("archivedAt", Null);
-            }
         }
 
         doc

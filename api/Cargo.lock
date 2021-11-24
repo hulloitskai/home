@@ -731,8 +731,8 @@ dependencies = [
 
 [[package]]
 name = "entrust"
-version = "0.2.8"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.8#22c23b3189b77327ed37a44dd78405ce5743affb"
+version = "0.2.9"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.9#6ab8456520a991e4c22f802df8b7799484ec93e4"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -753,8 +753,8 @@ dependencies = [
 
 [[package]]
 name = "entrust-macros"
-version = "0.2.8"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.8#22c23b3189b77327ed37a44dd78405ce5743affb"
+version = "0.2.9"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.9#6ab8456520a991e4c22f802df8b7799484ec93e4"
 dependencies = [
  "proc-macro2",
  "quote",

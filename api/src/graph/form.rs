@@ -19,6 +19,14 @@ impl FormObject {
         self.record.updated_at().into()
     }
 
+    async fn archived_at(&self) -> Option<DateTimeScalar> {
+        self.record.deleted_at().map(Into::into)
+    }
+
+    async fn is_archived(&self) -> bool {
+        self.record.is_deleted()
+    }
+
     async fn handle(&self) -> &str {
         self.record.handle.as_str()
     }
@@ -41,14 +49,6 @@ impl FormObject {
 
     async fn fields(&self) -> Vec<FormFieldObject> {
         self.record.fields.iter().cloned().map(Into::into).collect()
-    }
-
-    async fn archived_at(&self) -> Option<DateTimeScalar> {
-        self.record.archived_at.map(Into::into)
-    }
-
-    async fn is_archived(&self) -> bool {
-        self.record.is_archived()
     }
 
     async fn responses(
@@ -274,16 +274,17 @@ impl FormQuery {
         }
         ensure!(take <= 25, "can only take up to 25 forms");
 
-        let forms = Form::find({
-            FormConditions::builder()
-                .is_archived(if include_archived { None } else { Some(false) })
-                .build()
-        })
-        .skip(skip)
-        .take(take)
-        .load(&ctx)
-        .await
-        .context("failed to find forms")?;
+        let forms = if include_archived {
+            Form::with_deleted()
+        } else {
+            Form::all()
+        };
+        let forms = forms
+            .skip(skip)
+            .take(take)
+            .load(&ctx)
+            .await
+            .context("failed to find forms")?;
         let forms = forms
             .try_collect::<Vec<_>>()
             .await
@@ -480,8 +481,7 @@ impl FormMutation {
                     .load(&ctx)
                     .await
                     .context("failed to load form")?;
-                form.archived_at = Some(now());
-                form.save(&ctx).await.context("failed to save form")?;
+                form.delete(&ctx).await?;
                 Ok(form)
             })
             .await?;

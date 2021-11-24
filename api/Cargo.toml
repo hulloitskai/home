@@ -15,7 +15,7 @@ derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
 emails = { package = "mailchecker", version = "^4.1.0" }
-entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.8" }
+entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.9" }
 futures = { package = "futures-core", version = "^0.3.18" }
 futures_util = { package = "futures-util", version = "^0.3.18" }
 graphql_axum = { package = "async-graphql-axum", version = "^3.0.7" }
