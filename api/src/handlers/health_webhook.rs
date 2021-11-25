@@ -26,6 +26,7 @@ async fn receive(
                 avg: measurement,
                 date: timestamp,
             } = measurement;
+
             let measurement = measurement.round() as u16;
             let timestamp = {
                 let timestamp = DateTime::parse_from_str(
@@ -44,6 +45,7 @@ async fn receive(
                 .exists(&ctx)
                 .await
                 .context("failed to lookup conflicting heart rates")?;
+
                 if !rate_exists {
                     let mut rate = Record::new({
                         HeartRate::builder()

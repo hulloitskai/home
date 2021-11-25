@@ -23,7 +23,6 @@ headers = "^0.3.5"
 http = "^0.2.5"
 lazy_static = "^1.4.0"
 moka = { version = "^0.6.1", features = ["future"] }
-mongodb = { version = "2.1.0-beta", features = ["bson-chrono-0_4"] }
 oauth2 = "^4.1.0"
 phones = { package = "phonenumber", version = "^0.3.1" }
 regex = "^1.5.4"
@@ -50,6 +49,10 @@ features = ["http2", "ws", "headers", "json"]
 package = "async-graphql"
 version = "^3.0.7"
 features = ["chrono", "url", "apollo_persisted_queries"]
+
+[dependencies.mongodb]
+version = "2.1.0-beta"
+features = ["bson-chrono-0_4", "zstd-compression"]
 
 [dependencies.request]
 package = "reqwest"

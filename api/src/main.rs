@@ -47,6 +47,7 @@ use graphql_apq::ApolloPersistedQueries as GraphQLAPQExtension;
 use graphql_apq::LruCacheStorage as GraphQLAPQStorage;
 
 use mongodb::options::ClientOptions as MongoClientOptions;
+use mongodb::options::Compressor as MongoCompressor;
 use mongodb::Client as MongoClient;
 
 use tracing::{debug, info};
@@ -159,7 +160,11 @@ async fn main() -> Result<()> {
             let mut options = MongoClientOptions::parse(uri)
                 .await
                 .context("failed to parse MongoDB connection string")?;
-            options.retry_writes = true.into();
+            options.retry_writes = Some(true);
+            options.compressors = {
+                let compressor = MongoCompressor::Zstd { level: None };
+                Some(vec![compressor])
+            };
             options
         };
         MongoClient::with_options(options)
