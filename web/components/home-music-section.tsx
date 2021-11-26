@@ -111,7 +111,9 @@ export const HomeMusicSection: FC<HomeMusicSectionProps> = ({
     return (
       <Section {...otherProps}>
         <VStack spacing={1}>
-          <Text fontSize="3xl">{isPlaying ? "🔊" : "🔈"}</Text>
+          <Text fontFamily="emoji" fontSize="3xl">
+            {isPlaying ? "🔊" : "🔈"}
+          </Text>
           {isPlaying && (
             <MusicLyrics
               trackSpotifyId={track.spotifyId}

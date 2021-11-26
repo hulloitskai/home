@@ -56,7 +56,7 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
   return (
     <Box pos="relative" {...otherProps}>
       <MotionText
-        fontFamily="AppleColorEmoji, sans-serif"
+        fontFamily="emoji"
         fontSize="3xl"
         filter={bpm !== null ? "blur(0.6rem)" : "blur(0.6rem) brightness(70%)"}
         animate={bgControls}
@@ -66,7 +66,7 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
       </MotionText>
       <Center pos="absolute" inset={0}>
         <MotionText
-          fontFamily="AppleColorEmoji, sans-serif"
+          fontFamily="emoji"
           fontSize="3xl"
           animate={fgControls}
           transition={transition}

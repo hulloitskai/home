@@ -124,7 +124,9 @@ const HomePage: NextPage = () => {
         <HomeHeartSection />
         <Section>
           <Center>
-            <Text fontSize="3xl">🚧</Text>
+            <Text fontFamily="emoji" fontSize="3xl">
+              🚧
+            </Text>
           </Center>
           <Text color="gray.500" fontSize="lg" fontWeight="semibold">
             <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>

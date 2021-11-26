@@ -72,16 +72,12 @@ export const Layout: FC<LayoutProps> = ({
             {...tooltipStyles}
           >
             <LinkBox pos="relative">
-              <Text
-                fontFamily="AppleColorEmoji, sans-serif"
-                fontSize="xl"
-                filter="blur(0.6rem)"
-              >
+              <Text fontFamily="emoji" fontSize="xl" filter="blur(0.6rem)">
                 ❤️
               </Text>
               <Center pos="absolute" inset={0}>
                 <InternalLinkOverlay href="/">
-                  <Text fontFamily="AppleColorEmoji, sans-serif" fontSize="2xl">
+                  <Text fontFamily="emoji" fontSize="2xl">
                     ❤️
                   </Text>
                 </InternalLinkOverlay>
@@ -174,10 +170,22 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
 
   return (
     <HStack p={4} color="gray.600" _dark={{ color: "gray.400" }}>
-      <Tooltip label="Thanks for coming!" placement="top" {...tooltipStyles}>
+      <Tooltip
+        label={
+          <>
+            Thanks for visiting!{" "}
+            <chakra.span fontFamily="emoji">️☺</chakra.span>
+          </>
+        }
+        placement="top"
+        {...tooltipStyles}
+      >
         <Text fontSize="sm">
           Made by <chakra.span fontWeight="semibold">Kai</chakra.span>
-          <chakra.span display={["none", "initial"]}>, with ❤️</chakra.span>.
+          <chakra.span display={["none", "initial"]}>
+            , with <chakra.span fontFamily="emoji">❤️</chakra.span>
+          </chakra.span>
+          .
         </Text>
       </Tooltip>
       <Spacer />
@@ -228,11 +236,22 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
           </MenuList>
         </Menu>
       ) : (
-        <Link href="/api/auth/login" _hover={{ textDecor: "none" }}>
-          <Button size="sm" variant="outline">
-            Sign In
-          </Button>
-        </Link>
+        <Tooltip
+          label={
+            <>
+              Only for internal use right now.{" "}
+              <chakra.span fontFamily="emoji">🤫</chakra.span>
+            </>
+          }
+          placement="top-start"
+          {...tooltipStyles}
+        >
+          <Link href="/api/auth/login" _hover={{ textDecor: "none" }}>
+            <Button size="sm" variant="outline" tabIndex={-1}>
+              Sign In
+            </Button>
+          </Link>
+        </Tooltip>
       )}
     </HStack>
   );

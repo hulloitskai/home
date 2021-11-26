@@ -45,6 +45,9 @@ const theme = extendTheme({
     heading:
       "Inter, system-ui, -apple-system, BlinkMacSystemFont, Avenir, " +
       "'Adobe Heiti Std', 'Segoe UI', 'Trebuchet MS', sans-serif",
+    emoji:
+      "AppleColorEmoji, NotoColorEmoji, Symbola, 'Segoe UI Emoji', " +
+      "SamsungOne, sans-serif",
   },
   space: {
     0.5: "0.125rem",
