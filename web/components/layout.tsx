@@ -228,11 +228,17 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
           </MenuList>
         </Menu>
       ) : (
-        <Link href="/api/auth/login" _hover={{ textDecor: "none" }}>
-          <Button size="sm" variant="outline">
-            Sign In
-          </Button>
-        </Link>
+        <Tooltip
+          label="Only for internal use right now :)"
+          placement="top-start"
+          {...tooltipStyles}
+        >
+          <Link href="/api/auth/login" _hover={{ textDecor: "none" }}>
+            <Button size="sm" variant="outline" tabIndex={-1}>
+              Sign In
+            </Button>
+          </Link>
+        </Tooltip>
       )}
     </HStack>
   );
