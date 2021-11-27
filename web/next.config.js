@@ -10,6 +10,7 @@ const { SENTRY_URL, SENTRY_ORG, SENTRY_PROJECT, SENTRY_DSN } = process.env;
 /** @type {import('next').NextConfig} */
 const config = {
   swcMinify: true,
+  reactStrictMode: true,
   headers: async () => [
     {
       source: "/fonts/:font",

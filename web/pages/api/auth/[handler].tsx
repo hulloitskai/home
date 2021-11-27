@@ -1,13 +1,13 @@
-import type { NextApiResponse } from "next";
+import type { NextApiHandler, NextApiResponse } from "next";
 import { serialize as serializeCookie } from "cookie";
 import type { CookieSerializeOptions as SerializeCookieOptions } from "cookie";
 
+import { authRedirectCookieName } from "components/auth0-handler";
 import {
   handleAuth,
   handleLogout,
   handleCallback,
 } from "components/auth0-handler";
-import { authRedirectCookieName } from "components/auth0-handler";
 
 import { webPublicBaseURL } from "config";
 
@@ -24,7 +24,7 @@ export const setCookie = (
   res.setHeader("Set-Cookie", cookie);
 };
 
-export default handleAuth({
+const authHandler = handleAuth({
   logout: (req, res, options = {}) => {
     const { returnTo: returnToParam } = req.query;
     const returnTo = Array.isArray(returnToParam)
@@ -51,3 +51,11 @@ export default handleAuth({
     return handleCallback(req, res, options);
   },
 });
+
+const handler: NextApiHandler = (req, res) => {
+  const { query } = req;
+  query.auth0 = query.handler;
+  return authHandler(req, res);
+};
+
+export default handler;
