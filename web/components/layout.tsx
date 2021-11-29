@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useMemo } from "react";
 
-import { HiChevronDown, HiLogout, HiTerminal } from "react-icons/hi";
+import { HiChevronUp, HiLogout, HiTerminal } from "react-icons/hi";
 
 import { BoxProps, Box } from "@chakra-ui/react";
 import { StackProps, VStack, HStack, Center, Spacer } from "@chakra-ui/react";
@@ -19,6 +19,7 @@ import { InternalLink, InternalLinkOverlay } from "components/internal-link";
 import { gql } from "@apollo/client";
 import { useUser } from "@auth0/nextjs-auth0";
 import { useLayoutFooterViewerQuery } from "apollo";
+import { useHandleQueryError } from "./apollo";
 
 export interface LayoutProps extends Omit<StackProps, "direction"> {
   badge: string;
@@ -150,8 +151,14 @@ export type LayoutFooterProps = BoxProps;
 export const LayoutFooter: FC<LayoutFooterProps> = () => {
   const { user, isLoading: userIsLoading } = useUser();
 
-  const { data, refetch } = useLayoutFooterViewerQuery({
+  const handleQueryError = useHandleQueryError("Failed to load viewer");
+  const {
+    data,
+    refetch,
+    loading: queryIsLoading,
+  } = useLayoutFooterViewerQuery({
     skip: userIsLoading,
+    onError: handleQueryError,
   });
   const { viewer } = data ?? {};
   const { email, isAdmin } = viewer ?? {};
@@ -189,7 +196,7 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
         </Text>
       </Tooltip>
       <Spacer />
-      {user ? (
+      {viewer || (user && queryIsLoading) ? (
         <Menu>
           <Tooltip
             label={isAdmin ? "Welcome back, supreme leader." : "Oh hai there!"}
@@ -200,8 +207,9 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
               as={Button}
               variant="outline"
               size="sm"
-              rightIcon={<Icon as={HiChevronDown} />}
-              isLoading={!viewer}
+              iconSpacing={1}
+              rightIcon={<Icon as={HiChevronUp} fontSize="md" />}
+              isLoading={queryIsLoading}
               isDisabled={!viewer}
             >
               <Text

@@ -1,8 +1,17 @@
 import React, { FC, useMemo } from "react";
+import { isEmpty } from "lodash";
 import { useUser } from "@auth0/nextjs-auth0";
 
 import type { IconType } from "react-icons";
-import { HiAnnotation, HiExternalLink, HiPencil } from "react-icons/hi";
+import {
+  HiAnnotation,
+  HiArchive,
+  HiExternalLink,
+  HiMenu,
+  HiPencilAlt,
+  HiPlusCircle,
+  HiTrash,
+} from "react-icons/hi";
 
 import { BoxProps, VStack, HStack, Spacer } from "@chakra-ui/react";
 import { Heading, Text, Code } from "@chakra-ui/react";
@@ -10,16 +19,28 @@ import { Icon } from "@chakra-ui/react";
 import { IconButton } from "@chakra-ui/react";
 import { Badge } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
-import { Skeleton } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
 
+import {
+  MenuItemProps,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+} from "@chakra-ui/react";
+
 import { Section } from "components/section";
-import { InternalLink } from "components/internal-link";
+import { SkeletonBlock } from "components/skeleton";
+import { NoContent } from "components/no-content";
 import { ExternalLink } from "components/external-link";
+import { useToast } from "components/toast";
+
+import { CreateFormButton } from "components/create-form-modal";
 
 import { gql } from "@apollo/client";
+import { useHandleQueryError } from "components/apollo";
 import { useAdminResearchSectionQuery } from "apollo";
-import { useHandleQueryError } from "./apollo";
+import { useDeleteFormMutation, DeleteFormMutation } from "apollo";
 
 gql`
   query AdminResearchSection($skip: Int = 0) {
@@ -34,18 +55,29 @@ gql`
   }
 `;
 
+gql`
+  mutation DeleteForm($input: DeleteFormInput!) {
+    payload: deleteForm(input: $input) {
+      ok
+    }
+  }
+`;
+
 export type AdminResearchSectionProps = BoxProps;
 
 export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
   ...otherProps
 }) => {
+  const toast = useToast();
   const { user } = useUser();
+
   const handleQueryError = useHandleQueryError("Failed to load forms");
-  const { data } = useAdminResearchSectionQuery({
+  const { data, refetch } = useAdminResearchSectionQuery({
     skip: !user,
     onError: handleQueryError,
   });
   const { forms } = data ?? {};
+
   return (
     <Section align="stretch" {...otherProps}>
       <Heading>Research</Heading>
@@ -79,18 +111,58 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
                   </VStack>
                   <Spacer />
                   <HStack spacing={1.5}>
-                    <InternalLink
-                      href={`/admin/form/${formId}`}
-                      _hover={{ textDecor: "none" }}
-                    >
-                      <IconButton
-                        icon={<Icon as={HiPencil} fontSize="sm" />}
-                        aria-label="Open"
+                    <Menu>
+                      <MenuButton
+                        as={IconButton}
+                        icon={<Icon as={HiMenu} fontSize="sm" />}
+                        aria-label="Actions"
                         size="xs"
                         colorScheme="black"
                         isRound
                       />
-                    </InternalLink>
+                      <MenuList>
+                        <MenuItem
+                          icon={
+                            <Icon
+                              as={HiPencilAlt}
+                              fontSize="md"
+                              color="blue.500"
+                            />
+                          }
+                          onClick={() => {
+                            toast({
+                              status: "info",
+                              description: "Not implemented!",
+                            });
+                          }}
+                        >
+                          Edit
+                        </MenuItem>
+                        <MenuItem
+                          icon={
+                            <Icon
+                              as={HiArchive}
+                              fontSize="md"
+                              color="yellow.500"
+                            />
+                          }
+                          onClick={() => {
+                            toast({
+                              status: "info",
+                              description: "Not implemented!",
+                            });
+                          }}
+                        >
+                          Archive
+                        </MenuItem>
+                        <DeleteFormMenuItem
+                          formId={formId}
+                          onDelete={() => {
+                            refetch();
+                          }}
+                        />
+                      </MenuList>
+                    </Menu>
                     <ExternalLink
                       href={`/research/${formHandle}`}
                       _hover={{ textDecor: "none" }}
@@ -118,11 +190,19 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
               </VStack>
             ),
           )}
+          {isEmpty(forms) && (
+            <NoContent>You don&apos;t have any forms.</NoContent>
+          )}
+          <CreateFormButton
+            leftIcon={<Icon as={HiPlusCircle} fontSize="lg" />}
+            onCreate={() => {
+              refetch();
+            }}
+          />
         </VStack>
       ) : (
-        <Skeleton h={48} />
+        <SkeletonBlock />
       )}
-      {/* {forms.forEach()} */}
     </Section>
   );
 };
@@ -151,5 +231,44 @@ const FormStatBadge: FC<FormStatBadgeProps> = ({ name, icon, value }) => {
         </HStack>
       </Badge>
     </Tooltip>
+  );
+};
+
+interface DeleteFormMenuItemProps extends MenuItemProps {
+  formId: string;
+  onDelete?: (payload: DeleteFormMutation["payload"]) => void;
+}
+
+const DeleteFormMenuItem: FC<DeleteFormMenuItemProps> = ({
+  formId,
+  onDelete,
+  ...otherProps
+}) => {
+  const handleQueryError = useHandleQueryError("Failed to delete form");
+  const [runMutation, { loading: isLoading }] = useDeleteFormMutation({
+    onError: handleQueryError,
+    onCompleted: ({ payload }) => {
+      if (onDelete) {
+        onDelete(payload);
+      }
+    },
+  });
+  return (
+    <MenuItem
+      icon={<Icon as={HiTrash} fontSize="md" color="red.500" />}
+      isDisabled={isLoading}
+      onClick={() => {
+        runMutation({
+          variables: {
+            input: {
+              formId,
+            },
+          },
+        });
+      }}
+      {...otherProps}
+    >
+      Delete
+    </MenuItem>
   );
 };

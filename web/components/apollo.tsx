@@ -33,6 +33,7 @@ const typePolicies: TypePolicies = {
   MusicArtist: { keyFields: ["spotifyId"] },
   Lyrics: { keyFields: false },
   LyricLine: { keyFields: false },
+  FormField: { keyFields: false },
 };
 
 const createTerminatingLink = (): ApolloLink => {

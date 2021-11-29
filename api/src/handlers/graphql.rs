@@ -56,8 +56,17 @@ pub async fn graphql_handler(
                     .auth0()
                     .identify(bearer.token())
                     .await
-                    .context("authentication failed")?;
-                request.data(identity)
+                    .context("authentication failed");
+                match identity {
+                    Ok(identity) => request.data(identity),
+                    Err(error) => {
+                        error!(
+                            error = %format!("{:#}", error),
+                            "authentication failed"
+                        );
+                        return Err(error.into());
+                    }
+                }
             }
             None => request,
         };

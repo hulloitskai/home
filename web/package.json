@@ -46,6 +46,7 @@
     "react-icons": "^4.3.1",
     "react-textarea-autosize": "^8.3.3",
     "sentry": "^0.1.2",
+    "slugify": "^1.6.3",
     "tailwindcss": "^2.2.19"
   },
   "devDependencies": {

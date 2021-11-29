@@ -90,6 +90,12 @@ impl Entity for Form {
     type Conditions = FormConditions;
     type Sorting = EmptySorting;
 
+    fn validate(&self) -> Result<()> {
+        let Form { fields, .. } = self;
+        ensure!(!fields.is_empty(), "missing fields");
+        Ok(())
+    }
+
     async fn before_destroy(
         record: &mut Record<Self>,
         ctx: &EntityContext<Self::Services>,

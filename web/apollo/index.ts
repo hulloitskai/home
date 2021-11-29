@@ -216,7 +216,8 @@ export type Mutation = {
   createForm: CreateFormPayload;
   deleteForm: DeleteFormPayload;
   submitForm: SubmitFormPayload;
-  testFailure: TestFailurePayload;
+  test: TestPayload;
+  testFailure: TestPayload;
 };
 
 
@@ -239,6 +240,16 @@ export type MutationSubmitFormArgs = {
   input: SubmitFormInput;
 };
 
+
+export type MutationTestArgs = {
+  input: TestInput;
+};
+
+
+export type MutationTestFailureArgs = {
+  input: TestInput;
+};
+
 export type Query = {
   __typename?: 'Query';
   buildInfo: BuildInfo;
@@ -249,6 +260,7 @@ export type Query = {
   knowledgeEntries: Array<KnowledgeEntry>;
   knowledgeEntry?: Maybe<KnowledgeEntry>;
   musicInfo?: Maybe<MusicInfo>;
+  test: Scalars['Boolean'];
   viewer?: Maybe<User>;
 };
 
@@ -286,9 +298,19 @@ export type SubmitFormPayload = {
   response: FormResponse;
 };
 
-export type TestFailurePayload = {
-  __typename?: 'TestFailurePayload';
+export type Subscription = {
+  __typename?: 'Subscription';
+  test: Scalars['Int'];
+};
+
+export type TestInput = {
+  value: Scalars['String'];
+};
+
+export type TestPayload = {
+  __typename?: 'TestPayload';
   ok: Scalars['Boolean'];
+  value: Scalars['String'];
 };
 
 export type User = {
@@ -304,6 +326,20 @@ export type AdminResearchSectionQueryVariables = Exact<{
 
 
 export type AdminResearchSectionQuery = { __typename?: 'Query', forms: Array<{ __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responsesCount: number, isArchived: boolean }> };
+
+export type DeleteFormMutationVariables = Exact<{
+  input: DeleteFormInput;
+}>;
+
+
+export type DeleteFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'DeleteFormPayload', ok: boolean } };
+
+export type CreateFormMutationVariables = Exact<{
+  input: CreateFormInput;
+}>;
+
+
+export type CreateFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'CreateFormPayload', form: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } };
 
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
@@ -334,20 +370,6 @@ export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: { __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> } | null | undefined } } | null | undefined };
 
-export type SubmitFormMutationVariables = Exact<{
-  input: SubmitFormInput;
-}>;
-
-
-export type SubmitFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'SubmitFormPayload', ok: boolean } };
-
-export type AdminFormPagePropsQueryVariables = Exact<{
-  formId: Scalars['ID'];
-}>;
-
-
-export type AdminFormPagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined } | null | undefined };
-
 export type HomePageQueryVariables = Exact<{
   dailyNoteId: Scalars['String'];
 }>;
@@ -359,6 +381,13 @@ export type KnowledgePageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type KnowledgePageQuery = { __typename?: 'Query', entries: Array<{ __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } }> };
+
+export type SubmitFormMutationVariables = Exact<{
+  input: SubmitFormInput;
+}>;
+
+
+export type SubmitFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'SubmitFormPayload', ok: boolean } };
 
 export type ResearchPagePropsQueryVariables = Exact<{
   formHandle: Scalars['String'];
@@ -435,6 +464,91 @@ export function useAdminResearchSectionLazyQuery(baseOptions?: Apollo.LazyQueryH
 export type AdminResearchSectionQueryHookResult = ReturnType<typeof useAdminResearchSectionQuery>;
 export type AdminResearchSectionLazyQueryHookResult = ReturnType<typeof useAdminResearchSectionLazyQuery>;
 export type AdminResearchSectionQueryResult = Apollo.QueryResult<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>;
+export const DeleteFormDocument = gql`
+    mutation DeleteForm($input: DeleteFormInput!) {
+  payload: deleteForm(input: $input) {
+    ok
+  }
+}
+    `;
+export type DeleteFormMutationFn = Apollo.MutationFunction<DeleteFormMutation, DeleteFormMutationVariables>;
+
+/**
+ * __useDeleteFormMutation__
+ *
+ * To run a mutation, you first call `useDeleteFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteFormMutation, { data, loading, error }] = useDeleteFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteFormMutation(baseOptions?: Apollo.MutationHookOptions<DeleteFormMutation, DeleteFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteFormMutation, DeleteFormMutationVariables>(DeleteFormDocument, options);
+      }
+export type DeleteFormMutationHookResult = ReturnType<typeof useDeleteFormMutation>;
+export type DeleteFormMutationResult = Apollo.MutationResult<DeleteFormMutation>;
+export type DeleteFormMutationOptions = Apollo.BaseMutationOptions<DeleteFormMutation, DeleteFormMutationVariables>;
+export const CreateFormDocument = gql`
+    mutation CreateForm($input: CreateFormInput!) {
+  payload: createForm(input: $input) {
+    form {
+      id
+      handle
+      name
+      description
+      fields {
+        question
+        input {
+          text
+          singleChoice {
+            options
+          }
+          multipleChoice {
+            options
+          }
+        }
+      }
+      respondentLabel
+      respondentHelper
+    }
+  }
+}
+    `;
+export type CreateFormMutationFn = Apollo.MutationFunction<CreateFormMutation, CreateFormMutationVariables>;
+
+/**
+ * __useCreateFormMutation__
+ *
+ * To run a mutation, you first call `useCreateFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createFormMutation, { data, loading, error }] = useCreateFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateFormMutation(baseOptions?: Apollo.MutationHookOptions<CreateFormMutation, CreateFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateFormMutation, CreateFormMutationVariables>(CreateFormDocument, options);
+      }
+export type CreateFormMutationHookResult = ReturnType<typeof useCreateFormMutation>;
+export type CreateFormMutationResult = Apollo.MutationResult<CreateFormMutation>;
+export type CreateFormMutationOptions = Apollo.BaseMutationOptions<CreateFormMutation, CreateFormMutationVariables>;
 export const HomeHeartSectionDocument = gql`
     query HomeHeartSection {
   heartRate {
@@ -637,77 +751,6 @@ export function useMusicLyricsLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type MusicLyricsQueryHookResult = ReturnType<typeof useMusicLyricsQuery>;
 export type MusicLyricsLazyQueryHookResult = ReturnType<typeof useMusicLyricsLazyQuery>;
 export type MusicLyricsQueryResult = Apollo.QueryResult<MusicLyricsQuery, MusicLyricsQueryVariables>;
-export const SubmitFormDocument = gql`
-    mutation SubmitForm($input: SubmitFormInput!) {
-  payload: submitForm(input: $input) {
-    ok
-  }
-}
-    `;
-export type SubmitFormMutationFn = Apollo.MutationFunction<SubmitFormMutation, SubmitFormMutationVariables>;
-
-/**
- * __useSubmitFormMutation__
- *
- * To run a mutation, you first call `useSubmitFormMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSubmitFormMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [submitFormMutation, { data, loading, error }] = useSubmitFormMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useSubmitFormMutation(baseOptions?: Apollo.MutationHookOptions<SubmitFormMutation, SubmitFormMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SubmitFormMutation, SubmitFormMutationVariables>(SubmitFormDocument, options);
-      }
-export type SubmitFormMutationHookResult = ReturnType<typeof useSubmitFormMutation>;
-export type SubmitFormMutationResult = Apollo.MutationResult<SubmitFormMutation>;
-export type SubmitFormMutationOptions = Apollo.BaseMutationOptions<SubmitFormMutation, SubmitFormMutationVariables>;
-export const AdminFormPagePropsDocument = gql`
-    query AdminFormPageProps($formId: ID!) {
-  form(id: $formId) {
-    id
-    handle
-    name
-    description
-  }
-}
-    `;
-
-/**
- * __useAdminFormPagePropsQuery__
- *
- * To run a query within a React component, call `useAdminFormPagePropsQuery` and pass it any options that fit your needs.
- * When your component renders, `useAdminFormPagePropsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useAdminFormPagePropsQuery({
- *   variables: {
- *      formId: // value for 'formId'
- *   },
- * });
- */
-export function useAdminFormPagePropsQuery(baseOptions: Apollo.QueryHookOptions<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>(AdminFormPagePropsDocument, options);
-      }
-export function useAdminFormPagePropsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>(AdminFormPagePropsDocument, options);
-        }
-export type AdminFormPagePropsQueryHookResult = ReturnType<typeof useAdminFormPagePropsQuery>;
-export type AdminFormPagePropsLazyQueryHookResult = ReturnType<typeof useAdminFormPagePropsLazyQuery>;
-export type AdminFormPagePropsQueryResult = Apollo.QueryResult<AdminFormPagePropsQuery, AdminFormPagePropsQueryVariables>;
 export const HomePageDocument = gql`
     query HomePage($dailyNoteId: String!) {
   dailyEntry: knowledgeEntry(id: $dailyNoteId) {
@@ -789,6 +832,39 @@ export function useKnowledgePageLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type KnowledgePageQueryHookResult = ReturnType<typeof useKnowledgePageQuery>;
 export type KnowledgePageLazyQueryHookResult = ReturnType<typeof useKnowledgePageLazyQuery>;
 export type KnowledgePageQueryResult = Apollo.QueryResult<KnowledgePageQuery, KnowledgePageQueryVariables>;
+export const SubmitFormDocument = gql`
+    mutation SubmitForm($input: SubmitFormInput!) {
+  payload: submitForm(input: $input) {
+    ok
+  }
+}
+    `;
+export type SubmitFormMutationFn = Apollo.MutationFunction<SubmitFormMutation, SubmitFormMutationVariables>;
+
+/**
+ * __useSubmitFormMutation__
+ *
+ * To run a mutation, you first call `useSubmitFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubmitFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [submitFormMutation, { data, loading, error }] = useSubmitFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSubmitFormMutation(baseOptions?: Apollo.MutationHookOptions<SubmitFormMutation, SubmitFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SubmitFormMutation, SubmitFormMutationVariables>(SubmitFormDocument, options);
+      }
+export type SubmitFormMutationHookResult = ReturnType<typeof useSubmitFormMutation>;
+export type SubmitFormMutationResult = Apollo.MutationResult<SubmitFormMutation>;
+export type SubmitFormMutationOptions = Apollo.BaseMutationOptions<SubmitFormMutation, SubmitFormMutationVariables>;
 export const ResearchPagePropsDocument = gql`
     query ResearchPageProps($formHandle: String!) {
   form: formByHandle(handle: $formHandle) {

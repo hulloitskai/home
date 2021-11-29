@@ -449,7 +449,7 @@ impl FormMutation {
                 .load(&ctx)
                 .await
                 .context("failed to load form")?;
-            form.delete(&ctx).await.context("failed to delete form")?;
+            form.destroy(&ctx).await.context("failed to destroy form")?;
             Ok(())
         })
         .await?;

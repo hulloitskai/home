@@ -5,19 +5,19 @@ import {
   rose,
   amber,
   orange,
-  green,
   teal,
   cyan,
   purple,
   pink,
   blue,
+  emerald,
 } from "tailwindcss/colors";
 
+import type { StorageManager, ColorMode } from "@chakra-ui/react";
 import { ChakraProvider as Provider } from "@chakra-ui/react";
-import { ThemeConfig, useTheme, extendTheme } from "@chakra-ui/react";
-import { StorageManager, ColorMode } from "@chakra-ui/react";
+import { useTheme, extendTheme, ThemeConfig } from "@chakra-ui/react";
 
-import { StyleFunctionProps } from "@chakra-ui/theme-tools";
+import type { StyleFunctionProps } from "@chakra-ui/theme-tools";
 import { transparentize, mode } from "@chakra-ui/theme-tools";
 
 const config: ThemeConfig = {
@@ -31,7 +31,7 @@ const theme = extendTheme({
     red: rose,
     orange,
     yellow: amber,
-    green,
+    green: emerald,
     teal,
     blue,
     cyan,

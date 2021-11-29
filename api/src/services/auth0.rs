@@ -55,7 +55,7 @@ impl Service {
 
         let token = token.to_owned();
         if let Some(claims) = cache.get(&token) {
-            trace!("cache hit");
+            trace!(?claims, "cache hit");
             return Ok(claims);
         } else {
             trace!("cache miss");
@@ -75,11 +75,13 @@ impl Service {
             .send()
             .await
             .context("request failed")?;
+        let response = response.error_for_status().context("bad status")?;
 
         let data = response
             .json::<Json>()
             .await
             .context("failed to decode JSON response")?;
+        println!("data: {:?}", &data);
         let identity = match from_json::<Claims>(data.clone()) {
             Ok(claims) => {
                 let identity = {

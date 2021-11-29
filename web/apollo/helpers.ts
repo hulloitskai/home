@@ -125,15 +125,16 @@ export type MusicTrackFieldPolicy = {
 	spotifyId?: FieldPolicy<any> | FieldReadFunction<any>,
 	spotifyUrl?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'submitForm' | 'testFailure' | MutationKeySpecifier)[];
+export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'submitForm' | 'test' | 'testFailure' | MutationKeySpecifier)[];
 export type MutationFieldPolicy = {
 	archiveForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	createForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	deleteForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	submitForm?: FieldPolicy<any> | FieldReadFunction<any>,
+	test?: FieldPolicy<any> | FieldReadFunction<any>,
 	testFailure?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'forms' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'viewer' | QueryKeySpecifier)[];
+export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'forms' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'test' | 'viewer' | QueryKeySpecifier)[];
 export type QueryFieldPolicy = {
 	buildInfo?: FieldPolicy<any> | FieldReadFunction<any>,
 	form?: FieldPolicy<any> | FieldReadFunction<any>,
@@ -143,6 +144,7 @@ export type QueryFieldPolicy = {
 	knowledgeEntries?: FieldPolicy<any> | FieldReadFunction<any>,
 	knowledgeEntry?: FieldPolicy<any> | FieldReadFunction<any>,
 	musicInfo?: FieldPolicy<any> | FieldReadFunction<any>,
+	test?: FieldPolicy<any> | FieldReadFunction<any>,
 	viewer?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type SubmitFormPayloadKeySpecifier = ('ok' | 'response' | SubmitFormPayloadKeySpecifier)[];
@@ -150,9 +152,14 @@ export type SubmitFormPayloadFieldPolicy = {
 	ok?: FieldPolicy<any> | FieldReadFunction<any>,
 	response?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type TestFailurePayloadKeySpecifier = ('ok' | TestFailurePayloadKeySpecifier)[];
-export type TestFailurePayloadFieldPolicy = {
-	ok?: FieldPolicy<any> | FieldReadFunction<any>
+export type SubscriptionKeySpecifier = ('test' | SubscriptionKeySpecifier)[];
+export type SubscriptionFieldPolicy = {
+	test?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type TestPayloadKeySpecifier = ('ok' | 'value' | TestPayloadKeySpecifier)[];
+export type TestPayloadFieldPolicy = {
+	ok?: FieldPolicy<any> | FieldReadFunction<any>,
+	value?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type UserKeySpecifier = ('email' | 'id' | 'isAdmin' | UserKeySpecifier)[];
 export type UserFieldPolicy = {
@@ -253,9 +260,13 @@ export type StrictTypedTypePolicies = {
 		keyFields?: false | SubmitFormPayloadKeySpecifier | (() => undefined | SubmitFormPayloadKeySpecifier),
 		fields?: SubmitFormPayloadFieldPolicy,
 	},
-	TestFailurePayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
-		keyFields?: false | TestFailurePayloadKeySpecifier | (() => undefined | TestFailurePayloadKeySpecifier),
-		fields?: TestFailurePayloadFieldPolicy,
+	Subscription?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | SubscriptionKeySpecifier | (() => undefined | SubscriptionKeySpecifier),
+		fields?: SubscriptionFieldPolicy,
+	},
+	TestPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | TestPayloadKeySpecifier | (() => undefined | TestPayloadKeySpecifier),
+		fields?: TestPayloadFieldPolicy,
 	},
 	User?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | UserKeySpecifier | (() => undefined | UserKeySpecifier),
