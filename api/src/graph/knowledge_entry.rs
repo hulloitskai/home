@@ -57,11 +57,14 @@ impl KnowledgeEntryQuery {
         ctx: &Context<'_>,
     ) -> Result<Vec<KnowledgeEntryObject>> {
         let notes = ctx.services().obsidian().list_notes().await?;
-        let mut entries = notes
-            .into_iter()
-            .map(KnowledgeEntryObject::from)
-            .collect::<Vec<_>>();
-        entries.sort_by_cached_key(|entry| entry.note.id.clone());
+        let entries = {
+            let mut entries = notes
+                .into_iter()
+                .map(KnowledgeEntryObject::from)
+                .collect::<Vec<_>>();
+            entries.sort_by_cached_key(|entry| entry.note.id.clone());
+            entries
+        };
         Ok(entries)
     }
 

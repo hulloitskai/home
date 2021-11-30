@@ -446,8 +446,10 @@ impl FormMutation {
         };
         form.save(&ctx).await.context("failed to save form")?;
 
-        let form = FormObject::from(form);
-        let payload = UpdateFormPayload { ok: true, form };
+        let payload = UpdateFormPayload {
+            ok: true,
+            form: form.into(),
+        };
         Ok(payload)
     }
 
@@ -547,8 +549,10 @@ impl FormMutation {
             })
             .await?;
 
-        let form = FormObject::from(form);
-        let payload = ArchiveFormPayload { ok: true, form };
+        let payload = ArchiveFormPayload {
+            ok: true,
+            form: form.into(),
+        };
         Ok(payload)
     }
 }

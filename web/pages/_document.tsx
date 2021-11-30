@@ -4,7 +4,7 @@ import NextDocument, { Html, Head, Main, NextScript } from "next/document";
 class Document extends NextDocument {
   render(): JSX.Element {
     return (
-      <Html>
+      <Html prefix="og: http://ogp.me/ns#">
         <Head>
           <link rel="icon" href="/favicon.ico" />
           <link
