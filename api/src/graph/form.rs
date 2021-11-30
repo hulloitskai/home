@@ -634,8 +634,8 @@ pub(super) struct FormFieldMultipleChoiceInputConfigInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct CreateFormPayload {
-    pub ok: bool,
     pub form: FormObject,
+    pub ok: bool,
 }
 
 #[derive(Debug, Clone, InputObject)]
@@ -650,8 +650,8 @@ pub(super) struct UpdateFormInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct UpdateFormPayload {
-    pub ok: bool,
     pub form: FormObject,
+    pub ok: bool,
 }
 
 #[derive(Debug, Clone, InputObject)]
@@ -693,8 +693,8 @@ impl TryFrom<FormFieldResponseInput> for FormResponseField {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct SubmitFormPayload {
-    pub ok: bool,
     pub response: FormResponseObject,
+    pub ok: bool,
 }
 
 #[derive(Debug, Clone, InputObject)]
@@ -714,6 +714,6 @@ pub(super) struct ArchiveFormInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct ArchiveFormPayload {
-    pub ok: bool,
     pub form: FormObject,
+    pub ok: bool,
 }

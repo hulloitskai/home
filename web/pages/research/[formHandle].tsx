@@ -142,58 +142,67 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
             {fields.map(({ question, input }, index) => {
               return (
                 <VStack key={index} align="stretch">
-                  <Text fontWeight="medium" color="gray.500">
-                    {question}
-                  </Text>
                   <FormControl isInvalid={!!(formErrors.fields ?? [])[index]}>
+                    <FormLabel fontWeight="medium" color="gray.500">
+                      {question}
+                    </FormLabel>
                     {input.text && (
                       <TextareaAutosize
+                        placeholder="Enter your response..."
                         {...register(`fields.${index}.text`, {
                           required: true,
                         })}
                       />
                     )}
                     {input.singleChoice && (
-                      <Controller
-                        control={control}
-                        name={`fields.${index}.singleChoice`}
-                        rules={{ required: true }}
-                        render={({ field }) => {
-                          const { value, onChange, onBlur } = field;
-                          return (
-                            <RadioGroup {...{ value, onChange, onBlur }}>
-                              <VStack align="stretch">
-                                {input.singleChoice!.options.map(option => (
-                                  <Radio key={option} value={option}>
-                                    {option}
-                                  </Radio>
-                                ))}
-                              </VStack>
-                            </RadioGroup>
-                          );
-                        }}
-                      />
+                      <>
+                        <Controller
+                          control={control}
+                          name={`fields.${index}.singleChoice`}
+                          rules={{ required: true }}
+                          render={({ field }) => {
+                            const { value, onChange, onBlur } = field;
+                            return (
+                              <RadioGroup {...{ value, onChange, onBlur }}>
+                                <VStack align="stretch" spacing={1}>
+                                  {input.singleChoice!.options.map(option => (
+                                    <Radio key={option} value={option}>
+                                      {option}
+                                    </Radio>
+                                  ))}
+                                </VStack>
+                              </RadioGroup>
+                            );
+                          }}
+                        />
+                        <FormHelperText>
+                          Select one of the above.
+                        </FormHelperText>
+                      </>
                     )}
                     {input.multipleChoice && (
-                      <Controller
-                        control={control}
-                        name={`fields.${index}.multipleChoice`}
-                        rules={{ required: true }}
-                        render={({ field }) => {
-                          const { value, onChange, onBlur } = field;
-                          return (
-                            <CheckboxGroup {...{ value, onChange, onBlur }}>
-                              <VStack align="stretch">
-                                {input.multipleChoice!.options.map(option => (
-                                  <Checkbox key={option} value={option}>
-                                    {option}
-                                  </Checkbox>
-                                ))}
-                              </VStack>
-                            </CheckboxGroup>
-                          );
-                        }}
-                      />
+                      <>
+                        <Controller
+                          control={control}
+                          name={`fields.${index}.multipleChoice`}
+                          rules={{ required: true }}
+                          render={({ field }) => {
+                            const { value, onChange, onBlur } = field;
+                            return (
+                              <CheckboxGroup {...{ value, onChange, onBlur }}>
+                                <VStack align="stretch" spacing={1}>
+                                  {input.multipleChoice!.options.map(option => (
+                                    <Checkbox key={option} value={option}>
+                                      {option}
+                                    </Checkbox>
+                                  ))}
+                                </VStack>
+                              </CheckboxGroup>
+                            );
+                          }}
+                        />
+                        <FormHelperText>Select all that apply.</FormHelperText>
+                      </>
                     )}
                   </FormControl>
                 </VStack>
@@ -222,6 +231,7 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
                   {respondentLabel || "Your Name"}
                 </FormLabel>
                 <Input
+                  placeholder="Enter your name..."
                   _light={{ bg: "white" }}
                   _dark={{
                     bg: transparentBlack,

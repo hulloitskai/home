@@ -54,6 +54,6 @@ pub(super) struct TestInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct TestPayload {
-    pub ok: bool,
     pub value: String,
+    pub ok: bool,
 }
