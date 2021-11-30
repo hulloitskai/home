@@ -80,5 +80,5 @@ cover:_
    docker compose down
    ```
 
-[uptime]: https://betteruptime.com
+[uptime]: https://status.itskai.me
 [uptime-badge]: https://betteruptime.com/status-badges/v1/monitor/a2in.svg

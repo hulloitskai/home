@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useMemo } from "react";
+import { useUser } from "@auth0/nextjs-auth0";
 
 import { HiChevronUp, HiLogout, HiTerminal } from "react-icons/hi";
 
@@ -17,9 +18,8 @@ import { chakra } from "@chakra-ui/react";
 import { InternalLink, InternalLinkOverlay } from "components/internal-link";
 
 import { gql } from "@apollo/client";
-import { useUser } from "@auth0/nextjs-auth0";
+import { useHandleQueryError } from "components/apollo";
 import { useLayoutFooterViewerQuery } from "apollo";
-import { useHandleQueryError } from "./apollo";
 
 export interface LayoutProps extends Omit<StackProps, "direction"> {
   badge: string;
