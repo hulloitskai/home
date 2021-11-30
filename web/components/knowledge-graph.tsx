@@ -34,11 +34,11 @@ gql`
 `;
 
 export interface KnowledgeGraphProps extends BoxProps {
-  entries: KnowledgeGraphEntryFragment[];
-  highlightedEntryId?: string;
-  linkForce?: number;
-  bodyForce?: number;
-  showOrphans?: boolean;
+  readonly entries: KnowledgeGraphEntryFragment[];
+  readonly highlightedEntryId?: string;
+  readonly linkForce?: number;
+  readonly bodyForce?: number;
+  readonly showOrphans?: boolean;
 }
 
 export const KnowledgeGraph: FC<KnowledgeGraphProps> = ({

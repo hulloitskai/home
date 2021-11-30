@@ -112,8 +112,8 @@ const createApolloClient = (): Client<NormalizedCacheObject> => {
 };
 
 export interface ApolloProviderProps {
-  initialState?: NormalizedCacheObject;
-  children: ReactNode | ReactNode[] | null;
+  readonly initialState?: NormalizedCacheObject;
+  readonly children: ReactNode | ReactNode[] | null;
 }
 
 export const ApolloProvider: FC<ApolloProviderProps> = ({

@@ -7,11 +7,10 @@ import { useWatch, get } from "react-hook-form";
 import { HiPlusCircle } from "react-icons/hi";
 
 import { BoxProps, Box, VStack } from "@chakra-ui/react";
-import { Icon } from "@chakra-ui/react";
+import { Icon, Badge } from "@chakra-ui/react";
 import { UnorderedList, ListItem } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 import { Select, Input } from "@chakra-ui/react";
-import { Badge } from "@chakra-ui/react";
 
 import {
   FormControl,

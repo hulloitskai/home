@@ -19,7 +19,7 @@ gql`
 `;
 
 export interface HeartStatProps extends BoxProps {
-  rate: HeartStatHeartRateFragment | null | undefined;
+  readonly rate: HeartStatHeartRateFragment | null | undefined;
 }
 
 export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {

@@ -28,9 +28,9 @@ gql`
 const MUSIC_LYRICS_DELAY = 1_000; // 1 second of estimated latency
 
 export interface MusicLyricsProps extends BoxProps {
-  trackSpotifyId: string | undefined | null;
-  progress: number | undefined | null;
-  duration: number;
+  readonly trackSpotifyId: string | undefined | null;
+  readonly progress: number | undefined | null;
+  readonly duration: number;
 }
 
 export const MusicLyrics: FC<MusicLyricsProps> = ({

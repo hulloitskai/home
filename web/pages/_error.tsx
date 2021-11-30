@@ -7,20 +7,18 @@ import { captureException, flush } from "@sentry/nextjs";
 import { HiClipboardCopy } from "react-icons/hi";
 
 import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
-import { Text, Code } from "@chakra-ui/react";
-import { Icon, IconButton } from "@chakra-ui/react";
-import { Badge } from "@chakra-ui/react";
-import { Button } from "@chakra-ui/react";
+import { Text, Code, Icon, Badge } from "@chakra-ui/react";
+import { Button, IconButton } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { useClipboard } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
-import { InternalLink } from "components/internal-link";
+import { InternalLink } from "components/link";
 
 export interface ErrorPageProps extends ErrorProps {
-  hasGetInitialPropsRun: boolean;
-  err: NextPageContext["err"];
+  readonly hasGetInitialPropsRun: boolean;
+  readonly err: NextPageContext["err"];
 }
 
 const ErrorPage: NextPage<ErrorPageProps> = ({

@@ -5,7 +5,6 @@ import { Center, Spinner } from "@chakra-ui/react";
 import { ClientOnly } from "components/client-only";
 
 import { KnowledgeGraph } from "components/knowledge-graph";
-import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
 import { gql } from "@apollo/client";
 import { useKnowledgePageQuery } from "apollo";
@@ -17,8 +16,6 @@ gql`
       ...KnowledgeGraphEntry
     }
   }
-
-  ${KnowledgeGraphEntryFragmentDoc}
 `;
 
 const KnowledgePage: NextPage = () => {

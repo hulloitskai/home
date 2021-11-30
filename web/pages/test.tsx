@@ -5,10 +5,8 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { HiClipboardCopy } from "react-icons/hi";
 
 import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
-import { Heading, Text, Link } from "@chakra-ui/react";
-import { Icon, IconButton } from "@chakra-ui/react";
-import { Badge } from "@chakra-ui/react";
-import { Button } from "@chakra-ui/react";
+import { Heading, Text, Link, Icon, Badge } from "@chakra-ui/react";
+import { Button, IconButton } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
 import { useClipboard } from "@chakra-ui/react";

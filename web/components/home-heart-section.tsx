@@ -5,7 +5,6 @@ import { Text } from "@chakra-ui/react";
 import { SectionProps, Section, SectionText } from "components/section";
 
 import { HeartStat } from "components/heart-stat";
-import { HeartStatHeartRateFragmentDoc } from "apollo";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
@@ -26,8 +25,6 @@ gql`
       ...HeartStatHeartRate
     }
   }
-
-  ${HeartStatHeartRateFragmentDoc}
 `;
 
 export type HomeHeartSectionProps = SectionProps;

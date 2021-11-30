@@ -53,10 +53,11 @@ export type FormFieldSingleChoiceInputConfigKeySpecifier = ('options' | FormFiel
 export type FormFieldSingleChoiceInputConfigFieldPolicy = {
 	options?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type FormResponseKeySpecifier = ('createdAt' | 'fields' | 'id' | 'respondent' | 'updatedAt' | FormResponseKeySpecifier)[];
+export type FormResponseKeySpecifier = ('createdAt' | 'fields' | 'form' | 'id' | 'respondent' | 'updatedAt' | FormResponseKeySpecifier)[];
 export type FormResponseFieldPolicy = {
 	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	fields?: FieldPolicy<any> | FieldReadFunction<any>,
+	form?: FieldPolicy<any> | FieldReadFunction<any>,
 	id?: FieldPolicy<any> | FieldReadFunction<any>,
 	respondent?: FieldPolicy<any> | FieldReadFunction<any>,
 	updatedAt?: FieldPolicy<any> | FieldReadFunction<any>
@@ -135,11 +136,12 @@ export type MutationFieldPolicy = {
 	testFailure?: FieldPolicy<any> | FieldReadFunction<any>,
 	updateForm?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'forms' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'test' | 'viewer' | QueryKeySpecifier)[];
+export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'formResponse' | 'forms' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'test' | 'viewer' | QueryKeySpecifier)[];
 export type QueryFieldPolicy = {
 	buildInfo?: FieldPolicy<any> | FieldReadFunction<any>,
 	form?: FieldPolicy<any> | FieldReadFunction<any>,
 	formByHandle?: FieldPolicy<any> | FieldReadFunction<any>,
+	formResponse?: FieldPolicy<any> | FieldReadFunction<any>,
 	forms?: FieldPolicy<any> | FieldReadFunction<any>,
 	heartRate?: FieldPolicy<any> | FieldReadFunction<any>,
 	knowledgeEntries?: FieldPolicy<any> | FieldReadFunction<any>,

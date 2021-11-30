@@ -7,7 +7,7 @@ import { TextProps, Text } from "@chakra-ui/react";
 const MotionText = motion<Omit<TextProps, "transition">>(Text);
 
 export interface HeartBeatProps extends BoxProps {
-  bpm: number | null | undefined;
+  readonly bpm: number | null | undefined;
 }
 
 const MAX_BEAT_DURATION = 0.5;

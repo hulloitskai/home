@@ -1,5 +1,7 @@
 use super::*;
 
+pub type FormResponseId = EntityId<FormResponse>;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct FormResponse {
     pub form_id: EntityId<Form>,
@@ -81,5 +83,11 @@ impl EntityConditions for FormResponseConditions {
         }
 
         doc
+    }
+}
+
+impl FormResponse {
+    pub fn form(&self) -> FindOneQuery<Form> {
+        Form::get(self.form_id)
     }
 }

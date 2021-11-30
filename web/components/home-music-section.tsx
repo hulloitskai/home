@@ -4,9 +4,9 @@ import { DateTime } from "luxon";
 
 import { VStack } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/react";
-import { ExternalLink } from "components/external-link";
 
 import { SectionProps, Section, SectionText } from "components/section";
+import { ExternalLink } from "components/link";
 import { MusicLyrics } from "components/music-lyrics";
 
 import { gql } from "@apollo/client";

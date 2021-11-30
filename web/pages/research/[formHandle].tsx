@@ -40,7 +40,7 @@ import { useSubmitFormMutation } from "apollo";
 import { useTransparentize } from "components/chakra";
 
 interface ResearchPageProps {
-  form: NonNullable<ResearchPagePropsQuery["form"]>;
+  readonly form: NonNullable<ResearchPagePropsQuery["form"]>;
 }
 
 gql`
@@ -79,9 +79,9 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
       onCompleted: ({ payload }) => {
         if (payload.ok) {
           router.push({
-            pathname: "/research/[form]/complete",
+            pathname: "/research/[formHandle]/complete",
             query: {
-              form: handle,
+              formHandle: handle,
             },
           });
         }

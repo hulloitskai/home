@@ -1,8 +1,9 @@
 import React, { FC } from "react";
 
+import { HiOutlineInbox } from "react-icons/hi";
+
 import { BoxProps, VStack, Center } from "@chakra-ui/react";
 import { Text, Icon } from "@chakra-ui/react";
-import { HiOutlineInbox } from "react-icons/hi";
 
 export type NoContentProps = BoxProps;
 

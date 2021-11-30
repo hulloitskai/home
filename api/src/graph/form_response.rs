@@ -31,6 +31,27 @@ impl FormResponseObject {
             .map(FormResponseFieldObject::from)
             .collect()
     }
+
+    async fn form(&self, ctx: &Context<'_>) -> FieldResult<FormObject> {
+        self.resolve_form(ctx).await.map_err(format_error)
+    }
+}
+
+impl FormResponseObject {
+    async fn resolve_form(&self, ctx: &Context<'_>) -> Result<FormObject> {
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.clone());
+
+        let form = self
+            .record
+            .form()
+            .load(&ctx)
+            .await
+            .context("failed to load form")?;
+
+        let form = FormObject::from(form);
+        Ok(form)
+    }
 }
 
 #[derive(Debug, Clone, From)]
@@ -64,5 +85,49 @@ impl FormResponseFieldObject {
             }
             _ => None,
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub(super) struct FormResponseQuery;
+
+#[Object]
+impl FormResponseQuery {
+    async fn form_response(
+        &self,
+        ctx: &Context<'_>,
+        id: Id<FormResponse>,
+    ) -> FieldResult<Option<FormResponseObject>> {
+        self.resolve_form_response(ctx, id)
+            .await
+            .map_err(format_error)
+    }
+}
+
+impl FormResponseQuery {
+    async fn resolve_form_response(
+        &self,
+        ctx: &Context<'_>,
+        id: Id<FormResponse>,
+    ) -> Result<Option<FormResponseObject>> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+
+        let response_id = FormResponseId::from(id);
+        let response = FormResponse::get(response_id)
+            .optional()
+            .load(&ctx)
+            .await
+            .context("failed to load formresponse")?;
+
+        let response = response.map(FormResponseObject::from);
+        Ok(response)
     }
 }

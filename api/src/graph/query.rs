@@ -8,6 +8,7 @@ pub struct Query(
     MusicInfoQuery,
     KnowledgeEntryQuery,
     FormQuery,
+    FormResponseQuery,
     UserQuery,
 );
 

@@ -2,13 +2,13 @@ import React, { FC, ReactNode, useMemo } from "react";
 import { useDisclosure, UseDisclosureReturn } from "@chakra-ui/react";
 
 export interface DisclosureTriggerProps {
-  open: UseDisclosureReturn["onOpen"];
-  isOpen: boolean;
+  readonly open: UseDisclosureReturn["onOpen"];
+  readonly isOpen: boolean;
 }
 
 export interface DialogProps {
-  renderTrigger: (props: DisclosureTriggerProps) => ReactNode;
-  children: (props: UseDisclosureReturn) => ReactNode;
+  readonly renderTrigger: (props: DisclosureTriggerProps) => ReactNode;
+  readonly children: (props: UseDisclosureReturn) => ReactNode;
 }
 
 export const Disclosure: FC<DialogProps> = ({

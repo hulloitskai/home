@@ -131,6 +131,7 @@ export type FormResponse = {
   __typename?: 'FormResponse';
   createdAt: Scalars['DateTime'];
   fields: Array<FormResponseField>;
+  form: Form;
   id: Scalars['ID'];
   respondent: Scalars['String'];
   updatedAt: Scalars['DateTime'];
@@ -261,6 +262,7 @@ export type Query = {
   buildInfo: BuildInfo;
   form?: Maybe<Form>;
   formByHandle?: Maybe<Form>;
+  formResponse?: Maybe<FormResponse>;
   forms: Array<Form>;
   heartRate?: Maybe<HeartRate>;
   knowledgeEntries: Array<KnowledgeEntry>;
@@ -278,6 +280,11 @@ export type QueryFormArgs = {
 
 export type QueryFormByHandleArgs = {
   handle: Scalars['String'];
+};
+
+
+export type QueryFormResponseArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -346,7 +353,7 @@ export type AdminResearchSectionQueryVariables = Exact<{
 }>;
 
 
-export type AdminResearchSectionQuery = { __typename?: 'Query', forms: Array<{ __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responsesCount: number, isArchived: boolean }> };
+export type AdminResearchSectionQuery = { __typename?: 'Query', forms: Array<{ __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responses: Array<{ __typename?: 'FormResponse', id: string, respondent: string }> }> };
 
 export type DeleteFormMutationVariables = Exact<{
   input: DeleteFormInput;
@@ -361,6 +368,15 @@ export type CreateFormMutationVariables = Exact<{
 
 
 export type CreateFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'CreateFormPayload', form: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } };
+
+export type FormCardFormFragment = { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responses: Array<{ __typename?: 'FormResponse', id: string, respondent: string }> };
+
+export type FormResponseModalResponseQueryVariables = Exact<{
+  responseId: Scalars['ID'];
+}>;
+
+
+export type FormResponseModalResponseQuery = { __typename?: 'Query', formResponse?: { __typename?: 'FormResponse', id: string, respondent: string, fields: Array<{ __typename?: 'FormResponseField', text?: string | null | undefined, singleChoice?: string | null | undefined, multipleChoice?: Array<string> | null | undefined }>, form: { __typename?: 'Form', id: string, name: string, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } | null | undefined };
 
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
@@ -438,6 +454,18 @@ export type ResearchCompletePagePropsQueryVariables = Exact<{
 
 export type ResearchCompletePagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string } | null | undefined };
 
+export const FormCardFormFragmentDoc = gql`
+    fragment FormCardForm on Form {
+  id
+  handle
+  name
+  description
+  responses {
+    id
+    respondent
+  }
+}
+    `;
 export const HeartStatHeartRateFragmentDoc = gql`
     fragment HeartStatHeartRate on HeartRate {
   id
@@ -463,14 +491,10 @@ export const AdminResearchSectionDocument = gql`
     query AdminResearchSection($skip: Int = 0) {
   forms(skip: $skip) {
     id
-    handle
-    name
-    description
-    responsesCount
-    isArchived
+    ...FormCardForm
   }
 }
-    `;
+    ${FormCardFormFragmentDoc}`;
 
 /**
  * __useAdminResearchSectionQuery__
@@ -584,6 +608,63 @@ export function useCreateFormMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreateFormMutationHookResult = ReturnType<typeof useCreateFormMutation>;
 export type CreateFormMutationResult = Apollo.MutationResult<CreateFormMutation>;
 export type CreateFormMutationOptions = Apollo.BaseMutationOptions<CreateFormMutation, CreateFormMutationVariables>;
+export const FormResponseModalResponseDocument = gql`
+    query FormResponseModalResponse($responseId: ID!) {
+  formResponse(id: $responseId) {
+    id
+    respondent
+    fields {
+      text
+      singleChoice
+      multipleChoice
+    }
+    form {
+      id
+      name
+      fields {
+        question
+        input {
+          text
+          singleChoice {
+            options
+          }
+          multipleChoice {
+            options
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useFormResponseModalResponseQuery__
+ *
+ * To run a query within a React component, call `useFormResponseModalResponseQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFormResponseModalResponseQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFormResponseModalResponseQuery({
+ *   variables: {
+ *      responseId: // value for 'responseId'
+ *   },
+ * });
+ */
+export function useFormResponseModalResponseQuery(baseOptions: Apollo.QueryHookOptions<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>(FormResponseModalResponseDocument, options);
+      }
+export function useFormResponseModalResponseLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>(FormResponseModalResponseDocument, options);
+        }
+export type FormResponseModalResponseQueryHookResult = ReturnType<typeof useFormResponseModalResponseQuery>;
+export type FormResponseModalResponseLazyQueryHookResult = ReturnType<typeof useFormResponseModalResponseLazyQuery>;
+export type FormResponseModalResponseQueryResult = Apollo.QueryResult<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>;
 export const HomeHeartSectionDocument = gql`
     query HomeHeartSection {
   heartRate {

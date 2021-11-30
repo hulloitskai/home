@@ -6,7 +6,7 @@ import { Text } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
-import { InternalLink } from "components/internal-link";
+import { InternalLink } from "components/link";
 
 import { patchNodeFetchForSSR } from "components/apollo";
 import { initializeApolloClient } from "components/apollo";
@@ -19,7 +19,7 @@ import {
 } from "apollo";
 
 interface ResearchCompletePageProps {
-  form: NonNullable<ResearchCompletePagePropsQuery["form"]>;
+  readonly form: NonNullable<ResearchCompletePagePropsQuery["form"]>;
 }
 
 const ResearchCompletePage: NextPage = () => {
@@ -47,35 +47,36 @@ gql`
   }
 `;
 
-export const getServerSideProps: GetServerSideProps<ResearchCompletePageProps> =
-  async ({ query }) => {
-    const { formHandle: formHandleParam } = query;
-    const formHandle = Array.isArray(formHandleParam)
-      ? formHandleParam[0]
-      : formHandleParam;
-    if (!formHandle) {
-      return { notFound: true };
-    }
-
-    await patchNodeFetchForSSR();
-    const client = initializeApolloClient();
-    const { data } = await client.query<
-      ResearchCompletePagePropsQuery,
-      ResearchCompletePagePropsQueryVariables
-    >({
-      query: ResearchCompletePagePropsDocument,
-      variables: {
-        formHandle,
-      },
-    });
-
-    if (data.form) {
-      const { form } = data;
-      return {
-        props: { form },
-      };
-    }
+export const getServerSideProps: GetServerSideProps<
+  ResearchCompletePageProps
+> = async ({ query }) => {
+  const { formHandle: formHandleParam } = query;
+  const formHandle = Array.isArray(formHandleParam)
+    ? formHandleParam[0]
+    : formHandleParam;
+  if (!formHandle) {
     return { notFound: true };
-  };
+  }
+
+  await patchNodeFetchForSSR();
+  const client = initializeApolloClient();
+  const { data } = await client.query<
+    ResearchCompletePagePropsQuery,
+    ResearchCompletePagePropsQueryVariables
+  >({
+    query: ResearchCompletePagePropsDocument,
+    variables: {
+      formHandle,
+    },
+  });
+
+  if (data.form) {
+    const { form } = data;
+    return {
+      props: { form },
+    };
+  }
+  return { notFound: true };
+};
 
 export default ResearchCompletePage;

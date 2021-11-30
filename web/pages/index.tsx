@@ -16,14 +16,13 @@ import { chakra } from "@chakra-ui/react";
 import { Layout } from "components/layout";
 import { Section } from "components/section";
 import { ClientOnly } from "components/client-only";
-import { InternalLink } from "components/internal-link";
+import { InternalLink } from "components/link";
 
 import { HomeHeartSection } from "components/home-heart-section";
 import { HomeMusicSection } from "components/home-music-section";
 
 import { KnowledgeGraph } from "components/knowledge-graph";
 import { KnowledgeGraphEntryFragment } from "apollo";
-import { KnowledgeGraphEntryFragmentDoc } from "apollo";
 
 import {
   HomeHeartSectionDocument,
@@ -66,8 +65,6 @@ gql`
       ...KnowledgeGraphEntry
     }
   }
-
-  ${KnowledgeGraphEntryFragmentDoc}
 `;
 
 const HomePage: NextPage = () => {

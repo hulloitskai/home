@@ -6,7 +6,7 @@ import { Text } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
 
 import { Layout } from "components/layout";
-import { InternalLink } from "components/internal-link";
+import { InternalLink } from "components/link";
 
 const NotFoundPage: NextPage = () => (
   <Layout

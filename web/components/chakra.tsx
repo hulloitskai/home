@@ -128,7 +128,7 @@ const theme = extendTheme({
 });
 
 export interface ChakraProviderProps {
-  cookies?: string;
+  readonly cookies?: string;
 }
 
 export const ChakraProvider: FC<ChakraProviderProps> = ({

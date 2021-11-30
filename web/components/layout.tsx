@@ -5,17 +5,14 @@ import { HiChevronUp, HiLogout, HiTerminal } from "react-icons/hi";
 
 import { BoxProps, Box } from "@chakra-ui/react";
 import { StackProps, VStack, HStack, Center, Spacer } from "@chakra-ui/react";
+import { Text, Icon, Badge, Link, LinkBox } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
-import { Icon } from "@chakra-ui/react";
-import { Text } from "@chakra-ui/react";
-import { Badge } from "@chakra-ui/react";
-import { LinkBox, Link } from "@chakra-ui/react";
 import { Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
 import { chakra } from "@chakra-ui/react";
 
-import { InternalLink, InternalLinkOverlay } from "components/internal-link";
+import { InternalLink, InternalLinkOverlay } from "components/link";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
