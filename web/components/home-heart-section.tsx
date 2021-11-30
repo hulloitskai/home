@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import { chakra } from "@chakra-ui/react";
 
 import { Text } from "@chakra-ui/react";
 import { SectionProps, Section, SectionText } from "components/section";
@@ -45,17 +46,23 @@ export const HomeHeartSection: FC<HomeHeartSectionProps> = ({
       <HeartStat rate={error ? null : heartRate} />
       {heartRate && (
         <SectionText>
-          <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
+          <chakra.span
+            _light={{ color: "gray.800" }}
+            _dark={{ color: "gray.200" }}
+          >
             I am currently alive
-          </Text>
+          </chakra.span>
           , although little else is known about me at the moment.
         </SectionText>
       )}
       {(heartRate === null || error) && (
         <SectionText>
-          <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
+          <chakra.span
+            _light={{ color: "gray.800" }}
+            _dark={{ color: "gray.200" }}
+          >
             It is unknown whether I am alive.
-          </Text>{" "}
+          </chakra.span>{" "}
           Little else is known about me at the moment.
         </SectionText>
       )}

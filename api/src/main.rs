@@ -69,6 +69,10 @@ use url::Url;
 
 #[tokio]
 async fn main() -> Result<()> {
+    run().await
+}
+
+async fn run() -> Result<()> {
     // Load environment variables
     load_env().context("failed to load environment variables")?;
 

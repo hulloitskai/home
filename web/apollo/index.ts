@@ -218,6 +218,7 @@ export type Mutation = {
   submitForm: SubmitFormPayload;
   test: TestPayload;
   testFailure: TestPayload;
+  updateForm: UpdateFormPayload;
 };
 
 
@@ -248,6 +249,11 @@ export type MutationTestArgs = {
 
 export type MutationTestFailureArgs = {
   input: TestInput;
+};
+
+
+export type MutationUpdateFormArgs = {
+  input: UpdateFormInput;
 };
 
 export type Query = {
@@ -313,6 +319,21 @@ export type TestPayload = {
   value: Scalars['String'];
 };
 
+export type UpdateFormInput = {
+  description?: Maybe<Scalars['String']>;
+  formId: Scalars['ID'];
+  handle: Scalars['String'];
+  name: Scalars['String'];
+  respondentHelper?: Maybe<Scalars['String']>;
+  respondentLabel?: Maybe<Scalars['String']>;
+};
+
+export type UpdateFormPayload = {
+  __typename?: 'UpdateFormPayload';
+  form: Form;
+  ok: Scalars['Boolean'];
+};
+
 export type User = {
   __typename?: 'User';
   email: Scalars['String'];
@@ -369,6 +390,20 @@ export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: { __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> } | null | undefined } } | null | undefined };
+
+export type UpdateFormModalQueryVariables = Exact<{
+  formId: Scalars['ID'];
+}>;
+
+
+export type UpdateFormModalQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
+
+export type UpdateFormMutationVariables = Exact<{
+  input: UpdateFormInput;
+}>;
+
+
+export type UpdateFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'UpdateFormPayload', form: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } };
 
 export type HomePageQueryVariables = Exact<{
   dailyNoteId: Scalars['String'];
@@ -751,6 +786,110 @@ export function useMusicLyricsLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type MusicLyricsQueryHookResult = ReturnType<typeof useMusicLyricsQuery>;
 export type MusicLyricsLazyQueryHookResult = ReturnType<typeof useMusicLyricsLazyQuery>;
 export type MusicLyricsQueryResult = Apollo.QueryResult<MusicLyricsQuery, MusicLyricsQueryVariables>;
+export const UpdateFormModalDocument = gql`
+    query UpdateFormModal($formId: ID!) {
+  form(id: $formId) {
+    id
+    handle
+    name
+    description
+    fields {
+      question
+      input {
+        text
+        singleChoice {
+          options
+        }
+        multipleChoice {
+          options
+        }
+      }
+    }
+    respondentLabel
+    respondentHelper
+  }
+}
+    `;
+
+/**
+ * __useUpdateFormModalQuery__
+ *
+ * To run a query within a React component, call `useUpdateFormModalQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUpdateFormModalQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUpdateFormModalQuery({
+ *   variables: {
+ *      formId: // value for 'formId'
+ *   },
+ * });
+ */
+export function useUpdateFormModalQuery(baseOptions: Apollo.QueryHookOptions<UpdateFormModalQuery, UpdateFormModalQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UpdateFormModalQuery, UpdateFormModalQueryVariables>(UpdateFormModalDocument, options);
+      }
+export function useUpdateFormModalLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UpdateFormModalQuery, UpdateFormModalQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UpdateFormModalQuery, UpdateFormModalQueryVariables>(UpdateFormModalDocument, options);
+        }
+export type UpdateFormModalQueryHookResult = ReturnType<typeof useUpdateFormModalQuery>;
+export type UpdateFormModalLazyQueryHookResult = ReturnType<typeof useUpdateFormModalLazyQuery>;
+export type UpdateFormModalQueryResult = Apollo.QueryResult<UpdateFormModalQuery, UpdateFormModalQueryVariables>;
+export const UpdateFormDocument = gql`
+    mutation UpdateForm($input: UpdateFormInput!) {
+  payload: updateForm(input: $input) {
+    form {
+      id
+      handle
+      name
+      description
+      fields {
+        question
+        input {
+          text
+          singleChoice {
+            options
+          }
+          multipleChoice {
+            options
+          }
+        }
+      }
+      respondentLabel
+      respondentHelper
+    }
+  }
+}
+    `;
+export type UpdateFormMutationFn = Apollo.MutationFunction<UpdateFormMutation, UpdateFormMutationVariables>;
+
+/**
+ * __useUpdateFormMutation__
+ *
+ * To run a mutation, you first call `useUpdateFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateFormMutation, { data, loading, error }] = useUpdateFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateFormMutation(baseOptions?: Apollo.MutationHookOptions<UpdateFormMutation, UpdateFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateFormMutation, UpdateFormMutationVariables>(UpdateFormDocument, options);
+      }
+export type UpdateFormMutationHookResult = ReturnType<typeof useUpdateFormMutation>;
+export type UpdateFormMutationResult = Apollo.MutationResult<UpdateFormMutation>;
+export type UpdateFormMutationOptions = Apollo.BaseMutationOptions<UpdateFormMutation, UpdateFormMutationVariables>;
 export const HomePageDocument = gql`
     query HomePage($dailyNoteId: String!) {
   dailyEntry: knowledgeEntry(id: $dailyNoteId) {

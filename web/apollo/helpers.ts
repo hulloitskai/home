@@ -125,14 +125,15 @@ export type MusicTrackFieldPolicy = {
 	spotifyId?: FieldPolicy<any> | FieldReadFunction<any>,
 	spotifyUrl?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'submitForm' | 'test' | 'testFailure' | MutationKeySpecifier)[];
+export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'submitForm' | 'test' | 'testFailure' | 'updateForm' | MutationKeySpecifier)[];
 export type MutationFieldPolicy = {
 	archiveForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	createForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	deleteForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	submitForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	test?: FieldPolicy<any> | FieldReadFunction<any>,
-	testFailure?: FieldPolicy<any> | FieldReadFunction<any>
+	testFailure?: FieldPolicy<any> | FieldReadFunction<any>,
+	updateForm?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type QueryKeySpecifier = ('buildInfo' | 'form' | 'formByHandle' | 'forms' | 'heartRate' | 'knowledgeEntries' | 'knowledgeEntry' | 'musicInfo' | 'test' | 'viewer' | QueryKeySpecifier)[];
 export type QueryFieldPolicy = {
@@ -160,6 +161,11 @@ export type TestPayloadKeySpecifier = ('ok' | 'value' | TestPayloadKeySpecifier)
 export type TestPayloadFieldPolicy = {
 	ok?: FieldPolicy<any> | FieldReadFunction<any>,
 	value?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type UpdateFormPayloadKeySpecifier = ('form' | 'ok' | UpdateFormPayloadKeySpecifier)[];
+export type UpdateFormPayloadFieldPolicy = {
+	form?: FieldPolicy<any> | FieldReadFunction<any>,
+	ok?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type UserKeySpecifier = ('email' | 'id' | 'isAdmin' | UserKeySpecifier)[];
 export type UserFieldPolicy = {
@@ -267,6 +273,10 @@ export type StrictTypedTypePolicies = {
 	TestPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | TestPayloadKeySpecifier | (() => undefined | TestPayloadKeySpecifier),
 		fields?: TestPayloadFieldPolicy,
+	},
+	UpdateFormPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | UpdateFormPayloadKeySpecifier | (() => undefined | UpdateFormPayloadKeySpecifier),
+		fields?: UpdateFormPayloadFieldPolicy,
 	},
 	User?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | UserKeySpecifier | (() => undefined | UserKeySpecifier),

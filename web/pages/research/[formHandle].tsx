@@ -115,14 +115,18 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
           <VStack align="stretch" spacing={4}>
             <VStack align="stretch" spacing={1}>
               <Heading>{name}</Heading>
-              {!!description && <Text color="gray.500">{description}</Text>}
+              {!!description && (
+                <Text whiteSpace="pre-line" color="gray.500">
+                  {description}
+                </Text>
+              )}
             </VStack>
             <HStack
               spacing={2}
               rounded="md"
               p={3}
-              bg="gray.100"
               color="gray.600"
+              _light={{ bg: "gray.100" }}
               _dark={{ bg: "black" }}
             >
               <Icon as={HiEyeOff} fontSize="lg" />
@@ -192,19 +196,24 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
           <VStack
             align="stretch"
             spacing={4}
-            borderRadius="md"
-            borderColor="blue.500"
-            borderWidth={1}
-            bg="blue.50"
             p={4}
+            borderRadius="md"
+            borderWidth={1}
+            _light={{
+              borderColor: "blue.500",
+              bg: "blue.50",
+            }}
             _dark={{
-              bg: transparentBlueDark,
               borderColor: transparentBlueLight,
+              bg: transparentBlueDark,
             }}
           >
             <FormControl isInvalid={!!formErrors.respondent}>
-              <FormLabel color="gray.800" _dark={{ color: "gray.300" }}>
-                {respondentLabel || "Name"}
+              <FormLabel
+                _light={{ color: "gray.800" }}
+                _dark={{ color: "gray.300" }}
+              >
+                {respondentLabel || "Your Name"}
               </FormLabel>
               <Input
                 _light={{ bg: "white" }}
@@ -225,7 +234,9 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
                 </FormErrorMessage>
               )}
               {!!respondentHelper && (
-                <FormHelperText>{respondentHelper}</FormHelperText>
+                <FormHelperText _light={{ color: "gray.500" }}>
+                  {respondentHelper}
+                </FormHelperText>
               )}
             </FormControl>
             <Button
@@ -271,33 +282,34 @@ gql`
   }
 `;
 
-export const getServerSideProps: GetServerSideProps<ResearchPageProps> =
-  async ({ query }) => {
-    const { formHandle: formHandleParam } = query;
-    const formHandle = Array.isArray(formHandleParam)
-      ? formHandleParam[0]
-      : formHandleParam;
-    if (!formHandle) {
-      return { notFound: true };
-    }
-
-    await patchNodeFetchForSSR();
-    const client = initializeApolloClient();
-    const { data } = await client.query<
-      ResearchPagePropsQuery,
-      ResearchPagePropsQueryVariables
-    >({
-      query: ResearchPagePropsDocument,
-      variables: {
-        formHandle,
-      },
-    });
-
-    if (data.form) {
-      const { form } = data;
-      return {
-        props: { form },
-      };
-    }
+export const getServerSideProps: GetServerSideProps<
+  ResearchPageProps
+> = async ({ query }) => {
+  const { formHandle: formHandleParam } = query;
+  const formHandle = Array.isArray(formHandleParam)
+    ? formHandleParam[0]
+    : formHandleParam;
+  if (!formHandle) {
     return { notFound: true };
-  };
+  }
+
+  await patchNodeFetchForSSR();
+  const client = initializeApolloClient();
+  const { data } = await client.query<
+    ResearchPagePropsQuery,
+    ResearchPagePropsQueryVariables
+  >({
+    query: ResearchPagePropsDocument,
+    variables: {
+      formHandle,
+    },
+  });
+
+  if (data.form) {
+    const { form } = data;
+    return {
+      props: { form },
+    };
+  }
+  return { notFound: true };
+};

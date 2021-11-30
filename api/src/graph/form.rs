@@ -310,6 +310,16 @@ impl FormMutation {
             .map_err(format_error)
     }
 
+    async fn update_form(
+        &self,
+        ctx: &Context<'_>,
+        input: UpdateFormInput,
+    ) -> FieldResult<UpdateFormPayload> {
+        self.resolve_update_form(ctx, input)
+            .await
+            .map_err(format_error)
+    }
+
     async fn submit_form(
         &self,
         ctx: &Context<'_>,
@@ -386,7 +396,58 @@ impl FormMutation {
         form.save(&ctx).await.context("failed to save form")?;
 
         let form = FormObject::from(form);
-        let payload = CreateFormPayload { form, ok: true };
+        let payload = CreateFormPayload { ok: true, form };
+        Ok(payload)
+    }
+
+    async fn resolve_update_form(
+        &self,
+        ctx: &Context<'_>,
+        input: UpdateFormInput,
+    ) -> Result<UpdateFormPayload> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.to_owned());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+
+        let UpdateFormInput {
+            form_id,
+            handle,
+            name,
+            description,
+            respondent_label,
+            respondent_helper,
+        } = input;
+        let form_id = EntityId::<_>::from(form_id);
+        let handle =
+            Handle::from_str(&handle).context("failed to parse handle")?;
+
+        let mut form = {
+            let Record { meta, data } = Form::get(form_id)
+                .load(&ctx)
+                .await
+                .context("failed to load form")?;
+            Record {
+                meta,
+                data: Form {
+                    handle,
+                    name,
+                    description,
+                    respondent_label,
+                    respondent_helper,
+                    ..data
+                },
+            }
+        };
+        form.save(&ctx).await.context("failed to save form")?;
+
+        let form = FormObject::from(form);
+        let payload = UpdateFormPayload { ok: true, form };
         Ok(payload)
     }
 
@@ -569,6 +630,22 @@ pub(super) struct FormFieldMultipleChoiceInputConfigInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct CreateFormPayload {
+    pub ok: bool,
+    pub form: FormObject,
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct UpdateFormInput {
+    pub form_id: Id<Form>,
+    pub handle: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub respondent_label: Option<String>,
+    pub respondent_helper: Option<String>,
+}
+
+#[derive(Debug, Clone, SimpleObject)]
+pub(super) struct UpdateFormPayload {
     pub ok: bool,
     pub form: FormObject,
 }

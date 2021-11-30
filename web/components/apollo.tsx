@@ -34,6 +34,9 @@ const typePolicies: TypePolicies = {
   Lyrics: { keyFields: false },
   LyricLine: { keyFields: false },
   FormField: { keyFields: false },
+  FormFieldInputConfig: { keyFields: false },
+  FormFieldSingleChoiceInputConfig: { keyFields: false },
+  FormFieldMultipleChoiceInputConfig: { keyFields: false },
 };
 
 const createTerminatingLink = (): ApolloLink => {

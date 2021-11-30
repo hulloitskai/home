@@ -21,7 +21,10 @@ interface HandleFieldValues {
 
 export interface HandleFieldProps<TFieldValues extends HandleFieldValues>
   extends BoxProps,
-    Pick<InputProps, "defaultValue" | "placeholder"> {
+    Pick<
+      InputProps,
+      "defaultValue" | "placeholder" | "isReadOnly" | "isDisabled"
+    > {
   readonly formMethods: UseFormReturn<TFieldValues>;
 }
 
@@ -39,7 +42,7 @@ export const HandleField = <TFieldValues extends HandleFieldValues>({
     register,
     control,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = formMethods as unknown as UseFormReturn<HandleFieldValues>;
 
   const name = useWatch({
@@ -47,7 +50,7 @@ export const HandleField = <TFieldValues extends HandleFieldValues>({
     name: "name",
   });
   useEffect(() => {
-    if (name !== undefined) {
+    if (name !== undefined && isDirty) {
       const handle = slugify(name, { lower: true, strict: true });
       const handleTrimmed = handle.substr(0, 32);
       setValue("handle", handleTrimmed, {
@@ -56,7 +59,7 @@ export const HandleField = <TFieldValues extends HandleFieldValues>({
         shouldValidate: true,
       });
     }
-  }, [name]);
+  }, [name, isDirty]);
 
   return (
     <FormControl isRequired isInvalid={!!errors.handle} {...otherProps}>

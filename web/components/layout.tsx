@@ -95,9 +95,8 @@ export const Layout: FC<LayoutProps> = ({
           >
             <Badge
               fontSize="sm"
-              bg="gray.500"
-              color="gray.50"
-              _dark={{ bg: "gray.700", color: "gray.300" }}
+              _light={{ color: "gray.50", bg: "gray.500" }}
+              _dark={{ color: "gray.300", bg: "gray.700" }}
             >
               {badge}
             </Badge>
@@ -176,7 +175,7 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
   );
 
   return (
-    <HStack p={4} color="gray.600" _dark={{ color: "gray.400" }}>
+    <HStack p={4} _light={{ color: "gray.600" }} _dark={{ color: "gray.400" }}>
       <Tooltip
         label={
           <>

@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useMemo } from "react";
-import { useForm, DefaultValues } from "react-hook-form";
+import React, { FC, useEffect } from "react";
+import { useForm } from "react-hook-form";
 
-import { ButtonProps, Button } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 
 import {
   ModalProps,
@@ -14,11 +14,8 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
-import { ModalTrigger } from "components/modal-trigger";
-
 import { FormFields } from "components/form-fields";
-import { FormFieldValues } from "components/form-fields";
-import { parseFormFieldValues } from "components/form-fields";
+import { parseFormFieldValues, FormFieldValues } from "components/form-fields";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
@@ -61,26 +58,18 @@ export const CreateFormModal: FC<CreateFormModalProps> = ({
   isOpen,
   ...otherProps
 }) => {
-  const handleCreateFormError = useHandleQueryError("Failed to create form");
-  const [runCreateFormMutation, { loading: isCreateFormLoading }] =
-    useCreateFormMutation({
-      onError: handleCreateFormError,
-      onCompleted: ({ payload }) => {
-        onClose();
-        if (onCreate) {
-          onCreate(payload);
-        }
-      },
-    });
-
-  const defaultValues: DefaultValues<FormFieldValues> = useMemo(
-    () => ({ fields: [] }),
-    [],
-  );
-  const formMethods = useForm<FormFieldValues>({
-    mode: "all",
-    defaultValues,
+  const handleMutationError = useHandleQueryError("Failed to create form");
+  const [runMutation, { loading: isMutationLoading }] = useCreateFormMutation({
+    onError: handleMutationError,
+    onCompleted: ({ payload }) => {
+      onClose();
+      if (onCreate) {
+        onCreate(payload);
+      }
+    },
   });
+
+  const formMethods = useForm<FormFieldValues>({ mode: "all" });
   const {
     handleSubmit,
     reset,
@@ -93,7 +82,7 @@ export const CreateFormModal: FC<CreateFormModalProps> = ({
   }, [isOpen]);
 
   const onSubmit = handleSubmit(async values => {
-    await runCreateFormMutation({
+    await runMutation({
       variables: {
         input: parseFormFieldValues(values),
       },
@@ -107,39 +96,19 @@ export const CreateFormModal: FC<CreateFormModalProps> = ({
         <ModalHeader>Create Form</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <FormFields formMethods={formMethods} />
+          <FormFields formMethods={formMethods} mode="create" />
         </ModalBody>
         <ModalFooter>
           <Button
             type="submit"
             colorScheme="black"
             isDisabled={!isValid}
-            isLoading={isCreateFormLoading}
+            isLoading={isMutationLoading}
           >
             Create
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
-
-export interface CreateFormButtonProps
-  extends ButtonProps,
-    Pick<CreateFormModalProps, "onCreate"> {}
-
-export const CreateFormButton: FC<CreateFormButtonProps> = ({
-  onCreate,
-  ...otherProps
-}) => {
-  return (
-    <ModalTrigger
-      renderTrigger={({ open }) => (
-        <Button colorScheme="black" onClick={open} {...otherProps}>
-          Create Form
-        </Button>
-      )}
-      renderModal={props => <CreateFormModal onCreate={onCreate} {...props} />}
-    />
   );
 };

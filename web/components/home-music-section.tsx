@@ -126,7 +126,7 @@ export const HomeMusicSection: FC<HomeMusicSectionProps> = ({
           I&apos;m currently listening to{" "}
           <ExternalLink
             href={track.spotifyUrl}
-            color="gray.800"
+            _light={{ color: "gray.800" }}
             _dark={{ color: "gray.200" }}
           >
             {track.name}
@@ -137,7 +137,7 @@ export const HomeMusicSection: FC<HomeMusicSectionProps> = ({
               by{" "}
               <ExternalLink
                 href={track.spotifyUrl}
-                color="gray.800"
+                _light={{ color: "gray.800" }}
                 _dark={{ color: "gray.200" }}
               >
                 {artist.name}

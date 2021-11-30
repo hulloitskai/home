@@ -21,12 +21,9 @@ import {
 } from "@chakra-ui/react";
 
 import { HandleField } from "components/handle-field";
+import { TextareaAutosize } from "components/textarea";
 
-import {
-  CreateFormInput,
-  FormFieldInput,
-  FormFieldInputConfigInput,
-} from "apollo";
+import { FormFieldInput, FormFieldInputConfigInput } from "apollo";
 
 export type FormFieldValues = {
   handle: string;
@@ -36,12 +33,12 @@ export type FormFieldValues = {
   fields: FormFieldValue[];
 };
 
-type FormFieldValue = {
+export type FormFieldValue = {
   question: string;
   input: FormFieldInputConfigValue;
 };
 
-type FormFieldInputConfigValue = {
+export type FormFieldInputConfigValue = {
   type: "TEXT" | "SINGLE_CHOICE" | "MULTIPLE_CHOICE";
   singleChoice: {
     options: string;
@@ -51,9 +48,7 @@ type FormFieldInputConfigValue = {
   };
 };
 
-export const parseFormFieldValues = (
-  values: FormFieldValues,
-): CreateFormInput => {
+export const parseFormFieldValues = (values: FormFieldValues) => {
   const { handle, name, description, fields, respondent } = values;
   return {
     handle,
@@ -106,10 +101,14 @@ const parseFormFieldInputConfigValue = (
 
 export interface FormFieldsProps extends BoxProps {
   readonly formMethods: UseFormReturn<FormFieldValues>;
+  readonly mode: "create" | "update";
+  readonly isDisabled?: boolean;
 }
 
 export const FormFields: FC<FormFieldsProps> = ({
   formMethods,
+  mode,
+  isDisabled,
   ...otherProps
 }) => {
   const {
@@ -118,7 +117,7 @@ export const FormFields: FC<FormFieldsProps> = ({
   } = formMethods;
   return (
     <VStack {...otherProps}>
-      <FormControl isRequired isInvalid={!!errors.name}>
+      <FormControl isRequired isInvalid={!!errors.name} isDisabled={isDisabled}>
         <FormLabel>Name</FormLabel>
         <Input
           type="text"
@@ -129,28 +128,35 @@ export const FormFields: FC<FormFieldsProps> = ({
           <FormErrorMessage>{errors.name.message}</FormErrorMessage>
         )}
       </FormControl>
-      <HandleField formMethods={formMethods} placeholder="my-form" />
-      <FormControl isInvalid={!!errors.description}>
+      <HandleField
+        formMethods={formMethods}
+        placeholder="my-form"
+        isDisabled={isDisabled}
+      />
+      <FormControl isInvalid={!!errors.description} isDisabled={isDisabled}>
         <FormLabel>Description</FormLabel>
-        <Input
-          type="text"
+        <TextareaAutosize
           placeholder="This is a cool-ass form."
+          minRows={2}
+          maxRows={4}
           {...register("description")}
         />
         {!!errors.description?.message && (
           <FormErrorMessage>{errors.description.message}</FormErrorMessage>
         )}
       </FormControl>
-
-      <FormFieldsFields formMethods={formMethods} />
+      <FormFieldsFields {...{ formMethods, mode, isDisabled }} />
       <FormControl isInvalid={!!errors.respondent}>
         <FormLabel>Respondent</FormLabel>
         <VStack align="stretch" p={3} borderWidth={1} borderRadius="md">
-          <FormControl isInvalid={!!get(errors, `respondent.label`)}>
+          <FormControl
+            isInvalid={!!get(errors, `respondent.label`)}
+            isDisabled={isDisabled}
+          >
             <FormLabel fontSize="sm">Label</FormLabel>
             <Input
               type="text"
-              placeholder="Name"
+              placeholder="Your Name"
               size="sm"
               {...register(`respondent.label`)}
             />
@@ -160,7 +166,10 @@ export const FormFields: FC<FormFieldsProps> = ({
               </FormErrorMessage>
             )}
           </FormControl>
-          <FormControl isInvalid={!!get(errors, `respondent.helper`)}>
+          <FormControl
+            isInvalid={!!get(errors, `respondent.helper`)}
+            isDisabled={isDisabled}
+          >
             <FormLabel fontSize="sm">Helper Text</FormLabel>
             <Input
               type="text"
@@ -182,9 +191,15 @@ export const FormFields: FC<FormFieldsProps> = ({
 
 interface FormFieldsFieldsProps extends BoxProps {
   readonly formMethods: UseFormReturn<FormFieldValues>;
+  readonly mode: "create" | "update";
+  readonly isDisabled?: boolean;
 }
 
-const FormFieldsFields: FC<FormFieldsFieldsProps> = ({ formMethods }) => {
+const FormFieldsFields: FC<FormFieldsFieldsProps> = ({
+  formMethods,
+  mode,
+  isDisabled,
+}) => {
   const {
     control,
     formState: { errors },
@@ -207,15 +222,14 @@ const FormFieldsFields: FC<FormFieldsFieldsProps> = ({ formMethods }) => {
         {fields.map(({ id, ...value }, index) => (
           <FormFieldsFieldCard
             key={id}
-            formMethods={formMethods}
-            value={value}
-            index={index}
+            {...{ formMethods, mode, value, index, isDisabled }}
           />
         ))}
         <Button
           size="sm"
-          isFullWidth
           leftIcon={<Icon as={HiPlusCircle} fontSize="md" />}
+          isFullWidth
+          isDisabled={isDisabled || mode === "update"}
           onClick={() => {
             append({});
           }}
@@ -229,14 +243,18 @@ const FormFieldsFields: FC<FormFieldsFieldsProps> = ({ formMethods }) => {
 
 interface FormFieldsFieldCardProps extends BoxProps {
   readonly formMethods: UseFormReturn<FormFieldValues>;
+  readonly mode: "create" | "update";
   readonly value: FormFieldValue;
   readonly index: number;
+  readonly isDisabled?: boolean;
 }
 
 const FormFieldsFieldCard: FC<FormFieldsFieldCardProps> = ({
   formMethods,
+  mode,
   value,
   index,
+  isDisabled,
 }) => {
   const {
     register,
@@ -275,6 +293,7 @@ const FormFieldsFieldCard: FC<FormFieldsFieldCardProps> = ({
       <FormControl
         isRequired
         isInvalid={!!get(errors, `fields.${index}.question`)}
+        isDisabled={isDisabled || mode === "update"}
       >
         <FormLabel fontSize="sm">Question</FormLabel>
         <Input
@@ -293,6 +312,7 @@ const FormFieldsFieldCard: FC<FormFieldsFieldCardProps> = ({
       <FormControl
         isRequired
         isInvalid={!!get(errors, `fields.${index}.input.type`)}
+        isDisabled={isDisabled || mode === "update"}
       >
         <FormLabel fontSize="sm">Input</FormLabel>
         <Select
@@ -317,6 +337,7 @@ const FormFieldsFieldCard: FC<FormFieldsFieldCardProps> = ({
           isInvalid={
             !!get(errors, `fields.${index}.input.singleChoice.options`)
           }
+          isDisabled={isDisabled || mode === "update"}
         >
           <FormLabel fontSize="sm">Options</FormLabel>
           <Input
@@ -343,10 +364,17 @@ const FormFieldsFieldCard: FC<FormFieldsFieldCardProps> = ({
             Enter a semicolon-delimited set of options.
           </FormHelperText>
           {!isEmpty(inputSingleChoiceOptions) && (
-            <Box p={2} pl={3} mt={2} bg="gray.100" rounded="md">
+            <Box
+              p={2}
+              pl={3}
+              mt={2}
+              rounded="md"
+              _light={{ color: "gray.600", bg: "gray.100" }}
+              _dark={{ color: "gray.400", bg: "gray.800" }}
+            >
               <UnorderedList>
                 {inputSingleChoiceOptions.map(option => (
-                  <ListItem key={option} color="gray.600" fontSize="sm">
+                  <ListItem key={option} fontSize="sm">
                     {option}
                   </ListItem>
                 ))}
@@ -361,6 +389,7 @@ const FormFieldsFieldCard: FC<FormFieldsFieldCardProps> = ({
           isInvalid={
             !!get(errors, `fields.${index}.input.multipleChoice.options`)
           }
+          isDisabled={isDisabled || mode === "update"}
         >
           <FormLabel fontSize="sm">Options</FormLabel>
           <Input

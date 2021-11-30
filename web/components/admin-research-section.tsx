@@ -15,8 +15,8 @@ import {
 
 import { BoxProps, VStack, HStack, Spacer } from "@chakra-ui/react";
 import { Heading, Text, Code } from "@chakra-ui/react";
+import { Button, IconButton } from "@chakra-ui/react";
 import { Icon } from "@chakra-ui/react";
-import { IconButton } from "@chakra-ui/react";
 import { Badge } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
@@ -31,15 +31,18 @@ import {
 
 import { Section } from "components/section";
 import { SkeletonBlock } from "components/skeleton";
+import { Disclosure } from "components/disclosure";
 import { NoContent } from "components/no-content";
 import { ExternalLink } from "components/external-link";
+import { ConfirtDeleteAlert } from "components/confirm-delete-alert";
 import { useToast } from "components/toast";
 
-import { CreateFormButton } from "components/create-form-modal";
+import { CreateFormModal } from "components/create-form-modal";
+import { UpdateFormModal } from "components/update-form-modal";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useAdminResearchSectionQuery } from "apollo";
+import { UpdateFormMutation, useAdminResearchSectionQuery } from "apollo";
 import { useDeleteFormMutation, DeleteFormMutation } from "apollo";
 
 gql`
@@ -121,23 +124,7 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
                         isRound
                       />
                       <MenuList>
-                        <MenuItem
-                          icon={
-                            <Icon
-                              as={HiPencilAlt}
-                              fontSize="md"
-                              color="blue.500"
-                            />
-                          }
-                          onClick={() => {
-                            toast({
-                              status: "info",
-                              description: "Not implemented!",
-                            });
-                          }}
-                        >
-                          Edit
-                        </MenuItem>
+                        <EditFormMenuItem formId={formId} />
                         <MenuItem
                           icon={
                             <Icon
@@ -184,7 +171,11 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
                     value={responsesCount}
                   />
                 </HStack>
-                <Text color="gray.500" noOfLines={2}>
+                <Text
+                  noOfLines={2}
+                  _light={{ color: "gray.500" }}
+                  _dark={{ color: "gray.400" }}
+                >
                   {description}
                 </Text>
               </VStack>
@@ -193,12 +184,26 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
           {isEmpty(forms) && (
             <NoContent>You don&apos;t have any forms.</NoContent>
           )}
-          <CreateFormButton
-            leftIcon={<Icon as={HiPlusCircle} fontSize="lg" />}
-            onCreate={() => {
-              refetch();
-            }}
-          />
+          <Disclosure
+            renderTrigger={({ open }) => (
+              <Button
+                leftIcon={<Icon as={HiPlusCircle} fontSize="lg" />}
+                colorScheme="black"
+                onClick={open}
+              >
+                Create Form
+              </Button>
+            )}
+          >
+            {props => (
+              <CreateFormModal
+                onCreate={() => {
+                  refetch();
+                }}
+                {...props}
+              />
+            )}
+          </Disclosure>
         </VStack>
       ) : (
         <SkeletonBlock />
@@ -234,6 +239,35 @@ const FormStatBadge: FC<FormStatBadgeProps> = ({ name, icon, value }) => {
   );
 };
 
+interface EditFormMenuItemProps extends MenuItemProps {
+  formId: string;
+  onUpdate?: (payload: UpdateFormMutation["payload"]) => void;
+}
+
+const EditFormMenuItem: FC<EditFormMenuItemProps> = ({
+  formId,
+  onUpdate,
+  ...otherProps
+}) => {
+  return (
+    <Disclosure
+      renderTrigger={({ open }) => (
+        <MenuItem
+          icon={<Icon as={HiPencilAlt} fontSize="md" color="blue.500" />}
+          onClick={open}
+          {...otherProps}
+        >
+          Edit
+        </MenuItem>
+      )}
+    >
+      {props => (
+        <UpdateFormModal formId={formId} onUpdate={onUpdate} {...props} />
+      )}
+    </Disclosure>
+  );
+};
+
 interface DeleteFormMenuItemProps extends MenuItemProps {
   formId: string;
   onDelete?: (payload: DeleteFormMutation["payload"]) => void;
@@ -254,21 +288,33 @@ const DeleteFormMenuItem: FC<DeleteFormMenuItemProps> = ({
     },
   });
   return (
-    <MenuItem
-      icon={<Icon as={HiTrash} fontSize="md" color="red.500" />}
-      isDisabled={isLoading}
-      onClick={() => {
-        runMutation({
-          variables: {
-            input: {
-              formId,
-            },
-          },
-        });
-      }}
-      {...otherProps}
+    <Disclosure
+      renderTrigger={({ open }) => (
+        <MenuItem
+          icon={<Icon as={HiTrash} fontSize="md" color="red.500" />}
+          isDisabled={isLoading}
+          onClick={open}
+          {...otherProps}
+        >
+          Delete
+        </MenuItem>
+      )}
     >
-      Delete
-    </MenuItem>
+      {props => (
+        <ConfirtDeleteAlert
+          name="Form"
+          onDelete={() => {
+            runMutation({
+              variables: {
+                input: {
+                  formId,
+                },
+              },
+            });
+          }}
+          {...props}
+        />
+      )}
+    </Disclosure>
   );
 };

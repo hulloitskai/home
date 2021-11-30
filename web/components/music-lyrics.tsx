@@ -90,12 +90,11 @@ export const MusicLyrics: FC<MusicLyricsProps> = ({
     <VStack {...otherProps}>
       {!!line && (
         <Box
-          bg="black"
-          color="white"
-          rounded="sm"
           px={2}
           py={1.5}
-          _dark={{ bg: "white", color: "black" }}
+          rounded="sm"
+          _light={{ color: "white", bg: "black" }}
+          _dark={{ color: "black", bg: "white" }}
           {...otherProps}
         >
           <Text
@@ -111,8 +110,8 @@ export const MusicLyrics: FC<MusicLyricsProps> = ({
       {progressPercent !== null && (
         <HStack
           w={40}
-          color="gray.400"
           fontSize="xs"
+          _light={{ color: "gray.400" }}
           _dark={{ color: "gray.600" }}
         >
           <Text>({progressDescription}</Text>

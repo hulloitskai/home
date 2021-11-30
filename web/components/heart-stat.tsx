@@ -65,7 +65,11 @@ export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {
           <Text color="gray.500" fontSize="sm" fontWeight="semibold">
             My heart beats like this.
           </Text>
-          <Text color="gray.400" fontSize="xs" _dark={{ color: "gray.600" }}>
+          <Text
+            fontSize="xs"
+            _light={{ color: "gray.400" }}
+            _dark={{ color: "gray.600" }}
+          >
             ({measurement} bpm, measured {lastMeasured} ago)
           </Text>
         </VStack>

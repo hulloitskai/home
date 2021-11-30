@@ -110,9 +110,12 @@ const HomePage: NextPage = () => {
           </Text>
           <Text color="gray.500" fontSize="2xl" fontWeight="bold">
             It&apos;s me,{" "}
-            <Text as="span" color="gray.800" _dark={{ color: "gray.300" }}>
+            <chakra.span
+              _light={{ color: "gray.800" }}
+              _dark={{ color: "gray.300" }}
+            >
               Kai
-            </Text>
+            </chakra.span>
             , your favorite{" "}
             <Tooltip label="Non-Playable Character" {...tooltipStyles}>
               <chakra.span>NPC</chakra.span>
@@ -129,9 +132,12 @@ const HomePage: NextPage = () => {
             </Text>
           </Center>
           <Text color="gray.500" fontSize="lg" fontWeight="semibold">
-            <Text as="span" color="gray.800" _dark={{ color: "gray.200" }}>
+            <chakra.span
+              _light={{ color: "gray.800" }}
+              _dark={{ color: "gray.200" }}
+            >
               This is a work-in-progress.
-            </Text>
+            </chakra.span>
             <br />
             Come back again later!
           </Text>

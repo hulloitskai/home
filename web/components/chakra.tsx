@@ -102,10 +102,10 @@ const theme = extendTheme({
       },
     },
     FormLabel: {
-      baseStyle: {
-        color: "gray.500",
+      baseStyle: (props: StyleFunctionProps) => ({
         mb: 1,
-      },
+        color: mode("gray.500", "gray.400")(props),
+      }),
     },
     FormError: {
       baseStyle: {
