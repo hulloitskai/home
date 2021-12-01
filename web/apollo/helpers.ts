@@ -126,11 +126,12 @@ export type MusicTrackFieldPolicy = {
 	spotifyId?: FieldPolicy<any> | FieldReadFunction<any>,
 	spotifyUrl?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'submitForm' | 'test' | 'testFailure' | 'updateForm' | MutationKeySpecifier)[];
+export type MutationKeySpecifier = ('archiveForm' | 'createForm' | 'deleteForm' | 'restoreForm' | 'submitForm' | 'test' | 'testFailure' | 'updateForm' | MutationKeySpecifier)[];
 export type MutationFieldPolicy = {
 	archiveForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	createForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	deleteForm?: FieldPolicy<any> | FieldReadFunction<any>,
+	restoreForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	submitForm?: FieldPolicy<any> | FieldReadFunction<any>,
 	test?: FieldPolicy<any> | FieldReadFunction<any>,
 	testFailure?: FieldPolicy<any> | FieldReadFunction<any>,
@@ -149,6 +150,11 @@ export type QueryFieldPolicy = {
 	musicInfo?: FieldPolicy<any> | FieldReadFunction<any>,
 	test?: FieldPolicy<any> | FieldReadFunction<any>,
 	viewer?: FieldPolicy<any> | FieldReadFunction<any>
+};
+export type RestoreFormPayloadKeySpecifier = ('form' | 'ok' | RestoreFormPayloadKeySpecifier)[];
+export type RestoreFormPayloadFieldPolicy = {
+	form?: FieldPolicy<any> | FieldReadFunction<any>,
+	ok?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type SubmitFormPayloadKeySpecifier = ('ok' | 'response' | SubmitFormPayloadKeySpecifier)[];
 export type SubmitFormPayloadFieldPolicy = {
@@ -263,6 +269,10 @@ export type StrictTypedTypePolicies = {
 	Query?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | QueryKeySpecifier | (() => undefined | QueryKeySpecifier),
 		fields?: QueryFieldPolicy,
+	},
+	RestoreFormPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
+		keyFields?: false | RestoreFormPayloadKeySpecifier | (() => undefined | RestoreFormPayloadKeySpecifier),
+		fields?: RestoreFormPayloadFieldPolicy,
 	},
 	SubmitFormPayload?: Omit<TypePolicy, "fields" | "keyFields"> & {
 		keyFields?: false | SubmitFormPayloadKeySpecifier | (() => undefined | SubmitFormPayloadKeySpecifier),

@@ -22,17 +22,9 @@ import { useAdminResearchSectionQuery } from "apollo";
 
 gql`
   query AdminResearchSection($skip: Int = 0) {
-    forms(skip: $skip) {
+    forms(skip: $skip, includeArchived: true) {
       id
       ...FormCardForm
-    }
-  }
-`;
-
-gql`
-  mutation DeleteForm($input: DeleteFormInput!) {
-    payload: deleteForm(input: $input) {
-      ok
     }
   }
 `;

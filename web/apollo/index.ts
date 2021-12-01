@@ -216,6 +216,7 @@ export type Mutation = {
   archiveForm: ArchiveFormPayload;
   createForm: CreateFormPayload;
   deleteForm: DeleteFormPayload;
+  restoreForm: RestoreFormPayload;
   submitForm: SubmitFormPayload;
   test: TestPayload;
   testFailure: TestPayload;
@@ -235,6 +236,11 @@ export type MutationCreateFormArgs = {
 
 export type MutationDeleteFormArgs = {
   input: DeleteFormInput;
+};
+
+
+export type MutationRestoreFormArgs = {
+  input: RestoreFormInput;
 };
 
 
@@ -299,6 +305,16 @@ export type QueryKnowledgeEntryArgs = {
   id: Scalars['String'];
 };
 
+export type RestoreFormInput = {
+  formId: Scalars['ID'];
+};
+
+export type RestoreFormPayload = {
+  __typename?: 'RestoreFormPayload';
+  form: Form;
+  ok: Scalars['Boolean'];
+};
+
 export type SubmitFormInput = {
   fields: Array<FormFieldResponseInput>;
   formId: Scalars['ID'];
@@ -353,14 +369,7 @@ export type AdminResearchSectionQueryVariables = Exact<{
 }>;
 
 
-export type AdminResearchSectionQuery = { __typename?: 'Query', forms: Array<{ __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responses: Array<{ __typename?: 'FormResponse', id: string, respondent: string }> }> };
-
-export type DeleteFormMutationVariables = Exact<{
-  input: DeleteFormInput;
-}>;
-
-
-export type DeleteFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'DeleteFormPayload', ok: boolean } };
+export type AdminResearchSectionQuery = { __typename?: 'Query', forms: Array<{ __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, isArchived: boolean, responses: Array<{ __typename?: 'FormResponse', id: string, respondent: string }> }> };
 
 export type CreateFormMutationVariables = Exact<{
   input: CreateFormInput;
@@ -369,7 +378,28 @@ export type CreateFormMutationVariables = Exact<{
 
 export type CreateFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'CreateFormPayload', form: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } };
 
-export type FormCardFormFragment = { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, responses: Array<{ __typename?: 'FormResponse', id: string, respondent: string }> };
+export type FormCardFormFragment = { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, isArchived: boolean, responses: Array<{ __typename?: 'FormResponse', id: string, respondent: string }> };
+
+export type ArchiveFormMutationVariables = Exact<{
+  input: ArchiveFormInput;
+}>;
+
+
+export type ArchiveFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'ArchiveFormPayload', form: { __typename?: 'Form', id: string, isArchived: boolean } } };
+
+export type RestoreFormMutationVariables = Exact<{
+  input: RestoreFormInput;
+}>;
+
+
+export type RestoreFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'RestoreFormPayload', form: { __typename?: 'Form', id: string, isArchived: boolean } } };
+
+export type DeleteFormMutationVariables = Exact<{
+  input: DeleteFormInput;
+}>;
+
+
+export type DeleteFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'DeleteFormPayload', ok: boolean } };
 
 export type FormResponseModalResponseQueryVariables = Exact<{
   responseId: Scalars['ID'];
@@ -464,6 +494,7 @@ export const FormCardFormFragmentDoc = gql`
     id
     respondent
   }
+  isArchived
 }
     `;
 export const HeartStatHeartRateFragmentDoc = gql`
@@ -489,7 +520,7 @@ export const KnowledgeGraphEntryFragmentDoc = gql`
     `;
 export const AdminResearchSectionDocument = gql`
     query AdminResearchSection($skip: Int = 0) {
-  forms(skip: $skip) {
+  forms(skip: $skip, includeArchived: true) {
     id
     ...FormCardForm
   }
@@ -523,39 +554,6 @@ export function useAdminResearchSectionLazyQuery(baseOptions?: Apollo.LazyQueryH
 export type AdminResearchSectionQueryHookResult = ReturnType<typeof useAdminResearchSectionQuery>;
 export type AdminResearchSectionLazyQueryHookResult = ReturnType<typeof useAdminResearchSectionLazyQuery>;
 export type AdminResearchSectionQueryResult = Apollo.QueryResult<AdminResearchSectionQuery, AdminResearchSectionQueryVariables>;
-export const DeleteFormDocument = gql`
-    mutation DeleteForm($input: DeleteFormInput!) {
-  payload: deleteForm(input: $input) {
-    ok
-  }
-}
-    `;
-export type DeleteFormMutationFn = Apollo.MutationFunction<DeleteFormMutation, DeleteFormMutationVariables>;
-
-/**
- * __useDeleteFormMutation__
- *
- * To run a mutation, you first call `useDeleteFormMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDeleteFormMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [deleteFormMutation, { data, loading, error }] = useDeleteFormMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useDeleteFormMutation(baseOptions?: Apollo.MutationHookOptions<DeleteFormMutation, DeleteFormMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteFormMutation, DeleteFormMutationVariables>(DeleteFormDocument, options);
-      }
-export type DeleteFormMutationHookResult = ReturnType<typeof useDeleteFormMutation>;
-export type DeleteFormMutationResult = Apollo.MutationResult<DeleteFormMutation>;
-export type DeleteFormMutationOptions = Apollo.BaseMutationOptions<DeleteFormMutation, DeleteFormMutationVariables>;
 export const CreateFormDocument = gql`
     mutation CreateForm($input: CreateFormInput!) {
   payload: createForm(input: $input) {
@@ -608,6 +606,111 @@ export function useCreateFormMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreateFormMutationHookResult = ReturnType<typeof useCreateFormMutation>;
 export type CreateFormMutationResult = Apollo.MutationResult<CreateFormMutation>;
 export type CreateFormMutationOptions = Apollo.BaseMutationOptions<CreateFormMutation, CreateFormMutationVariables>;
+export const ArchiveFormDocument = gql`
+    mutation ArchiveForm($input: ArchiveFormInput!) {
+  payload: archiveForm(input: $input) {
+    form {
+      id
+      isArchived
+    }
+  }
+}
+    `;
+export type ArchiveFormMutationFn = Apollo.MutationFunction<ArchiveFormMutation, ArchiveFormMutationVariables>;
+
+/**
+ * __useArchiveFormMutation__
+ *
+ * To run a mutation, you first call `useArchiveFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useArchiveFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [archiveFormMutation, { data, loading, error }] = useArchiveFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useArchiveFormMutation(baseOptions?: Apollo.MutationHookOptions<ArchiveFormMutation, ArchiveFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ArchiveFormMutation, ArchiveFormMutationVariables>(ArchiveFormDocument, options);
+      }
+export type ArchiveFormMutationHookResult = ReturnType<typeof useArchiveFormMutation>;
+export type ArchiveFormMutationResult = Apollo.MutationResult<ArchiveFormMutation>;
+export type ArchiveFormMutationOptions = Apollo.BaseMutationOptions<ArchiveFormMutation, ArchiveFormMutationVariables>;
+export const RestoreFormDocument = gql`
+    mutation RestoreForm($input: RestoreFormInput!) {
+  payload: restoreForm(input: $input) {
+    form {
+      id
+      isArchived
+    }
+  }
+}
+    `;
+export type RestoreFormMutationFn = Apollo.MutationFunction<RestoreFormMutation, RestoreFormMutationVariables>;
+
+/**
+ * __useRestoreFormMutation__
+ *
+ * To run a mutation, you first call `useRestoreFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRestoreFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [restoreFormMutation, { data, loading, error }] = useRestoreFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRestoreFormMutation(baseOptions?: Apollo.MutationHookOptions<RestoreFormMutation, RestoreFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RestoreFormMutation, RestoreFormMutationVariables>(RestoreFormDocument, options);
+      }
+export type RestoreFormMutationHookResult = ReturnType<typeof useRestoreFormMutation>;
+export type RestoreFormMutationResult = Apollo.MutationResult<RestoreFormMutation>;
+export type RestoreFormMutationOptions = Apollo.BaseMutationOptions<RestoreFormMutation, RestoreFormMutationVariables>;
+export const DeleteFormDocument = gql`
+    mutation DeleteForm($input: DeleteFormInput!) {
+  payload: deleteForm(input: $input) {
+    ok
+  }
+}
+    `;
+export type DeleteFormMutationFn = Apollo.MutationFunction<DeleteFormMutation, DeleteFormMutationVariables>;
+
+/**
+ * __useDeleteFormMutation__
+ *
+ * To run a mutation, you first call `useDeleteFormMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteFormMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteFormMutation, { data, loading, error }] = useDeleteFormMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteFormMutation(baseOptions?: Apollo.MutationHookOptions<DeleteFormMutation, DeleteFormMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteFormMutation, DeleteFormMutationVariables>(DeleteFormDocument, options);
+      }
+export type DeleteFormMutationHookResult = ReturnType<typeof useDeleteFormMutation>;
+export type DeleteFormMutationResult = Apollo.MutationResult<DeleteFormMutation>;
+export type DeleteFormMutationOptions = Apollo.BaseMutationOptions<DeleteFormMutation, DeleteFormMutationVariables>;
 export const FormResponseModalResponseDocument = gql`
     query FormResponseModalResponse($responseId: ID!) {
   formResponse(id: $responseId) {

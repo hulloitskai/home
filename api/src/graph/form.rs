@@ -19,14 +19,6 @@ impl FormObject {
         self.record.updated_at().into()
     }
 
-    async fn archived_at(&self) -> Option<DateTimeScalar> {
-        self.record.deleted_at().map(Into::into)
-    }
-
-    async fn is_archived(&self) -> bool {
-        self.record.is_deleted()
-    }
-
     async fn handle(&self) -> &str {
         self.record.handle.as_str()
     }
@@ -62,6 +54,10 @@ impl FormObject {
         self.resolve_responses_count(ctx)
             .await
             .map_err(format_error)
+    }
+
+    async fn is_archived(&self) -> bool {
+        self.record.is_archived()
     }
 }
 
@@ -220,6 +216,7 @@ impl FormQuery {
         ctx: &Context<'_>,
         id: Id<Form>,
     ) -> Result<Option<FormObject>> {
+        let identity = ctx.identity();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -230,6 +227,18 @@ impl FormQuery {
             .await
             .context("failed to load form")?;
 
+        // Only show unarchived forms to public.
+        if let Some(form) = &form {
+            if form.is_archived() {
+                let is_admin = identity
+                    .map(|identity| identity.is_admin)
+                    .unwrap_or_default();
+                if !is_admin {
+                    return Ok(None);
+                }
+            }
+        }
+
         let form = form.map(FormObject::from);
         Ok(form)
     }
@@ -239,6 +248,7 @@ impl FormQuery {
         ctx: &Context<'_>,
         handle: String,
     ) -> Result<Option<FormObject>> {
+        let identity = ctx.identity();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -251,6 +261,18 @@ impl FormQuery {
         .load(&ctx)
         .await
         .context("failed to load form")?;
+
+        // Only show unarchived forms to public.
+        if let Some(form) = &form {
+            if form.is_archived() {
+                let is_admin = identity
+                    .map(|identity| identity.is_admin)
+                    .unwrap_or_default();
+                if !is_admin {
+                    return Ok(None);
+                }
+            }
+        }
 
         let form = form.map(FormObject::from);
         Ok(form)
@@ -282,6 +304,7 @@ impl FormQuery {
         let forms = forms
             .skip(skip)
             .take(take)
+            .sort(FormSorting::CreatedAt(SortingDirection::Desc))
             .load(&ctx)
             .await
             .context("failed to find forms")?;
@@ -349,6 +372,16 @@ impl FormMutation {
             .await
             .map_err(format_error)
     }
+
+    async fn restore_form(
+        &self,
+        ctx: &Context<'_>,
+        input: RestoreFormInput,
+    ) -> FieldResult<RestoreFormPayload> {
+        self.resolve_restore_form(ctx, input)
+            .await
+            .map_err(format_error)
+    }
 }
 
 impl FormMutation {
@@ -396,7 +429,7 @@ impl FormMutation {
         form.save(&ctx).await.context("failed to save form")?;
 
         let form = FormObject::from(form);
-        let payload = CreateFormPayload { ok: true, form };
+        let payload = CreateFormPayload { form, ok: true };
         Ok(payload)
     }
 
@@ -447,8 +480,8 @@ impl FormMutation {
         form.save(&ctx).await.context("failed to save form")?;
 
         let payload = UpdateFormPayload {
-            ok: true,
             form: form.into(),
+            ok: true,
         };
         Ok(payload)
     }
@@ -486,7 +519,7 @@ impl FormMutation {
             .context("failed to save response")?;
 
         let response = FormResponseObject::from(response);
-        let payload = SubmitFormPayload { ok: true, response };
+        let payload = SubmitFormPayload { response, ok: true };
         Ok(payload)
     }
 
@@ -512,7 +545,7 @@ impl FormMutation {
                 .load(&ctx)
                 .await
                 .context("failed to load form")?;
-            form.destroy(&ctx).await.context("failed to destroy form")?;
+            form.delete(&ctx).await.context("failed to delete form")?;
             Ok(())
         })
         .await?;
@@ -544,14 +577,49 @@ impl FormMutation {
                     .load(&ctx)
                     .await
                     .context("failed to load form")?;
-                form.delete(&ctx).await?;
+                form.archive(&ctx).await?;
                 Ok(form)
             })
             .await?;
 
         let payload = ArchiveFormPayload {
-            ok: true,
             form: form.into(),
+            ok: true,
+        };
+        Ok(payload)
+    }
+
+    async fn resolve_restore_form(
+        &self,
+        ctx: &Context<'_>,
+        input: RestoreFormInput,
+    ) -> Result<RestoreFormPayload> {
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let ctx = EntityContext::new(services.clone());
+
+        if let Some(identity) = identity {
+            ensure!(identity.is_admin, "not authorized");
+        } else {
+            bail!("not authenticated");
+        }
+
+        let RestoreFormInput { form_id } = input;
+        let form_id = FormId::from(form_id);
+        let form = ctx
+            .transact(|ctx| async move {
+                let mut form = Form::get(form_id)
+                    .load(&ctx)
+                    .await
+                    .context("failed to load form")?;
+                form.restore(&ctx).await?;
+                Ok(form)
+            })
+            .await?;
+
+        let payload = RestoreFormPayload {
+            form: form.into(),
+            ok: true,
         };
         Ok(payload)
     }
@@ -714,6 +782,17 @@ pub(super) struct ArchiveFormInput {
 
 #[derive(Debug, Clone, SimpleObject)]
 pub(super) struct ArchiveFormPayload {
+    pub form: FormObject,
+    pub ok: bool,
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub(super) struct RestoreFormInput {
+    pub form_id: Id<Form>,
+}
+
+#[derive(Debug, Clone, SimpleObject)]
+pub(super) struct RestoreFormPayload {
     pub form: FormObject,
     pub ok: bool,
 }

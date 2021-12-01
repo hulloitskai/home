@@ -6,8 +6,6 @@ import { useAuthentication } from "components/auth0";
 
 import { AdminResearchSection } from "components/admin-research-section";
 
-// type AdminPageProps = {};
-
 const AdminPage: NextPage = () => {
   useAuthentication();
   return (

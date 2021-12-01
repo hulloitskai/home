@@ -131,7 +131,7 @@ const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
                 p={3}
                 color="gray.600"
                 _light={{ bg: "gray.100" }}
-                _dark={{ bg: "black" }}
+                _dark={{ bg: transparentBlack }}
               >
                 <Icon as={HiEyeOff} fontSize="lg" />
                 <Text fontSize="sm" fontWeight="medium">

@@ -43,7 +43,7 @@ impl Form {
         })
     }
 
-    pub async fn destroy_responses(
+    pub async fn delete_responses(
         record: &Record<Self>,
         ctx: &Context,
     ) -> Result<Vec<Record<FormResponse>>> {
@@ -61,9 +61,9 @@ impl Form {
                 .map(|mut response| {
                     let ctx = ctx.clone();
                     async move {
-                        response.destroy(&ctx).await.with_context(|| {
+                        response.delete(&ctx).await.with_context(|| {
                             format!(
-                                "failed to destroy response {}",
+                                "failed to delete response {}",
                                 response.id()
                             )
                         })?;
@@ -88,7 +88,7 @@ impl Entity for Form {
 
     type Services = Services;
     type Conditions = FormConditions;
-    type Sorting = EmptySorting;
+    type Sorting = FormSorting;
 
     fn validate(&self) -> Result<()> {
         let Form { fields, .. } = self;
@@ -96,13 +96,13 @@ impl Entity for Form {
         Ok(())
     }
 
-    async fn before_destroy(
+    async fn before_delete(
         record: &mut Record<Self>,
         ctx: &EntityContext<Self::Services>,
     ) -> Result<()> {
-        Self::destroy_responses(record, ctx)
+        Self::delete_responses(record, ctx)
             .await
-            .context("failed to destroy responses")?;
+            .context("failed to delete responses")?;
         Ok(())
     }
 }
@@ -123,5 +123,19 @@ impl EntityConditions for FormConditions {
         }
 
         doc
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FormSorting {
+    CreatedAt(SortingDirection),
+}
+
+impl EntitySorting for FormSorting {
+    fn into_document(self) -> Document {
+        use FormSorting::*;
+        match self {
+            CreatedAt(direction) => doc! { "_createdAt": direction },
+        }
     }
 }

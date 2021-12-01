@@ -6,14 +6,17 @@ import {
   HiAnnotation,
   HiArchive,
   HiExternalLink,
+  HiInboxIn,
   HiMenu,
   HiPencilAlt,
+  HiRewind,
   HiTrash,
 } from "react-icons/hi";
 
 import { BoxProps, Box, VStack, HStack, Spacer } from "@chakra-ui/react";
 import { Wrap } from "@chakra-ui/react";
-import { Text, Code, Icon, Badge } from "@chakra-ui/react";
+import { BadgeProps, Badge } from "@chakra-ui/react";
+import { Text, Code, Icon } from "@chakra-ui/react";
 import { Button, IconButton } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { useColorModeValue } from "@chakra-ui/react";
@@ -29,7 +32,6 @@ import {
 import { Disclosure } from "components/disclosure";
 import { ExternalLink } from "components/link";
 import { ConfirtDeleteAlert } from "components/confirm-delete-alert";
-import { useToast } from "components/toast";
 
 import { FormResponseModal } from "components/form-response-modal";
 import {
@@ -40,6 +42,8 @@ import {
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
 import { useDeleteFormMutation, DeleteFormMutation } from "apollo";
+import { useArchiveFormMutation, ArchiveFormMutation } from "apollo";
+import { useRestoreFormMutation, RestoreFormMutation } from "apollo";
 import type { UpdateFormMutation } from "apollo";
 import type { FormCardFormFragment } from "apollo";
 
@@ -53,13 +57,16 @@ gql`
       id
       respondent
     }
+    isArchived
   }
 `;
 
 export interface FormCardProps
   extends BoxProps,
     Pick<UpdateFormModalProps, "onUpdate">,
-    Pick<DeleteFormMenuItemProps, "onDelete"> {
+    Pick<DeleteFormMenuItemProps, "onDelete">,
+    Pick<ArchiveFormMenuItemProps, "onArchive">,
+    Pick<RestoreFormMenuItemProps, "onRestore"> {
   readonly form: FormCardFormFragment;
 }
 
@@ -67,10 +74,21 @@ export const FormCard: FC<FormCardProps> = ({
   form,
   onUpdate,
   onDelete,
+  onArchive,
+  onRestore,
   ...otherProps
 }) => {
-  const toast = useToast();
-  const { id: formId, handle, name, description, responses } = form;
+  const { id: formId, handle, name, description, responses, isArchived } = form;
+
+  const tooltipBg = useColorModeValue("gray.900", undefined);
+  const tooltipStyles = useMemo(
+    () => ({
+      hasArrow: true,
+      bg: tooltipBg,
+    }),
+    [tooltipBg],
+  );
+
   return (
     <VStack
       align="stretch"
@@ -103,17 +121,11 @@ export const FormCard: FC<FormCardProps> = ({
             />
             <MenuList>
               <EditFormMenuItem {...{ formId, onUpdate }} />
-              <MenuItem
-                icon={<Icon as={HiArchive} fontSize="md" color="yellow.500" />}
-                onClick={() => {
-                  toast({
-                    status: "info",
-                    description: "Not implemented!",
-                  });
-                }}
-              >
-                Archive
-              </MenuItem>
+              {isArchived ? (
+                <RestoreFormMenuItem {...{ formId, onRestore }} />
+              ) : (
+                <ArchiveFormMenuItem {...{ formId, onArchive }} />
+              )}
               <DeleteFormMenuItem {...{ formId, onDelete }} />
             </MenuList>
           </Menu>
@@ -135,8 +147,26 @@ export const FormCard: FC<FormCardProps> = ({
         <FormStatBadge
           name="Responses"
           icon={HiAnnotation}
+          label={`${responses.length} responses`}
           value={responses.length}
         />
+        {isArchived ? (
+          <FormStatBadge
+            name="Archived"
+            icon={HiArchive}
+            label="Closed and no longer receiving responses"
+            value="Archived"
+            colorScheme="yellow"
+          />
+        ) : (
+          <FormStatBadge
+            name="Open"
+            icon={HiInboxIn}
+            label="Open and receiving responses"
+            value="Open"
+            colorScheme="green"
+          />
+        )}
       </HStack>
       {!!description && (
         <Text
@@ -187,13 +217,20 @@ export const FormCard: FC<FormCardProps> = ({
   );
 };
 
-interface FormStatBadgeProps {
+interface FormStatBadgeProps extends BadgeProps {
   readonly name: string;
   readonly icon: IconType;
   readonly value: string | number;
+  readonly label?: string;
 }
 
-const FormStatBadge: FC<FormStatBadgeProps> = ({ name, icon, value }) => {
+const FormStatBadge: FC<FormStatBadgeProps> = ({
+  name,
+  icon,
+  value,
+  label,
+  ...otherProps
+}) => {
   const tooltipBg = useColorModeValue("gray.900", undefined);
   const tooltipStyles = useMemo(
     () => ({
@@ -203,8 +240,8 @@ const FormStatBadge: FC<FormStatBadgeProps> = ({ name, icon, value }) => {
     [tooltipBg],
   );
   return (
-    <Tooltip label={name} {...tooltipStyles}>
-      <Badge colorScheme="red">
+    <Tooltip label={label || name} {...tooltipStyles}>
+      <Badge colorScheme="red" {...otherProps}>
         <HStack spacing={1}>
           <Icon as={icon} aria-label={name} />
           <Text>{value}</Text>
@@ -242,6 +279,114 @@ const EditFormMenuItem: FC<EditFormMenuItemProps> = ({
     </Disclosure>
   );
 };
+
+gql`
+  mutation ArchiveForm($input: ArchiveFormInput!) {
+    payload: archiveForm(input: $input) {
+      form {
+        id
+        isArchived
+      }
+    }
+  }
+`;
+
+interface ArchiveFormMenuItemProps extends MenuItemProps {
+  readonly formId: string;
+  readonly onArchive?: (payload: ArchiveFormMutation["payload"]) => void;
+}
+
+const ArchiveFormMenuItem: FC<ArchiveFormMenuItemProps> = ({
+  formId,
+  onArchive,
+  ...otherProps
+}) => {
+  const handleQueryError = useHandleQueryError("Failed to archive form");
+  const [runMutation, { loading: isLoading }] = useArchiveFormMutation({
+    onError: handleQueryError,
+    onCompleted: ({ payload }) => {
+      if (onArchive) {
+        onArchive(payload);
+      }
+    },
+  });
+  return (
+    <MenuItem
+      icon={<Icon as={HiArchive} fontSize="md" color="yellow.500" />}
+      isDisabled={isLoading}
+      onClick={() => {
+        runMutation({
+          variables: {
+            input: {
+              formId,
+            },
+          },
+        });
+      }}
+      {...otherProps}
+    >
+      Archive
+    </MenuItem>
+  );
+};
+
+gql`
+  mutation RestoreForm($input: RestoreFormInput!) {
+    payload: restoreForm(input: $input) {
+      form {
+        id
+        isArchived
+      }
+    }
+  }
+`;
+
+interface RestoreFormMenuItemProps extends MenuItemProps {
+  readonly formId: string;
+  readonly onRestore?: (payload: RestoreFormMutation["payload"]) => void;
+}
+
+const RestoreFormMenuItem: FC<RestoreFormMenuItemProps> = ({
+  formId,
+  onRestore,
+  ...otherProps
+}) => {
+  const handleQueryError = useHandleQueryError("Failed to restore form");
+  const [runMutation, { loading: isLoading }] = useRestoreFormMutation({
+    onError: handleQueryError,
+    onCompleted: ({ payload }) => {
+      if (onRestore) {
+        onRestore(payload);
+      }
+    },
+  });
+  return (
+    <MenuItem
+      icon={<Icon as={HiRewind} fontSize="md" color="purple.500" />}
+      isDisabled={isLoading}
+      onClick={() => {
+        runMutation({
+          variables: {
+            input: {
+              formId,
+            },
+          },
+        });
+      }}
+      {...otherProps}
+    >
+      Archive
+    </MenuItem>
+  );
+};
+
+gql`
+  mutation DeleteForm($input: DeleteFormInput!) {
+    payload: deleteForm(input: $input) {
+      ok
+    }
+  }
+`;
 
 interface DeleteFormMenuItemProps extends MenuItemProps {
   readonly formId: string;
