@@ -12,13 +12,13 @@ import {
   AlertDialogOverlay,
 } from "@chakra-ui/react";
 
-export interface ConfirmDeleteAlertProps
+export interface DeleteDialogProps
   extends Omit<AlertDialogProps, "children" | "leastDestructiveRef"> {
   name?: string;
   onDelete?: () => void;
 }
 
-export const ConfirtDeleteAlert: FC<ConfirmDeleteAlertProps> = ({
+export const DeleteDialog: FC<DeleteDialogProps> = ({
   name,
   onClose,
   onDelete,

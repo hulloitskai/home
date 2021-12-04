@@ -33,9 +33,12 @@ pub(super) struct TestMutation;
 
 #[Object]
 impl TestMutation {
-    async fn test(&self, input: TestInput) -> TestPayload {
-        let TestInput { value } = input;
-        TestPayload { ok: true, value }
+    async fn test(
+        &self,
+        ctx: &Context<'_>,
+        input: TestInput,
+    ) -> FieldResult<TestPayload> {
+        self.resolve_test(ctx, input).await.map_err(format_error)
     }
 
     async fn test_failure(
@@ -47,7 +50,35 @@ impl TestMutation {
     }
 }
 
-#[derive(Debug, Clone, InputObject)]
+impl TestMutation {
+    async fn resolve_test(
+        &self,
+        ctx: &Context<'_>,
+        input: TestInput,
+    ) -> Result<TestPayload> {
+        let properties = json!({ "input": &input });
+        let TestInput { value } = input;
+
+        let identity = ctx.identity();
+        let services = ctx.services();
+        let segment = services.segment();
+
+        // Track mutation
+        if let Some(user) = identity {
+            segment.send_later(SegmentTrackEvent {
+                user: user.to_owned(),
+                event: "Test".to_owned(),
+                properties,
+                ..default()
+            });
+        }
+
+        let payload = TestPayload { ok: true, value };
+        Ok(payload)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, InputObject)]
 pub(super) struct TestInput {
     pub value: String,
 }

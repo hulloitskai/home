@@ -18,9 +18,8 @@ export type DeleteFormPayloadKeySpecifier = ('ok' | DeleteFormPayloadKeySpecifie
 export type DeleteFormPayloadFieldPolicy = {
 	ok?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type FormKeySpecifier = ('archivedAt' | 'createdAt' | 'description' | 'fields' | 'handle' | 'id' | 'isArchived' | 'name' | 'respondentHelper' | 'respondentLabel' | 'responses' | 'responsesCount' | 'updatedAt' | FormKeySpecifier)[];
+export type FormKeySpecifier = ('createdAt' | 'description' | 'fields' | 'handle' | 'id' | 'isArchived' | 'name' | 'respondentHelper' | 'respondentLabel' | 'responses' | 'responsesCount' | 'updatedAt' | FormKeySpecifier)[];
 export type FormFieldPolicy = {
-	archivedAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	description?: FieldPolicy<any> | FieldReadFunction<any>,
 	fields?: FieldPolicy<any> | FieldReadFunction<any>,

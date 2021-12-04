@@ -8,13 +8,13 @@ pub(super) struct UserObject {
     pub is_admin: bool,
 }
 
-impl From<Identity> for UserObject {
-    fn from(identity: Identity) -> Self {
-        let Identity {
+impl From<UserInfo> for UserObject {
+    fn from(info: UserInfo) -> Self {
+        let UserInfo {
             id,
             email,
             is_admin,
-        } = identity;
+        } = info;
         let email = email.to_string();
 
         UserObject {
@@ -37,7 +37,7 @@ impl UserQuery {
 
 impl UserQuery {
     async fn resolve_viewer(&self, ctx: &Context<'_>) -> Option<UserObject> {
-        let identity = ctx.identity();
-        identity.map(ToOwned::to_owned).map(Into::into)
+        let userinfo = ctx.userinfo();
+        userinfo.map(ToOwned::to_owned).map(Into::into)
     }
 }

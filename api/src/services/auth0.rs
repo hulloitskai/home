@@ -3,7 +3,7 @@ use super::*;
 use entities::Email;
 
 #[derive(Debug, Clone, Hash, Serialize, Deserialize)]
-pub struct Identity {
+pub struct UserInfo {
     pub id: String,
     pub email: Email,
     pub is_admin: bool,
@@ -26,7 +26,7 @@ pub struct Service {
     issuer_base_url: Url,
 
     #[derivative(Debug = "ignore")]
-    cache: Cache<String, Identity>,
+    cache: Cache<String, UserInfo>,
 }
 
 #[derive(Debug, Clone, Builder)]
@@ -46,7 +46,7 @@ impl Service {
 }
 
 impl Service {
-    pub async fn identify(&self, token: &str) -> Result<Identity> {
+    pub async fn userinfo(&self, token: &str) -> Result<UserInfo> {
         let Self {
             client,
             issuer_base_url,
@@ -90,7 +90,7 @@ impl Service {
                         email,
                         is_admin,
                     } = claims;
-                    Identity {
+                    UserInfo {
                         id: sub,
                         email,
                         is_admin,

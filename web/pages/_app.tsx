@@ -7,6 +7,7 @@ import type { AppContext as NextAppContext } from "next/app";
 
 import { UserProvider } from "@auth0/nextjs-auth0";
 
+import { AnalyticsProvider } from "components/segment";
 import { ApolloProvider } from "components/apollo";
 import { ChakraProvider } from "components/chakra";
 
@@ -24,11 +25,13 @@ const App = ({ Component, pageProps }: NextAppProps): ReactElement => {
         <MetaType type="website" />
       </>
       <UserProvider>
-        <ApolloProvider initialState={apolloState}>
-          <ChakraProvider cookies={cookieHeader}>
-            <Component {...otherProps} />
-          </ChakraProvider>
-        </ApolloProvider>
+        <AnalyticsProvider>
+          <ApolloProvider initialState={apolloState}>
+            <ChakraProvider cookies={cookieHeader}>
+              <Component {...otherProps} />
+            </ChakraProvider>
+          </ApolloProvider>
+        </AnalyticsProvider>
       </UserProvider>
     </>
   );

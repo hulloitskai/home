@@ -48,11 +48,11 @@ gql`
   }
 `;
 
-export interface CreateFormModalProps extends Omit<ModalProps, "children"> {
+export interface CreateFormDialogProps extends Omit<ModalProps, "children"> {
   onCreate?: (payload: CreateFormMutation["payload"]) => void;
 }
 
-export const CreateFormModal: FC<CreateFormModalProps> = ({
+export const CreateFormDialog: FC<CreateFormDialogProps> = ({
   onCreate,
   onClose,
   isOpen,

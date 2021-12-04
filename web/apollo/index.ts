@@ -64,7 +64,6 @@ export type DeleteFormPayload = {
 
 export type Form = {
   __typename?: 'Form';
-  archivedAt?: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
   description?: Maybe<Scalars['String']>;
   fields: Array<FormField>;
@@ -401,12 +400,12 @@ export type DeleteFormMutationVariables = Exact<{
 
 export type DeleteFormMutation = { __typename?: 'Mutation', payload: { __typename?: 'DeleteFormPayload', ok: boolean } };
 
-export type FormResponseModalResponseQueryVariables = Exact<{
+export type FormResponseDialogQueryVariables = Exact<{
   responseId: Scalars['ID'];
 }>;
 
 
-export type FormResponseModalResponseQuery = { __typename?: 'Query', formResponse?: { __typename?: 'FormResponse', id: string, respondent: string, fields: Array<{ __typename?: 'FormResponseField', text?: string | null | undefined, singleChoice?: string | null | undefined, multipleChoice?: Array<string> | null | undefined }>, form: { __typename?: 'Form', id: string, name: string, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } | null | undefined };
+export type FormResponseDialogQuery = { __typename?: 'Query', formResponse?: { __typename?: 'FormResponse', id: string, respondent: string, fields: Array<{ __typename?: 'FormResponseField', text?: string | null | undefined, singleChoice?: string | null | undefined, multipleChoice?: Array<string> | null | undefined }>, form: { __typename?: 'Form', id: string, name: string, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } } | null | undefined };
 
 export type HeartStatHeartRateFragment = { __typename?: 'HeartRate', id: string, measurement: number, timestamp: any };
 
@@ -427,22 +426,22 @@ export type HomeMusicSectionHeartbeatQuery = { __typename?: 'Query', musicInfo?:
 
 export type KnowledgeGraphEntryFragment = { __typename?: 'KnowledgeEntry', id: string, tags: Array<string>, links: { __typename?: 'KnowledgeEntryLinks', incoming: Array<{ __typename?: 'KnowledgeEntry', id: string }>, outgoing: Array<{ __typename?: 'KnowledgeEntry', id: string }> } };
 
-export type LayoutFooterViewerQueryVariables = Exact<{ [key: string]: never; }>;
+export type LayoutFooterQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type LayoutFooterViewerQuery = { __typename?: 'Query', viewer?: { __typename?: 'User', id: string, email: string, isAdmin: boolean } | null | undefined };
+export type LayoutFooterQuery = { __typename?: 'Query', viewer?: { __typename?: 'User', id: string, email: string, isAdmin: boolean } | null | undefined };
 
 export type MusicLyricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type MusicLyricsQuery = { __typename?: 'Query', musicInfo?: { __typename?: 'MusicInfo', track: { __typename?: 'MusicTrack', spotifyId: string, lyrics?: { __typename?: 'Lyrics', lines: Array<{ __typename?: 'LyricLine', text: string, position: number }> } | null | undefined } } | null | undefined };
 
-export type UpdateFormModalQueryVariables = Exact<{
+export type UpdateFormDialogQueryVariables = Exact<{
   formId: Scalars['ID'];
 }>;
 
 
-export type UpdateFormModalQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
+export type UpdateFormDialogQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string, handle: string, name: string, description?: string | null | undefined, respondentLabel?: string | null | undefined, respondentHelper?: string | null | undefined, fields: Array<{ __typename?: 'FormField', question: string, input: { __typename?: 'FormFieldInputConfig', text?: boolean | null | undefined, singleChoice?: { __typename?: 'FormFieldSingleChoiceInputConfig', options: Array<string> } | null | undefined, multipleChoice?: { __typename?: 'FormFieldMultipleChoiceInputConfig', options: Array<string> } | null | undefined } }> } | null | undefined };
 
 export type UpdateFormMutationVariables = Exact<{
   input: UpdateFormInput;
@@ -483,6 +482,20 @@ export type ResearchCompletePagePropsQueryVariables = Exact<{
 
 
 export type ResearchCompletePagePropsQuery = { __typename?: 'Query', form?: { __typename?: 'Form', id: string } | null | undefined };
+
+export type TestMutationVariables = Exact<{
+  input: TestInput;
+}>;
+
+
+export type TestMutation = { __typename?: 'Mutation', payload: { __typename?: 'TestPayload', value: string } };
+
+export type TestFailureMutationVariables = Exact<{
+  input: TestInput;
+}>;
+
+
+export type TestFailureMutation = { __typename?: 'Mutation', payload: { __typename?: 'TestPayload', value: string } };
 
 export const FormCardFormFragmentDoc = gql`
     fragment FormCardForm on Form {
@@ -711,8 +724,8 @@ export function useDeleteFormMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeleteFormMutationHookResult = ReturnType<typeof useDeleteFormMutation>;
 export type DeleteFormMutationResult = Apollo.MutationResult<DeleteFormMutation>;
 export type DeleteFormMutationOptions = Apollo.BaseMutationOptions<DeleteFormMutation, DeleteFormMutationVariables>;
-export const FormResponseModalResponseDocument = gql`
-    query FormResponseModalResponse($responseId: ID!) {
+export const FormResponseDialogDocument = gql`
+    query FormResponseDialog($responseId: ID!) {
   formResponse(id: $responseId) {
     id
     respondent
@@ -742,32 +755,32 @@ export const FormResponseModalResponseDocument = gql`
     `;
 
 /**
- * __useFormResponseModalResponseQuery__
+ * __useFormResponseDialogQuery__
  *
- * To run a query within a React component, call `useFormResponseModalResponseQuery` and pass it any options that fit your needs.
- * When your component renders, `useFormResponseModalResponseQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useFormResponseDialogQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFormResponseDialogQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useFormResponseModalResponseQuery({
+ * const { data, loading, error } = useFormResponseDialogQuery({
  *   variables: {
  *      responseId: // value for 'responseId'
  *   },
  * });
  */
-export function useFormResponseModalResponseQuery(baseOptions: Apollo.QueryHookOptions<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>) {
+export function useFormResponseDialogQuery(baseOptions: Apollo.QueryHookOptions<FormResponseDialogQuery, FormResponseDialogQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>(FormResponseModalResponseDocument, options);
+        return Apollo.useQuery<FormResponseDialogQuery, FormResponseDialogQueryVariables>(FormResponseDialogDocument, options);
       }
-export function useFormResponseModalResponseLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>) {
+export function useFormResponseDialogLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FormResponseDialogQuery, FormResponseDialogQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>(FormResponseModalResponseDocument, options);
+          return Apollo.useLazyQuery<FormResponseDialogQuery, FormResponseDialogQueryVariables>(FormResponseDialogDocument, options);
         }
-export type FormResponseModalResponseQueryHookResult = ReturnType<typeof useFormResponseModalResponseQuery>;
-export type FormResponseModalResponseLazyQueryHookResult = ReturnType<typeof useFormResponseModalResponseLazyQuery>;
-export type FormResponseModalResponseQueryResult = Apollo.QueryResult<FormResponseModalResponseQuery, FormResponseModalResponseQueryVariables>;
+export type FormResponseDialogQueryHookResult = ReturnType<typeof useFormResponseDialogQuery>;
+export type FormResponseDialogLazyQueryHookResult = ReturnType<typeof useFormResponseDialogLazyQuery>;
+export type FormResponseDialogQueryResult = Apollo.QueryResult<FormResponseDialogQuery, FormResponseDialogQueryVariables>;
 export const HomeHeartSectionDocument = gql`
     query HomeHeartSection {
   heartRate {
@@ -892,8 +905,8 @@ export function useHomeMusicSectionHeartbeatLazyQuery(baseOptions?: Apollo.LazyQ
 export type HomeMusicSectionHeartbeatQueryHookResult = ReturnType<typeof useHomeMusicSectionHeartbeatQuery>;
 export type HomeMusicSectionHeartbeatLazyQueryHookResult = ReturnType<typeof useHomeMusicSectionHeartbeatLazyQuery>;
 export type HomeMusicSectionHeartbeatQueryResult = Apollo.QueryResult<HomeMusicSectionHeartbeatQuery, HomeMusicSectionHeartbeatQueryVariables>;
-export const LayoutFooterViewerDocument = gql`
-    query LayoutFooterViewer {
+export const LayoutFooterDocument = gql`
+    query LayoutFooter {
   viewer {
     id
     email
@@ -903,31 +916,31 @@ export const LayoutFooterViewerDocument = gql`
     `;
 
 /**
- * __useLayoutFooterViewerQuery__
+ * __useLayoutFooterQuery__
  *
- * To run a query within a React component, call `useLayoutFooterViewerQuery` and pass it any options that fit your needs.
- * When your component renders, `useLayoutFooterViewerQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useLayoutFooterQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLayoutFooterQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useLayoutFooterViewerQuery({
+ * const { data, loading, error } = useLayoutFooterQuery({
  *   variables: {
  *   },
  * });
  */
-export function useLayoutFooterViewerQuery(baseOptions?: Apollo.QueryHookOptions<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>) {
+export function useLayoutFooterQuery(baseOptions?: Apollo.QueryHookOptions<LayoutFooterQuery, LayoutFooterQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>(LayoutFooterViewerDocument, options);
+        return Apollo.useQuery<LayoutFooterQuery, LayoutFooterQueryVariables>(LayoutFooterDocument, options);
       }
-export function useLayoutFooterViewerLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>) {
+export function useLayoutFooterLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LayoutFooterQuery, LayoutFooterQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>(LayoutFooterViewerDocument, options);
+          return Apollo.useLazyQuery<LayoutFooterQuery, LayoutFooterQueryVariables>(LayoutFooterDocument, options);
         }
-export type LayoutFooterViewerQueryHookResult = ReturnType<typeof useLayoutFooterViewerQuery>;
-export type LayoutFooterViewerLazyQueryHookResult = ReturnType<typeof useLayoutFooterViewerLazyQuery>;
-export type LayoutFooterViewerQueryResult = Apollo.QueryResult<LayoutFooterViewerQuery, LayoutFooterViewerQueryVariables>;
+export type LayoutFooterQueryHookResult = ReturnType<typeof useLayoutFooterQuery>;
+export type LayoutFooterLazyQueryHookResult = ReturnType<typeof useLayoutFooterLazyQuery>;
+export type LayoutFooterQueryResult = Apollo.QueryResult<LayoutFooterQuery, LayoutFooterQueryVariables>;
 export const MusicLyricsDocument = gql`
     query MusicLyrics {
   musicInfo {
@@ -970,8 +983,8 @@ export function useMusicLyricsLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type MusicLyricsQueryHookResult = ReturnType<typeof useMusicLyricsQuery>;
 export type MusicLyricsLazyQueryHookResult = ReturnType<typeof useMusicLyricsLazyQuery>;
 export type MusicLyricsQueryResult = Apollo.QueryResult<MusicLyricsQuery, MusicLyricsQueryVariables>;
-export const UpdateFormModalDocument = gql`
-    query UpdateFormModal($formId: ID!) {
+export const UpdateFormDialogDocument = gql`
+    query UpdateFormDialog($formId: ID!) {
   form(id: $formId) {
     id
     handle
@@ -996,32 +1009,32 @@ export const UpdateFormModalDocument = gql`
     `;
 
 /**
- * __useUpdateFormModalQuery__
+ * __useUpdateFormDialogQuery__
  *
- * To run a query within a React component, call `useUpdateFormModalQuery` and pass it any options that fit your needs.
- * When your component renders, `useUpdateFormModalQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useUpdateFormDialogQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUpdateFormDialogQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useUpdateFormModalQuery({
+ * const { data, loading, error } = useUpdateFormDialogQuery({
  *   variables: {
  *      formId: // value for 'formId'
  *   },
  * });
  */
-export function useUpdateFormModalQuery(baseOptions: Apollo.QueryHookOptions<UpdateFormModalQuery, UpdateFormModalQueryVariables>) {
+export function useUpdateFormDialogQuery(baseOptions: Apollo.QueryHookOptions<UpdateFormDialogQuery, UpdateFormDialogQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UpdateFormModalQuery, UpdateFormModalQueryVariables>(UpdateFormModalDocument, options);
+        return Apollo.useQuery<UpdateFormDialogQuery, UpdateFormDialogQueryVariables>(UpdateFormDialogDocument, options);
       }
-export function useUpdateFormModalLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UpdateFormModalQuery, UpdateFormModalQueryVariables>) {
+export function useUpdateFormDialogLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UpdateFormDialogQuery, UpdateFormDialogQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UpdateFormModalQuery, UpdateFormModalQueryVariables>(UpdateFormModalDocument, options);
+          return Apollo.useLazyQuery<UpdateFormDialogQuery, UpdateFormDialogQueryVariables>(UpdateFormDialogDocument, options);
         }
-export type UpdateFormModalQueryHookResult = ReturnType<typeof useUpdateFormModalQuery>;
-export type UpdateFormModalLazyQueryHookResult = ReturnType<typeof useUpdateFormModalLazyQuery>;
-export type UpdateFormModalQueryResult = Apollo.QueryResult<UpdateFormModalQuery, UpdateFormModalQueryVariables>;
+export type UpdateFormDialogQueryHookResult = ReturnType<typeof useUpdateFormDialogQuery>;
+export type UpdateFormDialogLazyQueryHookResult = ReturnType<typeof useUpdateFormDialogLazyQuery>;
+export type UpdateFormDialogQueryResult = Apollo.QueryResult<UpdateFormDialogQuery, UpdateFormDialogQueryVariables>;
 export const UpdateFormDocument = gql`
     mutation UpdateForm($input: UpdateFormInput!) {
   payload: updateForm(input: $input) {
@@ -1275,3 +1288,69 @@ export function useResearchCompletePagePropsLazyQuery(baseOptions?: Apollo.LazyQ
 export type ResearchCompletePagePropsQueryHookResult = ReturnType<typeof useResearchCompletePagePropsQuery>;
 export type ResearchCompletePagePropsLazyQueryHookResult = ReturnType<typeof useResearchCompletePagePropsLazyQuery>;
 export type ResearchCompletePagePropsQueryResult = Apollo.QueryResult<ResearchCompletePagePropsQuery, ResearchCompletePagePropsQueryVariables>;
+export const TestDocument = gql`
+    mutation Test($input: TestInput!) {
+  payload: test(input: $input) {
+    value
+  }
+}
+    `;
+export type TestMutationFn = Apollo.MutationFunction<TestMutation, TestMutationVariables>;
+
+/**
+ * __useTestMutation__
+ *
+ * To run a mutation, you first call `useTestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [testMutation, { data, loading, error }] = useTestMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useTestMutation(baseOptions?: Apollo.MutationHookOptions<TestMutation, TestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<TestMutation, TestMutationVariables>(TestDocument, options);
+      }
+export type TestMutationHookResult = ReturnType<typeof useTestMutation>;
+export type TestMutationResult = Apollo.MutationResult<TestMutation>;
+export type TestMutationOptions = Apollo.BaseMutationOptions<TestMutation, TestMutationVariables>;
+export const TestFailureDocument = gql`
+    mutation TestFailure($input: TestInput!) {
+  payload: testFailure(input: $input) {
+    value
+  }
+}
+    `;
+export type TestFailureMutationFn = Apollo.MutationFunction<TestFailureMutation, TestFailureMutationVariables>;
+
+/**
+ * __useTestFailureMutation__
+ *
+ * To run a mutation, you first call `useTestFailureMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTestFailureMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [testFailureMutation, { data, loading, error }] = useTestFailureMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useTestFailureMutation(baseOptions?: Apollo.MutationHookOptions<TestFailureMutation, TestFailureMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<TestFailureMutation, TestFailureMutationVariables>(TestFailureDocument, options);
+      }
+export type TestFailureMutationHookResult = ReturnType<typeof useTestFailureMutation>;
+export type TestFailureMutationResult = Apollo.MutationResult<TestFailureMutation>;
+export type TestFailureMutationOptions = Apollo.BaseMutationOptions<TestFailureMutation, TestFailureMutationVariables>;

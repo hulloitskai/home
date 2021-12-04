@@ -31,13 +31,13 @@ import {
 
 import { Disclosure } from "components/disclosure";
 import { ExternalLink } from "components/link";
-import { ConfirtDeleteAlert } from "components/confirm-delete-alert";
+import { DeleteDialog } from "components/delete-dialog";
 
-import { FormResponseModal } from "components/form-response-modal";
+import { FormResponseDialog } from "components/form-response-dialog";
 import {
-  UpdateFormModalProps,
-  UpdateFormModal,
-} from "components/update-form-modal";
+  UpdateFormDialogProps,
+  UpdateFormDialog,
+} from "components/update-form-dialog";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
@@ -63,7 +63,7 @@ gql`
 
 export interface FormCardProps
   extends BoxProps,
-    Pick<UpdateFormModalProps, "onUpdate">,
+    Pick<UpdateFormDialogProps, "onUpdate">,
     Pick<DeleteFormMenuItemProps, "onDelete">,
     Pick<ArchiveFormMenuItemProps, "onArchive">,
     Pick<RestoreFormMenuItemProps, "onRestore"> {
@@ -79,16 +79,6 @@ export const FormCard: FC<FormCardProps> = ({
   ...otherProps
 }) => {
   const { id: formId, handle, name, description, responses, isArchived } = form;
-
-  const tooltipBg = useColorModeValue("gray.900", undefined);
-  const tooltipStyles = useMemo(
-    () => ({
-      hasArrow: true,
-      bg: tooltipBg,
-    }),
-    [tooltipBg],
-  );
-
   return (
     <VStack
       align="stretch"
@@ -206,7 +196,7 @@ export const FormCard: FC<FormCardProps> = ({
                     </Button>
                   )}
                 >
-                  {props => <FormResponseModal responseId={id} {...props} />}
+                  {props => <FormResponseDialog responseId={id} {...props} />}
                 </Disclosure>
               ))}
             </Wrap>
@@ -274,7 +264,7 @@ const EditFormMenuItem: FC<EditFormMenuItemProps> = ({
       )}
     >
       {props => (
-        <UpdateFormModal formId={formId} onUpdate={onUpdate} {...props} />
+        <UpdateFormDialog formId={formId} onUpdate={onUpdate} {...props} />
       )}
     </Disclosure>
   );
@@ -421,7 +411,7 @@ const DeleteFormMenuItem: FC<DeleteFormMenuItemProps> = ({
       )}
     >
       {props => (
-        <ConfirtDeleteAlert
+        <DeleteDialog
           name="Form"
           onDelete={() => {
             runMutation({

@@ -24,11 +24,11 @@ import {
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useUpdateFormModalQuery } from "apollo";
+import { useUpdateFormDialogQuery } from "apollo";
 import { useUpdateFormMutation, UpdateFormMutation } from "apollo";
 
 gql`
-  query UpdateFormModal($formId: ID!) {
+  query UpdateFormDialog($formId: ID!) {
     form(id: $formId) {
       id
       handle
@@ -79,12 +79,12 @@ gql`
   }
 `;
 
-export interface UpdateFormModalProps extends Omit<ModalProps, "children"> {
+export interface UpdateFormDialogProps extends Omit<ModalProps, "children"> {
   formId: string;
   onUpdate?: (payload: UpdateFormMutation["payload"]) => void;
 }
 
-export const UpdateFormModal: FC<UpdateFormModalProps> = ({
+export const UpdateFormDialog: FC<UpdateFormDialogProps> = ({
   formId,
   onUpdate,
   onClose,
@@ -92,7 +92,7 @@ export const UpdateFormModal: FC<UpdateFormModalProps> = ({
   ...otherProps
 }) => {
   const handleQueryError = useHandleQueryError("Failed to load form");
-  const { data, loading: isLoading } = useUpdateFormModalQuery({
+  const { data, loading: isLoading } = useUpdateFormDialogQuery({
     variables: { formId },
     skip: !isOpen,
     onError: handleQueryError,

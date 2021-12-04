@@ -1,7 +1,7 @@
+use api::config::{env, load_env, set_env};
+use api::config::{namespaced_env, namespaced_env_opt};
+use api::config::{PACKAGE_NAME, PROJECT_NAME};
 use api::entities::BuildInfo;
-use api::env::load as load_env;
-use api::env::var as env_var;
-use api::env::var_or as env_var_or;
 use api::graph::{Mutation, Query, Subscription};
 use api::handlers::graphql_handler;
 use api::handlers::graphql_playground_handler;
@@ -15,10 +15,10 @@ use api::services::Services;
 use api::services::Settings;
 use api::services::{Auth0Service, Auth0ServiceConfig};
 use api::services::{ObsidianService, ObsidianServiceConfig};
+use api::services::{SegmentService, SegmentServiceConfig};
 use api::services::{SpotifyService, SpotifyServiceConfig};
 use api::util::default;
 
-use std::env::VarError as EnvVarError;
 use std::net::SocketAddr;
 
 use anyhow::Context as AnyhowContext;
@@ -29,6 +29,7 @@ use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::{Method, StatusCode};
 
 use tower::ServiceBuilder;
+use tower_cookies::CookieManagerLayer;
 use tower_http::cors::any as cors_any;
 use tower_http::cors::AnyOr as CorsAnyOr;
 use tower_http::cors::CorsLayer;
@@ -50,7 +51,7 @@ use mongodb::options::ClientOptions as MongoClientOptions;
 use mongodb::options::Compressor as MongoCompressor;
 use mongodb::Client as MongoClient;
 
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 use tracing_subscriber::fmt::layer as fmt_tracing_layer;
 use tracing_subscriber::layer::SubscriberExt as TracingSubscriberLayerExt;
 use tracing_subscriber::registry as tracing_registry;
@@ -67,14 +68,23 @@ use chrono::{DateTime, FixedOffset};
 use tokio::main as tokio;
 use url::Url;
 
-#[tokio]
-async fn main() -> Result<()> {
-    run().await
-}
-
 async fn run() -> Result<()> {
     // Load environment variables
     load_env().context("failed to load environment variables")?;
+
+    // Configure backtrace
+    {
+        let backtrace = namespaced_env_opt("BACKTRACE")?;
+        let backtrace = backtrace.unwrap_or_else(|| "1".to_owned());
+        set_env("RUST_BACKTRACE", backtrace);
+    }
+
+    // Configure logging
+    {
+        let log = namespaced_env_opt("LOG").unwrap();
+        let log = log.unwrap_or_else(|| "info".to_owned());
+        set_env("RUST_LOG", log);
+    }
 
     // Initialize tracer
     debug!("initializing tracer");
@@ -86,14 +96,7 @@ async fn run() -> Result<()> {
         .context("failed to initialize tracer")?;
 
     // Read environment name
-    let environment = match env_var("ENV") {
-        Ok(environment) => Some(environment),
-        Err(EnvVarError::NotPresent) => None,
-        Err(error) => {
-            return Err(error)
-                .context("failed to read environment variable ENV")
-        }
-    };
+    let environment = namespaced_env_opt("ENV")?;
 
     // Read build info
     let build = {
@@ -105,14 +108,15 @@ async fn run() -> Result<()> {
         BuildInfo { timestamp, version }
     };
 
-    // Initialize Sentry (if SENTRY_DSN is set)
-    let _guard = match env_var("SENTRY_DSN") {
-        Ok(dsn) => {
+    // Initialize Sentry
+    let sentry_dsn = namespaced_env_opt("SENTRY_DSN")?;
+    let _sentry_guard = match sentry_dsn {
+        Some(dsn) => {
             debug!("initializing Sentry");
             let dsn = dsn.into_dsn().context("failed to parse Sentry DSN")?;
             let release = {
-                let name = env!("CARGO_PKG_NAME");
-                format!("{}@{}", name, &build.version)
+                let BuildInfo { version, .. } = &build;
+                format!("{}-{}@{}", PROJECT_NAME, PACKAGE_NAME, version)
             };
             let options = SentryOptions {
                 dsn,
@@ -123,63 +127,58 @@ async fn run() -> Result<()> {
             let guard = init_sentry(options);
             Some(guard)
         }
-        Err(EnvVarError::NotPresent) => None,
-        Err(error) => {
-            return Err(error)
-                .context("failed to read environment variable SENTRY_DSN")
+        None => {
+            warn!("skipping Sentry initialization (missing DSN)");
+            None
         }
     };
 
     // Build settings
     let settings = Settings::builder()
         .web_base_url({
-            let url = env_var("WEB_BASE_URL")
+            let url = env("WEB_BASE_URL")
                 .context("failed to read environment variable WEB_BASE_URL")?;
             url.parse().context("failed to parse web base URL")?
         })
         .web_public_base_url({
-            let url = env_var("WEB_PUBLIC_BASE_URL").context(
+            let url = env("WEB_PUBLIC_BASE_URL").context(
                 "failed to read environment variable WEB_PUBLIC_BASE_URL",
             )?;
             url.parse().context("failed to parse web public base URL")?
         })
         .api_base_url({
-            let url = env_var("API_BASE_URL")
+            let url = env("API_BASE_URL")
                 .context("failed to read environment variable API_BASE_URL")?;
-            url.parse().context("failed to parse api base URL")?
+            url.parse().context("failed to parse API base URL")?
         })
         .api_public_base_url({
-            let url = env_var("API_PUBLIC_BASE_URL").context(
+            let url = env("API_PUBLIC_BASE_URL").context(
                 "failed to read environment variable API_PUBLIC_BASE_URL",
             )?;
-            url.parse().context("failed to parse api public base URL")?
+            url.parse().context("failed to parse API public base URL")?
         })
         .build();
 
     // Connect to database
-    let database_client = {
-        let uri = env_var_or("MONGO_URI", "mongodb://localhost:27017")
-            .context("failed to read environment variable MONGO_URI")?;
-        let options = {
-            let mut options = MongoClientOptions::parse(uri)
-                .await
-                .context("failed to parse MongoDB connection string")?;
-            options.retry_writes = Some(true);
-            options.compressors = {
-                let compressor = MongoCompressor::Zstd { level: None };
-                Some(vec![compressor])
-            };
-            options
+    let database_client = MongoClient::with_options({
+        let uri = namespaced_env_opt("MONGO_URI")?;
+        let uri = uri.unwrap_or_else(|| "mongodb://localhost:27017".to_owned());
+        let mut options = MongoClientOptions::parse(uri)
+            .await
+            .context("failed to parse MongoDB connection string")?;
+        options.retry_writes = Some(true);
+        options.compressors = {
+            let compressor = MongoCompressor::Zstd { level: None };
+            Some(vec![compressor])
         };
-        MongoClient::with_options(options)
-            .context("failed to build MongoDB client")?
-    };
+        options
+    })
+    .context("failed to build MongoDB client")?;
 
     // Connect to MongoDB
     info!("connecting to database");
     let database = {
-        let name = env_var("MONGO_DATABASE")
-            .context("failed to read environment variable MONGO_DATABASE")?;
+        let name = namespaced_env("MONGO_DATABASE")?;
         let database = database_client.database(&name);
         database
             .run_command(doc! { "ping": 1 }, None)
@@ -190,11 +189,15 @@ async fn run() -> Result<()> {
 
     info!("initializing services");
 
+    // Build Segment client
+    let segment = SegmentService::new({
+        let write_key = namespaced_env("SEGMENT_WRITE_KEY")?;
+        SegmentServiceConfig::builder().write_key(write_key).build()
+    });
+
     // Build Obsidian service
     let obsidian = ObsidianService::new({
-        let vault_path = env_var("OBSIDIAN_VAULT_PATH").context(
-            "failed to read environment variable OBSIDIAN_VAULT_PATH",
-        )?;
+        let vault_path = namespaced_env("OBSIDIAN_VAULT_PATH")?;
         ObsidianServiceConfig::builder()
             .vault_path(vault_path)
             .build()
@@ -203,14 +206,9 @@ async fn run() -> Result<()> {
 
     // Build Spotify service
     let spotify = SpotifyService::new({
-        let client_id = env_var("SPOTIFY_CLIENT_ID")
-            .context("failed to read environment variable SPOTIFY_CLIENT_ID")?;
-        let client_secret = env_var("SPOTIFY_CLIENT_SECRET").context(
-            "failed to read environment variable SPOTIFY_CLIENT_SECRET",
-        )?;
-        let refresh_token = env_var("SPOTIFY_REFRESH_TOKEN").context(
-            "failed to read environment variable SPOTIFY_REFRESH_TOKEN",
-        )?;
+        let client_id = namespaced_env("SPOTIFY_CLIENT_ID")?;
+        let client_secret = namespaced_env("SPOTIFY_CLIENT_SECRET")?;
+        let refresh_token = namespaced_env("SPOTIFY_REFRESH_TOKEN")?;
         SpotifyServiceConfig::builder()
             .client_id(client_id)
             .client_secret(client_secret)
@@ -223,9 +221,7 @@ async fn run() -> Result<()> {
 
     // Build Auth0 service
     let auth0 = Auth0Service::new({
-        let issuer_base_url = env_var("AUTH0_ISSUER_BASE_URL").context(
-            "failed to read environment variable AUTH0_ISSUER_BASE_URL",
-        )?;
+        let issuer_base_url = namespaced_env("AUTH0_ISSUER_BASE_URL")?;
         let issuer_base_url = Url::parse(&issuer_base_url)
             .context("failed to parse Auth0 issuer base URL")?;
         Auth0ServiceConfig::builder()
@@ -240,6 +236,7 @@ async fn run() -> Result<()> {
             .database(database)
             .settings(settings.clone())
             .obsidian(obsidian)
+            .segment(segment)
             .spotify(spotify)
             .lyricly(lyricly)
             .auth0(auth0)
@@ -272,62 +269,59 @@ async fn run() -> Result<()> {
     let graphql_playground_extension =
         GraphQLPlaygroundExtension::new(&services)
             .context("failed to initialize GraphQL playground")?;
-    let graphql_layer =
-        CorsLayer::new()
-            .allow_methods(vec![Method::GET, Method::POST])
-            .allow_headers(vec![
-                CONTENT_TYPE,
-                AUTHORIZATION,
-                HeaderName::from_static("sentry-trace"),
-            ])
-            .allow_credentials(true)
-            .allow_origin({
-                match env_var("API_CORS_ALLOW_ORIGIN") {
-                    Ok(origin) => {
-                        let origin: CorsAnyOr<CorsOrigin> = if origin == "*" {
-                            cors_any().into()
-                        } else {
-                            let origins = origin
-                                .split(',')
-                                .map(HeaderValue::from_str)
-                                .collect::<Result<Vec<_>, InvalidHeaderValue>>()
-                                .context("failed to parse CORS origin")?;
-                            let list = CorsOrigin::list(origins);
-                            list.into()
-                        };
-                        origin
-                    }
-                    Err(EnvVarError::NotPresent) => {
-                        let Settings {
-                            web_base_url,
-                            web_public_base_url,
-                            api_base_url,
-                            api_public_base_url,
-                            ..
-                        } = &settings;
-                        let origins = [
-                            web_base_url,
-                            web_public_base_url,
-                            api_base_url,
-                            api_public_base_url,
-                        ]
-                        .into_iter()
-                        .map(|url| {
-                            let mut url = url.to_owned();
-                            url.set_path("");
-                            let mut url = url.to_string();
-                            url.pop();
-                            HeaderValue::from_str(&url)
-                        })
-                        .collect::<Result<Vec<_>, InvalidHeaderValue>>()
-                        .context("failed to parse CORS origin")?;
-                        CorsOrigin::list(origins).into()
-                    }
-                    Err(error) => return Err(error).context(
-                        "invalid environment variable API_CORS_ALLOW_ORIGIN",
-                    ),
+    let graphql_layer = CorsLayer::new()
+        .allow_methods(vec![Method::GET, Method::POST])
+        .allow_headers(vec![
+            CONTENT_TYPE,
+            AUTHORIZATION,
+            HeaderName::from_static("sentry-trace"),
+        ])
+        .allow_credentials(true)
+        .allow_origin({
+            let allow_origin = namespaced_env_opt("CORS_ALLOW_ORIGIN")?;
+            match allow_origin {
+                Some(origin) => {
+                    let origin: CorsAnyOr<CorsOrigin> = if origin == "*" {
+                        cors_any().into()
+                    } else {
+                        let origins = origin
+                            .split(',')
+                            .map(HeaderValue::from_str)
+                            .collect::<Result<Vec<_>, InvalidHeaderValue>>()
+                            .context("failed to parse CORS origin")?;
+                        let list = CorsOrigin::list(origins);
+                        list.into()
+                    };
+                    origin
                 }
-            });
+                None => {
+                    let Settings {
+                        web_base_url,
+                        web_public_base_url,
+                        api_base_url,
+                        api_public_base_url,
+                        ..
+                    } = &settings;
+                    let origins = [
+                        web_base_url,
+                        web_public_base_url,
+                        api_base_url,
+                        api_public_base_url,
+                    ]
+                    .into_iter()
+                    .map(|url| {
+                        let mut url = url.to_owned();
+                        url.set_path("");
+                        let mut url = url.to_string();
+                        url.pop();
+                        HeaderValue::from_str(&url)
+                    })
+                    .collect::<Result<Vec<_>, InvalidHeaderValue>>()
+                    .context("failed to parse CORS origin")?;
+                    CorsOrigin::list(origins).into()
+                }
+            }
+        });
 
     // Build routes
     let routes = Router::<Body>::new()
@@ -364,14 +358,19 @@ async fn run() -> Result<()> {
                 .layer(AddExtensionLayer::new(health_webhook_extension))
                 .layer(AddExtensionLayer::new(graphql_extension))
                 .layer(AddExtensionLayer::new(graphql_playground_extension))
+                .layer(CookieManagerLayer::new())
                 .layer(TraceLayer::new_for_http())
         })
         .into_make_service();
 
-    let host = env_var_or("API_HOST", "0.0.0.0")
-        .context("failed to get environment variable API_HOST")?;
-    let port = env_var_or("API_PORT", "3000")
-        .context("failed to get environment variable API_PORT")?;
+    let host = {
+        let host = namespaced_env_opt("HOST")?;
+        host.unwrap_or_else(|| "0.0.0.0".to_owned())
+    };
+    let port = {
+        let port = namespaced_env_opt("PORT")?;
+        port.unwrap_or_else(|| "3000".to_owned())
+    };
     let addr: SocketAddr = format!("{}:{}", host, port)
         .parse()
         .context("failed to parse server address")?;
@@ -382,4 +381,9 @@ async fn run() -> Result<()> {
         .await
         .context("failed to serve routes")?;
     Ok(())
+}
+
+#[tokio]
+async fn main() -> Result<()> {
+    run().await
 }

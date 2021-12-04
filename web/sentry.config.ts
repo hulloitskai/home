@@ -4,9 +4,14 @@ import { excludeGraphQLFetch } from "apollo-link-sentry";
 
 import { sentryDSN } from "config";
 
-init({
-  dsn: sentryDSN,
-  integrations: [new CaptureConsole({ levels: ["error"] })],
-  tracesSampleRate: 0,
-  beforeBreadcrumb: excludeGraphQLFetch,
-});
+if (sentryDSN) {
+  init({
+    dsn: sentryDSN,
+    integrations: [new CaptureConsole({ levels: ["error"] })],
+    tracesSampleRate: 0,
+    beforeBreadcrumb: excludeGraphQLFetch,
+  });
+  console.info("[Sentry] Successfully initialized Sentry");
+} else {
+  console.warn("[Sentry] Missing DSN; skipping initialization");
+}

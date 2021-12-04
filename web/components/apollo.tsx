@@ -40,11 +40,16 @@ const typePolicies: TypePolicies = {
 };
 
 const createTerminatingLink = (): ApolloLink => {
+  if (!apiPublicBaseURL) {
+    throw new Error("Missing API public base URL.");
+  }
+
   const httpLink = new HttpLink({
     uri:
       typeof window !== "undefined"
         ? `${apiPublicBaseURL}/graphql`
         : `${apiBaseURL}/graphql`,
+    credentials: "include",
   });
   if (typeof window === "undefined") {
     return httpLink;

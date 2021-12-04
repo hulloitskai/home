@@ -14,7 +14,7 @@ import { Disclosure } from "components/disclosure";
 import { NoContent } from "components/no-content";
 
 import { FormCard } from "components/form-card";
-import { CreateFormModal } from "components/create-form-modal";
+import { CreateFormDialog } from "components/create-form-dialog";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
@@ -67,7 +67,7 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
             )}
           >
             {props => (
-              <CreateFormModal
+              <CreateFormDialog
                 onCreate={() => {
                   refetch();
                 }}

@@ -42,7 +42,9 @@ use user::*;
 
 use super::*;
 
-use services::auth0::Identity;
+use services::auth0::UserInfo;
+use services::segment::Identity;
+use services::segment::TrackEvent as SegmentTrackEvent;
 use services::Services;
 
 use entrust::{Comparison, Record, SortingDirection};
@@ -65,12 +67,17 @@ use entities::{Context as EntityContext, *};
 
 trait ContextExt {
     fn services(&self) -> &Services;
+    fn userinfo(&self) -> Option<&UserInfo>;
     fn identity(&self) -> Option<&Identity>;
 }
 
 impl<'a> ContextExt for Context<'a> {
     fn services(&self) -> &Services {
-        self.data_unchecked::<Services>()
+        self.data_opt().expect("missing Services")
+    }
+
+    fn userinfo(&self) -> Option<&UserInfo> {
+        self.data_opt()
     }
 
     fn identity(&self) -> Option<&Identity> {

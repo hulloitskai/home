@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -24,6 +24,7 @@
     "@emotion/react": "^11.7.0",
     "@emotion/styled": "^11.6.0",
     "@rehooks/component-size": "^1.0.3",
+    "@segment/analytics-next": "^1.31.2",
     "@sentry/integrations": "^6.15.0",
     "@sentry/nextjs": "^6.15.0",
     "@sentry/types": "^6.15.0",
