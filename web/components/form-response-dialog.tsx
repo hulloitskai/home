@@ -24,10 +24,10 @@ import { SkeletonBlock } from "components/skeleton";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useFormResponseModalResponseQuery } from "apollo";
+import { useFormResponseDialogQuery } from "apollo";
 
 gql`
-  query FormResponseModalResponse($responseId: ID!) {
+  query FormResponseDialog($responseId: ID!) {
     formResponse(id: $responseId) {
       id
       respondent
@@ -56,17 +56,17 @@ gql`
   }
 `;
 
-export interface FormResponseModalProps extends Omit<ModalProps, "children"> {
+export interface FormResponseDialogProps extends Omit<ModalProps, "children"> {
   readonly responseId: string;
 }
 
-export const FormResponseModal: FC<FormResponseModalProps> = ({
+export const FormResponseDialog: FC<FormResponseDialogProps> = ({
   responseId,
   isOpen,
   ...otherProps
 }) => {
   const handleQueryError = useHandleQueryError("Failed to load form response");
-  const { data } = useFormResponseModalResponseQuery({
+  const { data } = useFormResponseDialogQuery({
     variables: {
       responseId,
     },

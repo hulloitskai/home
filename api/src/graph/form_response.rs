@@ -110,12 +110,12 @@ impl FormResponseQuery {
         ctx: &Context<'_>,
         id: Id<FormResponse>,
     ) -> Result<Option<FormResponseObject>> {
-        let identity = ctx.identity();
+        let userinfo = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
-        if let Some(identity) = identity {
-            ensure!(identity.is_admin, "not authorized");
+        if let Some(userinfo) = userinfo {
+            ensure!(userinfo.is_admin, "not authorized");
         } else {
             bail!("not authenticated");
         }

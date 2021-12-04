@@ -66,7 +66,7 @@ impl FormObject {
         &self,
         ctx: &Context<'_>,
     ) -> Result<Vec<FormResponseObject>> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
@@ -91,7 +91,7 @@ impl FormObject {
         Ok(responses)
     }
     async fn resolve_responses_count(&self, ctx: &Context<'_>) -> Result<u64> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
@@ -216,7 +216,7 @@ impl FormQuery {
         ctx: &Context<'_>,
         id: Id<Form>,
     ) -> Result<Option<FormObject>> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -248,7 +248,7 @@ impl FormQuery {
         ctx: &Context<'_>,
         handle: String,
     ) -> Result<Option<FormObject>> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -285,7 +285,7 @@ impl FormQuery {
         take: u64,
         include_archived: bool,
     ) -> Result<Vec<FormObject>> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -390,7 +390,7 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: CreateFormInput,
     ) -> Result<CreateFormPayload> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -438,7 +438,7 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: UpdateFormInput,
     ) -> Result<UpdateFormPayload> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.to_owned());
 
@@ -528,7 +528,7 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: DeleteFormInput,
     ) -> Result<DeleteFormPayload> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
@@ -559,7 +559,7 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: ArchiveFormInput,
     ) -> Result<ArchiveFormPayload> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
@@ -594,7 +594,7 @@ impl FormMutation {
         ctx: &Context<'_>,
         input: RestoreFormInput,
     ) -> Result<RestoreFormPayload> {
-        let identity = ctx.identity();
+        let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 

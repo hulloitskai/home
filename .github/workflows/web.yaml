@@ -39,9 +39,9 @@ jobs:
           push: true
           tags: ${{ steps.generate-tags.outputs.tags }}
           build-args: |
-            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
-            SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            SENTRY_ORG=${{ secrets.WEB_SENTRY_ORG }}
+            SENTRY_PROJECT=${{ secrets.WEB_SENTRY_PROJECT }}
+            SENTRY_AUTH_TOKEN=${{ secrets.WEB_SENTRY_AUTH_TOKEN }}
           cache-from: |
             type=local,src=/tmp/.docker-cache
           cache-to: |

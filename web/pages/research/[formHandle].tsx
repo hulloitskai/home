@@ -1,5 +1,6 @@
 import React from "react";
 import { useRouter } from "next/router";
+import { useTrackPage } from "components/segment";
 import type { NextPage, GetServerSideProps } from "next";
 
 import { useForm, Controller } from "react-hook-form";
@@ -24,20 +25,19 @@ import {
 import { MetaTitle, MetaDescription } from "components/meta";
 import { Layout } from "components/layout";
 import { TextareaAutosize } from "components/textarea";
+import { useTransparentize } from "components/chakra";
 
 import { patchNodeFetchForSSR } from "components/apollo";
 import { initializeApolloClient } from "components/apollo";
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
+import { useSubmitFormMutation } from "apollo";
 
 import {
   ResearchPagePropsDocument,
   ResearchPagePropsQuery,
   ResearchPagePropsQueryVariables,
 } from "apollo";
-
-import { useSubmitFormMutation } from "apollo";
-import { useTransparentize } from "components/chakra";
 
 interface ResearchPageProps {
   readonly form: NonNullable<ResearchPagePropsQuery["form"]>;
@@ -52,6 +52,8 @@ gql`
 `;
 
 const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
+  useTrackPage({ name: "Research" });
+
   const {
     id: formId,
     handle,

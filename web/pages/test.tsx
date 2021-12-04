@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import type { NextPage } from "next";
 import { useUser } from "@auth0/nextjs-auth0";
 
@@ -6,7 +6,7 @@ import { HiClipboardCopy } from "react-icons/hi";
 
 import { Box, Container, VStack, HStack, Spacer } from "@chakra-ui/react";
 import { Heading, Text, Link, Icon, Badge } from "@chakra-ui/react";
-import { Button, IconButton } from "@chakra-ui/react";
+import { ButtonProps, Button, IconButton } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/react";
 import { DarkMode } from "@chakra-ui/react";
 import { useClipboard } from "@chakra-ui/react";
@@ -14,6 +14,26 @@ import { useClipboard } from "@chakra-ui/react";
 import { Layout } from "components/layout";
 import { ClientOnly } from "components/client-only";
 import { useToast } from "components/toast";
+
+import { gql } from "@apollo/client";
+import { useHandleQueryError } from "components/apollo";
+import { useTestMutation, useTestFailureMutation } from "apollo";
+
+gql`
+  mutation Test($input: TestInput!) {
+    payload: test(input: $input) {
+      value
+    }
+  }
+`;
+
+gql`
+  mutation TestFailure($input: TestInput!) {
+    payload: testFailure(input: $input) {
+      value
+    }
+  }
+`;
 
 const TestPage: NextPage = () => {
   const toast = useToast();
@@ -169,8 +189,83 @@ const TestPage: NextPage = () => {
           </Button>
         </HStack>
       </Container>
+      <Container as={VStack} align="stretch">
+        <Heading>API Integration</Heading>
+        <HStack>
+          <TestButton flex={1} />
+          <TestFailureButton flex={1} />
+        </HStack>
+      </Container>
     </Layout>
   );
 };
 
 export default TestPage;
+
+const TestButton: FC<ButtonProps> = ({ ...otherProps }) => {
+  const toast = useToast();
+  const handleQueryError = useHandleQueryError();
+  const [runMutation, { loading: isLoading }] = useTestMutation({
+    onCompleted: ({ payload: { value } }) => {
+      toast({
+        status: "info",
+        description: `Got value: ${value}`,
+      });
+    },
+    onError: handleQueryError,
+  });
+  return (
+    <Button
+      isLoading={isLoading}
+      onClick={() => {
+        const value = window.prompt("Enter a value:");
+        if (value) {
+          runMutation({
+            variables: {
+              input: {
+                value,
+              },
+            },
+          });
+        }
+      }}
+      {...otherProps}
+    >
+      Test
+    </Button>
+  );
+};
+
+const TestFailureButton: FC<ButtonProps> = ({ ...otherProps }) => {
+  const toast = useToast();
+  const handleQueryError = useHandleQueryError();
+  const [runMutation, { loading: isLoading }] = useTestFailureMutation({
+    onCompleted: ({ payload: { value } }) => {
+      toast({
+        status: "info",
+        description: `Got value: ${value}`,
+      });
+    },
+    onError: handleQueryError,
+  });
+  return (
+    <Button
+      isLoading={isLoading}
+      onClick={() => {
+        const value = window.prompt("Enter a value:");
+        if (value) {
+          runMutation({
+            variables: {
+              input: {
+                value,
+              },
+            },
+          });
+        }
+      }}
+      {...otherProps}
+    >
+      TestFailure
+    </Button>
+  );
+};

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import type { GetServerSideProps, NextPage } from "next";
 import { DateTime } from "luxon";
+import { useTrackPage } from "components/segment";
 
 import { HiOutlineArrowsExpand } from "react-icons/hi";
 
@@ -68,6 +69,8 @@ gql`
 `;
 
 const HomePage: NextPage = () => {
+  useTrackPage({ name: "Home" });
+
   const dailyNoteId = useMemo(() => DateTime.now().toFormat("yyyy-LL-dd"), []);
   const handleQueryError = useHandleQueryError();
   const { data } = useHomePageQuery({

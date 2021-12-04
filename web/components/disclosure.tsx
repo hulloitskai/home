@@ -6,12 +6,12 @@ export interface DisclosureTriggerProps {
   readonly isOpen: boolean;
 }
 
-export interface DialogProps {
+export interface DisclosureProps {
   readonly renderTrigger: (props: DisclosureTriggerProps) => ReactNode;
   readonly children: (props: UseDisclosureReturn) => ReactNode;
 }
 
-export const Disclosure: FC<DialogProps> = ({
+export const Disclosure: FC<DisclosureProps> = ({
   children: renderDisclosure,
   renderTrigger,
 }) => {

@@ -16,7 +16,7 @@ import { InternalLink, InternalLinkOverlay } from "components/link";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useLayoutFooterViewerQuery } from "apollo";
+import { useLayoutFooterQuery } from "apollo";
 
 export interface LayoutProps extends Omit<StackProps, "direction"> {
   badge: string;
@@ -133,7 +133,7 @@ export const Layout: FC<LayoutProps> = ({
 };
 
 gql`
-  query LayoutFooterViewer {
+  query LayoutFooter {
     viewer {
       id
       email
@@ -152,7 +152,7 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
     data,
     refetch,
     loading: queryIsLoading,
-  } = useLayoutFooterViewerQuery({
+  } = useLayoutFooterQuery({
     skip: userIsLoading,
     onError: handleQueryError,
   });
