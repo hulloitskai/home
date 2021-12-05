@@ -61,16 +61,12 @@ impl TestMutation {
 
         let identity = ctx.identity();
         let services = ctx.services();
-        let segment = services.segment();
+        let heap = services.heap();
 
         // Track mutation
-        if let Some(user) = identity {
-            segment.send_later(SegmentTrackEvent {
-                user: user.to_owned(),
-                event: "Test".to_owned(),
-                properties,
-                ..default()
-            });
+        if let Some(Identity { id, .. }) = identity {
+            let event = Event::new("Test", properties);
+            heap.track_concurrently(id, event);
         }
 
         let payload = TestPayload { ok: true, value };

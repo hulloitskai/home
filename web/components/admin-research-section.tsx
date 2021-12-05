@@ -58,6 +58,7 @@ export const AdminResearchSection: FC<AdminResearchSectionProps> = ({
           <Disclosure
             renderTrigger={({ open }) => (
               <Button
+                className="create-form"
                 leftIcon={<Icon as={HiPlusCircle} fontSize="lg" />}
                 colorScheme="black"
                 onClick={open}

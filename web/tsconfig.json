@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "typeRoots": ["./typings"],
     "paths": {
       "pages": ["./pages"],
       "utils": ["./utils"],

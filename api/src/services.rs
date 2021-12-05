@@ -1,11 +1,11 @@
 pub mod auth0;
+pub mod heap;
 pub mod lyricly;
 pub mod obsidian;
-pub mod segment;
 pub mod spotify;
 
-pub use self::segment::Service as SegmentService;
-pub use self::segment::ServiceConfig as SegmentServiceConfig;
+pub use self::heap::Service as HeapService;
+pub use self::heap::ServiceConfig as HeapServiceConfig;
 pub use auth0::Service as Auth0Service;
 pub use auth0::ServiceConfig as Auth0ServiceConfig;
 pub use lyricly::Service as LyriclyService;
@@ -25,10 +25,10 @@ pub struct Config {
     pub database_client: DatabaseClient,
     pub settings: Settings,
     pub obsidian: ObsidianService,
-    pub segment: SegmentService,
     pub spotify: SpotifyService,
     pub lyricly: LyriclyService,
     pub auth0: Auth0Service,
+    pub heap: HeapService,
 }
 
 #[derive(Debug, Builder)]
@@ -37,10 +37,10 @@ struct ServicesInner {
     database_client: DatabaseClient,
     settings: Settings,
     obsidian: ObsidianService,
-    segment: SegmentService,
     spotify: SpotifyService,
     lyricly: LyriclyService,
     auth0: Auth0Service,
+    heap: HeapService,
 }
 
 impl ServicesInner {
@@ -60,10 +60,6 @@ impl ServicesInner {
         &self.obsidian
     }
 
-    fn segment(&self) -> &SegmentService {
-        &self.segment
-    }
-
     fn spotify(&self) -> &SpotifyService {
         &self.spotify
     }
@@ -74,6 +70,10 @@ impl ServicesInner {
 
     fn auth0(&self) -> &Auth0Service {
         &self.auth0
+    }
+
+    fn heap(&self) -> &HeapService {
+        &self.heap
     }
 }
 
@@ -87,10 +87,10 @@ impl Services {
             database_client,
             settings,
             obsidian,
-            segment,
             spotify,
             lyricly,
             auth0,
+            heap,
         } = config;
 
         let inner = ServicesInner {
@@ -98,10 +98,10 @@ impl Services {
             database_client,
             settings,
             obsidian,
-            segment,
             spotify,
             lyricly,
             auth0,
+            heap,
         };
         Services(inner.into())
     }
@@ -112,7 +112,7 @@ impl Services {
             pub fn database_client(&self) -> &DatabaseClient;
             pub fn settings(&self) -> &Settings;
             pub fn obsidian(&self) -> &ObsidianService;
-            pub fn segment(&self) -> &SegmentService;
+            pub fn heap(&self) -> &HeapService;
             pub fn spotify(&self) -> &SpotifyService;
             pub fn lyricly(&self) -> &LyriclyService;
             pub fn auth0(&self) -> &Auth0Service;

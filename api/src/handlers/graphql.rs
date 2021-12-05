@@ -2,7 +2,6 @@ use super::*;
 
 use axum::extract::ws::WebSocketUpgrade;
 use graph::{Mutation, Query, Subscription};
-use tower_cookies::Cookies;
 
 use headers::authorization::Bearer;
 use headers::Authorization;
@@ -19,9 +18,6 @@ use graphql_axum::GraphQLResponse;
 use graphql_axum::GraphQLSubscription;
 use graphql_axum::GraphQLWebSocket;
 
-use services::segment::IdentifyEvent as SegmentIdentifyEvent;
-use services::segment::Identity;
-
 #[derive(Clone, Builder)]
 pub struct GraphQLExtension {
     services: Services,
@@ -30,7 +26,6 @@ pub struct GraphQLExtension {
 
 pub async fn graphql_handler(
     Extension(extension): Extension<GraphQLExtension>,
-    cookies: Cookies,
     authorization: Option<HeaderExtractor<Authorization<Bearer>>>,
     request: Option<GraphQLRequest>,
     ws_upgrade: Option<WebSocketUpgrade>,
@@ -39,14 +34,14 @@ pub async fn graphql_handler(
     let GraphQLExtension { services, schema } = extension;
     let auth0 = services.auth0();
 
-    // Read userinfo from authorization
-    let userinfo = match authorization {
+    // Read identity from authorization
+    let identity = match authorization {
         Some(HeaderExtractor(Authorization(bearer))) => {
-            let userinfo = auth0
-                .userinfo(bearer.token())
+            let identity = auth0
+                .identify(bearer.token())
                 .await
                 .context("authentication failed");
-            let userinfo = match userinfo {
+            let identity = match identity {
                 Ok(info) => info,
                 Err(error) => {
                     error!(
@@ -56,35 +51,17 @@ pub async fn graphql_handler(
                     return Err(error.into());
                 }
             };
-            Some(userinfo)
+            Some(identity)
         }
         None => None,
-    };
-
-    // Read identity using userinfo and AnalyticsJS cookie
-    let identity = {
-        let anonymous_id = cookies
-            .get("ajs_anonymous_id")
-            .map(|cookie| cookie.value().to_owned());
-        let user_id = userinfo.as_ref().map(|info| info.id.clone());
-        match (anonymous_id, user_id) {
-            (Some(anonymous_id), Some(user_id)) => Some(Identity::Both {
-                anonymous_id,
-                user_id,
-            }),
-            (Some(anonymous_id), None) => {
-                Some(Identity::AnonymousId { anonymous_id })
-            }
-            (None, Some(user_id)) => Some(Identity::UserId { user_id }),
-            _ => None,
-        }
     };
 
     // Initial data from request
     let data = {
         let mut data = GraphQLData::default();
-        data.insert(userinfo.clone());
-        data.insert(identity.clone());
+        if let Some(identity) = &identity {
+            data.insert(identity.clone());
+        }
         data
     };
 
@@ -95,7 +72,6 @@ pub async fn graphql_handler(
             .on_upgrade(move |stream| async move {
                 trace!(
                     identity = %to_json_string(&identity).unwrap(),
-                    userinfo = %to_json_string(&userinfo).unwrap(),
                     "handling stream"
                 );
                 GraphQLWebSocket::new(stream, schema, protocol)
@@ -113,7 +89,6 @@ pub async fn graphql_handler(
     if let Some(GraphQLRequest(request)) = request {
         trace!(
             identity = %to_json_string(&identity).unwrap(),
-            userinfo = %to_json_string(&userinfo).unwrap(),
             request = %to_json_string(&request).unwrap(),
             "handling request"
         );

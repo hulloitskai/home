@@ -14,8 +14,8 @@ use api::services::LyriclyService;
 use api::services::Services;
 use api::services::Settings;
 use api::services::{Auth0Service, Auth0ServiceConfig};
+use api::services::{HeapService, HeapServiceConfig};
 use api::services::{ObsidianService, ObsidianServiceConfig};
-use api::services::{SegmentService, SegmentServiceConfig};
 use api::services::{SpotifyService, SpotifyServiceConfig};
 use api::util::default;
 
@@ -29,7 +29,6 @@ use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::{Method, StatusCode};
 
 use tower::ServiceBuilder;
-use tower_cookies::CookieManagerLayer;
 use tower_http::cors::any as cors_any;
 use tower_http::cors::AnyOr as CorsAnyOr;
 use tower_http::cors::CorsLayer;
@@ -189,10 +188,10 @@ async fn run() -> Result<()> {
 
     info!("initializing services");
 
-    // Build Segment client
-    let segment = SegmentService::new({
-        let write_key = namespaced_env("SEGMENT_WRITE_KEY")?;
-        SegmentServiceConfig::builder().write_key(write_key).build()
+    // Build Heap analytics client
+    let heap = HeapService::new({
+        let app_id = namespaced_env("HEAP_APP_ID")?;
+        HeapServiceConfig::builder().app_id(app_id).build()
     });
 
     // Build Obsidian service
@@ -236,10 +235,10 @@ async fn run() -> Result<()> {
             .database(database)
             .settings(settings.clone())
             .obsidian(obsidian)
-            .segment(segment)
             .spotify(spotify)
             .lyricly(lyricly)
             .auth0(auth0)
+            .heap(heap)
             .build()
     });
 
@@ -358,7 +357,6 @@ async fn run() -> Result<()> {
                 .layer(AddExtensionLayer::new(health_webhook_extension))
                 .layer(AddExtensionLayer::new(graphql_extension))
                 .layer(AddExtensionLayer::new(graphql_playground_extension))
-                .layer(CookieManagerLayer::new())
                 .layer(TraceLayer::new_for_http())
         })
         .into_make_service();

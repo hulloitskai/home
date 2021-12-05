@@ -33,7 +33,7 @@ thiserror = "^1.0.30"
 tokio = { version = "^1.14.0", features = ["rt-multi-thread", "macros"] }
 tokio_stream = { package = "tokio-stream", version = "^0.1.8" }
 tower = "^0.4.11"
-tower_cookies = { package = "tower-cookies", version = "^0.2.1" }
+# tower_cookies = { package = "tower-cookies", version = "^0.2.1" }
 tracing = "^0.1.29"
 typed_builder = { package = "typed-builder", version = "^0.9.1" }
 url = { version = "^2.2.2", features = ["serde"] }

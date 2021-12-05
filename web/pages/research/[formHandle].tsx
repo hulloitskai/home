@@ -1,6 +1,5 @@
 import React from "react";
 import { useRouter } from "next/router";
-import { useTrackPage } from "components/segment";
 import type { NextPage, GetServerSideProps } from "next";
 
 import { useForm, Controller } from "react-hook-form";
@@ -52,8 +51,6 @@ gql`
 `;
 
 const ResearchPage: NextPage<ResearchPageProps> = ({ form }) => {
-  useTrackPage({ name: "Research" });
-
   const {
     id: formId,
     handle,

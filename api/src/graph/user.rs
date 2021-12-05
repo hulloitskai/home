@@ -8,9 +8,9 @@ pub(super) struct UserObject {
     pub is_admin: bool,
 }
 
-impl From<UserInfo> for UserObject {
-    fn from(info: UserInfo) -> Self {
-        let UserInfo {
+impl From<Identity> for UserObject {
+    fn from(info: Identity) -> Self {
+        let Identity {
             id,
             email,
             is_admin,
@@ -37,7 +37,7 @@ impl UserQuery {
 
 impl UserQuery {
     async fn resolve_viewer(&self, ctx: &Context<'_>) -> Option<UserObject> {
-        let userinfo = ctx.userinfo();
-        userinfo.map(ToOwned::to_owned).map(Into::into)
+        let identity = ctx.identity();
+        identity.map(ToOwned::to_owned).map(Into::into)
     }
 }
