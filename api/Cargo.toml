@@ -1,6 +1,6 @@
 [package]
 name = "api"
-version = "0.8.7"
+version = "0.8.8"
 edition = "2021"
 rust-version = "1.56.0"
 
@@ -15,7 +15,7 @@ derives = { package = "derive_more", version = "^0.99.16" }
 derivative = "^2.2.0"
 dotenv = "^0.15.0"
 emails = { package = "mailchecker", version = "^4.1.0" }
-entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.11" }
+entrust = { git = "https://github.com/hulloitskai/entrust", tag = "v0.2.12" }
 futures = { package = "futures-core", version = "^0.3.18" }
 futures_util = { package = "futures-util", version = "^0.3.18" }
 graphql_axum = { package = "async-graphql-axum", version = "^3.0.7" }

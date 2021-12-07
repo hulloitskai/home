@@ -64,7 +64,7 @@ checksum = "8b26702f315f53b6071259e15dd9d64528213b44d61de1ec926eca7715d62203"
 
 [[package]]
 name = "api"
-version = "0.8.7"
+version = "0.8.8"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -765,8 +765,8 @@ dependencies = [
 
 [[package]]
 name = "entrust"
-version = "0.2.11"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.11#234b341091193375ad58c4f88bbe3c88ab964ea3"
+version = "0.2.12"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.12#e70ebd62995b75744d2375f15146ca95e855683e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -787,8 +787,8 @@ dependencies = [
 
 [[package]]
 name = "entrust-macros"
-version = "0.2.11"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.11#234b341091193375ad58c4f88bbe3c88ab964ea3"
+version = "0.2.12"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.2.12#e70ebd62995b75744d2375f15146ca95e855683e"
 dependencies = [
  "proc-macro2",
  "quote",

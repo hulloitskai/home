@@ -9,12 +9,15 @@ pub struct Form {
     pub handle: Handle,
     pub name: String,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub description: Option<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub respondent_label: Option<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub respondent_helper: Option<String>,
 
