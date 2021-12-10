@@ -47,7 +47,7 @@ use services::segment::Identity;
 use services::segment::TrackEvent as SegmentTrackEvent;
 use services::Services;
 
-use entrust::{Comparison, Record, SortingDirection};
+use entrust::{Comparison, SortingDirection};
 use entrust::{Entity, EntityId};
 
 use graphql::scalar;

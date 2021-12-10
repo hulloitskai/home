@@ -39,6 +39,9 @@ const ErrorPage: NextPage<ErrorPageProps> = ({
       if (error.name === "Error") {
         return error.message;
       }
+      if (error.message) {
+        return error.message;
+      }
       return error.toString();
     }
     return "";

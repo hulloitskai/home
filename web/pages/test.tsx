@@ -18,7 +18,7 @@ import { useToast } from "components/toast";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useTestMutation, useTestFailureMutation } from "apollo";
+import { useTestMutation, useTestFailureMutation } from "apollo/schema";
 
 gql`
   mutation Test($input: TestInput!) {

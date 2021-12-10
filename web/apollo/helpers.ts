@@ -52,14 +52,13 @@ export type FormFieldSingleChoiceInputConfigKeySpecifier = ('options' | FormFiel
 export type FormFieldSingleChoiceInputConfigFieldPolicy = {
 	options?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type FormResponseKeySpecifier = ('createdAt' | 'fields' | 'form' | 'id' | 'respondent' | 'updatedAt' | FormResponseKeySpecifier)[];
+export type FormResponseKeySpecifier = ('createdAt' | 'fields' | 'form' | 'id' | 'respondent' | FormResponseKeySpecifier)[];
 export type FormResponseFieldPolicy = {
 	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	fields?: FieldPolicy<any> | FieldReadFunction<any>,
 	form?: FieldPolicy<any> | FieldReadFunction<any>,
 	id?: FieldPolicy<any> | FieldReadFunction<any>,
-	respondent?: FieldPolicy<any> | FieldReadFunction<any>,
-	updatedAt?: FieldPolicy<any> | FieldReadFunction<any>
+	respondent?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type FormResponseFieldKeySpecifier = ('multipleChoice' | 'singleChoice' | 'text' | FormResponseFieldKeySpecifier)[];
 export type FormResponseFieldFieldPolicy = {
@@ -67,13 +66,11 @@ export type FormResponseFieldFieldPolicy = {
 	singleChoice?: FieldPolicy<any> | FieldReadFunction<any>,
 	text?: FieldPolicy<any> | FieldReadFunction<any>
 };
-export type HeartRateKeySpecifier = ('createdAt' | 'id' | 'measurement' | 'timestamp' | 'updatedAt' | HeartRateKeySpecifier)[];
+export type HeartRateKeySpecifier = ('id' | 'measuredAt' | 'measurement' | HeartRateKeySpecifier)[];
 export type HeartRateFieldPolicy = {
-	createdAt?: FieldPolicy<any> | FieldReadFunction<any>,
 	id?: FieldPolicy<any> | FieldReadFunction<any>,
-	measurement?: FieldPolicy<any> | FieldReadFunction<any>,
-	timestamp?: FieldPolicy<any> | FieldReadFunction<any>,
-	updatedAt?: FieldPolicy<any> | FieldReadFunction<any>
+	measuredAt?: FieldPolicy<any> | FieldReadFunction<any>,
+	measurement?: FieldPolicy<any> | FieldReadFunction<any>
 };
 export type KnowledgeEntryKeySpecifier = ('id' | 'links' | 'names' | 'tags' | KnowledgeEntryKeySpecifier)[];
 export type KnowledgeEntryFieldPolicy = {

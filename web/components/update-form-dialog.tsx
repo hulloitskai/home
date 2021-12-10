@@ -24,8 +24,8 @@ import {
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useUpdateFormDialogQuery } from "apollo";
-import { useUpdateFormMutation, UpdateFormMutation } from "apollo";
+import { useUpdateFormDialogQuery } from "apollo/schema";
+import { useUpdateFormMutation, UpdateFormMutation } from "apollo/schema";
 
 gql`
   query UpdateFormDialog($formId: ID!) {
@@ -183,11 +183,15 @@ export const UpdateFormDialog: FC<UpdateFormDialogProps> = ({
     reset,
     formState: { isValid },
   } = formMethods;
-  useEffect(() => {
-    if (isOpen) {
-      reset(defaultValues);
-    }
-  }, [isOpen, defaultValues]);
+  useEffect(
+    () => {
+      if (isOpen) {
+        reset(defaultValues);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isOpen, defaultValues],
+  );
 
   const onSubmit = handleSubmit(async values => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

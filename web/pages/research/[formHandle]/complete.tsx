@@ -16,7 +16,7 @@ import {
   ResearchCompletePagePropsDocument,
   ResearchCompletePagePropsQuery,
   ResearchCompletePagePropsQueryVariables,
-} from "apollo";
+} from "apollo/schema";
 
 interface ResearchCompletePageProps {
   readonly form: NonNullable<ResearchCompletePagePropsQuery["form"]>;

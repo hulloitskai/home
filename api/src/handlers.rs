@@ -12,7 +12,6 @@ use entities::*;
 use services::Services;
 
 use entrust::Comparison;
-use entrust::Record;
 use entrust::{Entity, EntityId};
 use entrust::{Object, ObjectId};
 
@@ -22,9 +21,9 @@ use axum::extract::Extension;
 use axum::extract::Json as JsonExtractor;
 use axum::extract::TypedHeader as HeaderExtractor;
 use axum::response::Html as HtmlResponse;
-use axum::response::IntoResponse;
 use axum::response::Json as JsonResponse;
-use http::{Response, StatusCode};
+use axum::response::{IntoResponse, Response};
+use http::StatusCode;
 
 pub type HandlerResult<T> = Result<T, HandlerError>;
 
@@ -35,10 +34,7 @@ pub enum HandlerError {
 }
 
 impl IntoResponse for HandlerError {
-    type Body = Full<Bytes>;
-    type BodyError = Infallible;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response {
         use HandlerError::*;
         let (status_code, message) = match self {
             Other(error) => {

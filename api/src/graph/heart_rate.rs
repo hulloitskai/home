@@ -1,30 +1,23 @@
 use super::*;
 
 #[derive(Debug, Clone, From)]
-pub(super) struct HeartRateObject {
-    pub record: Record<HeartRate>,
-}
+pub(super) struct HeartRateObject(HeartRate);
 
 #[Object(name = "HeartRate")]
 impl HeartRateObject {
     async fn id(&self) -> Id<HeartRate> {
-        self.record.id().into()
+        let HeartRateObject(rate) = self;
+        rate.id.into()
     }
 
-    async fn created_at(&self) -> DateTimeScalar {
-        self.record.created_at().into()
-    }
-
-    async fn updated_at(&self) -> DateTimeScalar {
-        self.record.updated_at().into()
+    async fn measured_at(&self) -> DateTimeScalar {
+        let HeartRateObject(rate) = self;
+        rate.measured_at.into()
     }
 
     async fn measurement(&self) -> u16 {
-        self.record.measurement
-    }
-
-    async fn timestamp(&self) -> DateTimeScalar {
-        self.record.timestamp.into()
+        let HeartRateObject(rate) = self;
+        rate.measurement
     }
 }
 
@@ -52,10 +45,10 @@ impl HeartRateQuery {
         let mut rates = HeartRate::find({
             let one_day_ago = now() - Duration::days(1);
             HeartRateConditions::builder()
-                .timestamp(Comparison::Gt(one_day_ago))
+                .measured_at(Comparison::Gt(one_day_ago))
                 .build()
         })
-        .sort(HeartRateSorting::Timestamp(SortingDirection::Desc))
+        .sort(HeartRateSorting::MeasuredAt(SortingDirection::Desc))
         .load(&ctx)
         .await
         .context("failed to find heart rates")?;

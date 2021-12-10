@@ -51,7 +51,7 @@ export const HeartBeat: FC<HeartBeatProps> = ({ bpm, ...otherProps }) => {
       fgControls.stop();
       bgControls.stop();
     }
-  }, [bpm]);
+  }, [bpm, fgControls, bgControls]);
 
   return (
     <Box pos="relative" {...otherProps}>

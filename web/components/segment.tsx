@@ -57,10 +57,14 @@ export type TrackPageOptions = {
 
 export const useTrackPage = (options?: TrackPageOptions): void => {
   const analytics = useAnalytics();
-  useEffect(() => {
-    if (analytics) {
-      const { category, name } = options ?? {};
-      analytics.page(category, name);
-    }
-  }, [analytics]);
+  useEffect(
+    () => {
+      if (analytics) {
+        const { category, name } = options ?? {};
+        analytics.page(category, name);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [analytics],
+  );
 };

@@ -19,7 +19,7 @@ import { parseFormFieldValues, FormFieldValues } from "components/form-fields";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { CreateFormMutation, useCreateFormMutation } from "apollo";
+import { CreateFormMutation, useCreateFormMutation } from "apollo/schema";
 
 gql`
   mutation CreateForm($input: CreateFormInput!) {
@@ -75,11 +75,15 @@ export const CreateFormDialog: FC<CreateFormDialogProps> = ({
     reset,
     formState: { isValid },
   } = formMethods;
-  useEffect(() => {
-    if (isOpen) {
-      reset();
-    }
-  }, [isOpen]);
+  useEffect(
+    () => {
+      if (isOpen) {
+        reset();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isOpen],
+  );
 
   const onSubmit = handleSubmit(async values => {
     await runMutation({

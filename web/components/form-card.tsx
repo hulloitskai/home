@@ -41,11 +41,11 @@ import {
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useDeleteFormMutation, DeleteFormMutation } from "apollo";
-import { useArchiveFormMutation, ArchiveFormMutation } from "apollo";
-import { useRestoreFormMutation, RestoreFormMutation } from "apollo";
-import type { UpdateFormMutation } from "apollo";
-import type { FormCardFormFragment } from "apollo";
+import { useDeleteFormMutation, DeleteFormMutation } from "apollo/schema";
+import { useArchiveFormMutation, ArchiveFormMutation } from "apollo/schema";
+import { useRestoreFormMutation, RestoreFormMutation } from "apollo/schema";
+import type { UpdateFormMutation } from "apollo/schema";
+import type { FormCardFormFragment } from "apollo/schema";
 
 gql`
   fragment FormCardForm on Form {

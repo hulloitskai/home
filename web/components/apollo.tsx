@@ -126,12 +126,16 @@ export const ApolloProvider: FC<ApolloProviderProps> = ({
   children,
 }) => {
   const apolloContext = useContext(getApolloContext());
-  const apolloClient = useMemo(() => {
-    if (apolloContext.client) {
-      return apolloContext.client;
-    }
-    return initializeApolloClient({ initialState });
-  }, [apolloContext]);
+  const apolloClient = useMemo(
+    () => {
+      if (apolloContext.client) {
+        return apolloContext.client;
+      }
+      return initializeApolloClient({ initialState });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [apolloContext],
+  );
 
   return <Provider client={apolloClient}>{children}</Provider>;
 };
@@ -148,7 +152,7 @@ let globalFetchIsPatched = false;
 //
 // See: https://github.com/apollographql/apollo-client/issues/6765
 // @ts-ignore
-export const patchNodeFetchForSSR = async () => {
+export const patchNodeFetchForSSR = async (): Promise<void> => {
   if (typeof window === "undefined" && !globalFetchIsPatched) {
     // @ts-ignore
     const { default: fetch } = await import("node-fetch");

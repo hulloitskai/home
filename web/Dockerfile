@@ -25,11 +25,12 @@ FROM node:14-alpine3.13 AS runner
 RUN apk add --update --no-cache curl
 
 WORKDIR /app
-COPY --from=builder /dist/web/next.config.js ./
-COPY --from=builder /dist/web/public ./public
-COPY --from=builder /dist/web/.next/ .next/
-COPY --from=builder /dist/web/node_modules/ node_modules/
-COPY --from=builder /dist/web/package.json package.json
+COPY --from=builder /dist/web/next.config.js /dist/web/package.json /dist/web/yarn.lock ./
+COPY --from=builder /dist/web/public ./public/
+COPY --from=builder /dist/web/.next/ ./.next/
+
+# Install only production dependencies
+RUN yarn install --production --frozen-lockfile
 
 # Configure permissions
 RUN addgroup -g 1001 -S docker && \

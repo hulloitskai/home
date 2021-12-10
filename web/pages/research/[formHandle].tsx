@@ -31,13 +31,13 @@ import { patchNodeFetchForSSR } from "components/apollo";
 import { initializeApolloClient } from "components/apollo";
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useSubmitFormMutation } from "apollo";
+import { useSubmitFormMutation } from "apollo/schema";
 
 import {
   ResearchPagePropsDocument,
   ResearchPagePropsQuery,
   ResearchPagePropsQueryVariables,
-} from "apollo";
+} from "apollo/schema";
 
 interface ResearchPageProps {
   readonly form: NonNullable<ResearchPagePropsQuery["form"]>;

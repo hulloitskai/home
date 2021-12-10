@@ -1,46 +1,53 @@
 use super::*;
 
 #[derive(Debug, Clone, From)]
-pub(super) struct FormObject {
-    pub record: Record<Form>,
-}
+pub(super) struct FormObject(Form);
 
 #[Object(name = "Form")]
 impl FormObject {
     async fn id(&self) -> Id<Form> {
-        self.record.id().into()
+        let FormObject(form) = self;
+        form.id.into()
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        self.record.created_at().into()
+        let FormObject(form) = self;
+        form.created_at.into()
     }
 
-    async fn updated_at(&self) -> DateTimeScalar {
-        self.record.updated_at().into()
+    async fn updated_at(&self) -> Option<DateTimeScalar> {
+        let FormObject(form) = self;
+        form.updated_at.map(Into::into)
     }
 
     async fn handle(&self) -> &str {
-        self.record.handle.as_str()
+        let FormObject(form) = self;
+        form.handle.as_str()
     }
 
-    async fn name(&self) -> &str {
-        self.record.name.as_str()
+    async fn name(&self) -> &String {
+        let FormObject(form) = self;
+        &form.name
     }
 
-    async fn description(&self) -> Option<&str> {
-        self.record.description.as_deref()
+    async fn description(&self) -> &Option<String> {
+        let FormObject(form) = self;
+        &form.description
     }
 
-    async fn respondent_label(&self) -> Option<&str> {
-        self.record.respondent_label.as_deref()
+    async fn respondent_label(&self) -> &Option<String> {
+        let FormObject(form) = self;
+        &form.respondent_label
     }
 
-    async fn respondent_helper(&self) -> Option<&str> {
-        self.record.respondent_helper.as_deref()
+    async fn respondent_helper(&self) -> &Option<String> {
+        let FormObject(form) = self;
+        &form.respondent_helper
     }
 
     async fn fields(&self) -> Vec<FormFieldObject> {
-        self.record.fields.iter().cloned().map(Into::into).collect()
+        let FormObject(form) = self;
+        form.fields.iter().cloned().map(Into::into).collect()
     }
 
     async fn responses(
@@ -57,7 +64,8 @@ impl FormObject {
     }
 
     async fn is_archived(&self) -> bool {
-        self.record.is_archived()
+        let FormObject(form) = self;
+        form.is_archived()
     }
 }
 
@@ -66,6 +74,8 @@ impl FormObject {
         &self,
         ctx: &Context<'_>,
     ) -> Result<Vec<FormResponseObject>> {
+        let FormObject(form) = self;
+
         let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
@@ -76,7 +86,8 @@ impl FormObject {
             bail!("not authenticated");
         }
 
-        let responses = Form::responses(&self.record)
+        let responses = form
+            .responses()
             .load(&ctx)
             .await
             .context("failed to find responses")?;
@@ -91,6 +102,8 @@ impl FormObject {
         Ok(responses)
     }
     async fn resolve_responses_count(&self, ctx: &Context<'_>) -> Result<u64> {
+        let FormObject(form) = self;
+
         let identity = ctx.userinfo();
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
@@ -101,7 +114,8 @@ impl FormObject {
             bail!("not authenticated");
         }
 
-        let count = Form::responses(&self.record)
+        let count = form
+            .responses()
             .count(&ctx)
             .await
             .context("failed to count responses")?;
@@ -416,16 +430,14 @@ impl FormMutation {
             .collect::<Result<Vec<_>>>()
             .context("invalid form field")?;
 
-        let mut form = Record::new({
-            Form::builder()
-                .handle(handle)
-                .name(name)
-                .description(description)
-                .fields(fields)
-                .respondent_label(respondent_label)
-                .respondent_helper(respondent_helper)
-                .build()
-        });
+        let mut form = Form::builder()
+            .handle(handle)
+            .name(name)
+            .description(description)
+            .fields(fields)
+            .respondent_label(respondent_label)
+            .respondent_helper(respondent_helper)
+            .build();
         form.save(&ctx).await.context("failed to save form")?;
 
         let form = FormObject::from(form);
@@ -461,20 +473,17 @@ impl FormMutation {
             Handle::from_str(&handle).context("failed to parse handle")?;
 
         let mut form = {
-            let Record { meta, data } = Form::get(form_id)
+            let form = Form::get(form_id)
                 .load(&ctx)
                 .await
                 .context("failed to load form")?;
-            Record {
-                meta,
-                data: Form {
-                    handle,
-                    name,
-                    description,
-                    respondent_label,
-                    respondent_helper,
-                    ..data
-                },
+            Form {
+                handle,
+                name,
+                description,
+                respondent_label,
+                respondent_helper,
+                ..form
             }
         };
         form.save(&ctx).await.context("failed to save form")?;
@@ -506,13 +515,11 @@ impl FormMutation {
             .collect::<Result<Vec<_>>>()
             .context("invalid field")?;
 
-        let mut response = Record::new({
-            FormResponse::builder()
-                .form_id(form_id)
-                .respondent(respondent)
-                .fields(fields)
-                .build()
-        });
+        let mut response = FormResponse::builder()
+            .form_id(form_id)
+            .respondent(respondent)
+            .fields(fields)
+            .build();
         response
             .save(&ctx)
             .await
@@ -577,7 +584,8 @@ impl FormMutation {
                     .load(&ctx)
                     .await
                     .context("failed to load form")?;
-                form.archive(&ctx).await?;
+                form.archived_at = Some(now());
+                form.save(&ctx).await.context("failed to save form")?;
                 Ok(form)
             })
             .await?;
@@ -612,7 +620,8 @@ impl FormMutation {
                     .load(&ctx)
                     .await
                     .context("failed to load form")?;
-                form.restore(&ctx).await?;
+                form.archived_at = None;
+                form.save(&ctx).await.context("failed to save form")?;
                 Ok(form)
             })
             .await?;
@@ -669,24 +678,22 @@ impl TryFrom<FormFieldInputConfigInput> for FormFieldInputConfig {
             single_choice,
             multiple_choice,
         } = input;
+        let text = text.unwrap_or_default();
 
         use FormFieldInputConfig::*;
-        let config = if text.unwrap_or_default() {
+        let input = if text {
             Text
-        } else if let Some(FormFieldSingleChoiceInputConfigInput { options }) =
-            single_choice
-        {
+        } else if let Some(input) = single_choice {
+            let FormFieldSingleChoiceInputConfigInput { options } = input;
             SingleChoice { options }
-        } else if let Some(FormFieldMultipleChoiceInputConfigInput {
-            options,
-        }) = multiple_choice
-        {
+        } else if let Some(input) = multiple_choice {
+            let FormFieldMultipleChoiceInputConfigInput { options } = input;
             MultipleChoice { options }
         } else {
-            bail!("not configured");
+            bail!("no selection");
         };
 
-        Ok(config)
+        Ok(input)
     }
 }
 

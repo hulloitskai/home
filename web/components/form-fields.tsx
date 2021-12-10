@@ -19,18 +19,17 @@ import {
   FormHelperText,
 } from "@chakra-ui/react";
 
-import { HandleField } from "components/handle-field";
+import { HandleField, WithHandleFieldValues } from "components/handle-field";
 import { TextareaAutosize } from "components/textarea";
 
-import { FormFieldInput, FormFieldInputConfigInput } from "apollo";
+import { FormFieldInput, FormFieldInputConfigInput } from "apollo/schema";
 
-export type FormFieldValues = {
-  handle: string;
+export interface FormFieldValues extends WithHandleFieldValues {
   name: string;
   description: string;
   respondent: { label: string; helper: string };
   fields: FormFieldValue[];
-};
+}
 
 export type FormFieldValue = {
   question: string;
@@ -208,11 +207,15 @@ const FormFieldsFields: FC<FormFieldsFieldsProps> = ({
     control,
     name: "fields",
   });
-  useEffect(() => {
-    if (isEmpty(fields)) {
-      append({}, { shouldFocus: false });
-    }
-  }, []);
+  useEffect(
+    () => {
+      if (isEmpty(fields)) {
+        append({}, { shouldFocus: false });
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   return (
     <FormControl isInvalid={!!errors.fields}>

@@ -23,31 +23,31 @@ import { HomeHeartSection } from "components/home-heart-section";
 import { HomeMusicSection } from "components/home-music-section";
 
 import { KnowledgeGraph } from "components/knowledge-graph";
-import { KnowledgeGraphEntryFragment } from "apollo";
+import { KnowledgeGraphEntryFragment } from "apollo/schema";
 
 import {
   HomeHeartSectionDocument,
   HomeHeartSectionQuery,
   HomeHeartSectionQueryVariables,
-} from "apollo";
+} from "apollo/schema";
 
 import {
   HomeMusicSectionDocument,
   HomeMusicSectionQuery,
   HomeMusicSectionQueryVariables,
-} from "apollo";
+} from "apollo/schema";
 
 import {
   MusicLyricsDocument,
   MusicLyricsQuery,
   MusicLyricsQueryVariables,
-} from "apollo";
+} from "apollo/schema";
 
 import { patchNodeFetchForSSR } from "components/apollo";
 import { initializeApolloClient } from "components/apollo";
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useHomePageQuery } from "apollo";
+import { useHomePageQuery } from "apollo/schema";
 
 gql`
   query HomePage($dailyNoteId: String!) {
@@ -145,7 +145,7 @@ const HomePage: NextPage = () => {
       </VStack>
       {dailyEntry && entries && (
         <DarkMode>
-          <Box alignSelf="stretch" pos="relative" bg="pink.50">
+          <Box alignSelf="stretch" pos="relative">
             <ClientOnly>
               <KnowledgeGraph
                 entries={entries}

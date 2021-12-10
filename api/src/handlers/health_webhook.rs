@@ -24,22 +24,23 @@ async fn receive(
         for measurement in rate.data {
             let HealthExportHeartRateMeasurement {
                 avg: measurement,
-                date: timestamp,
+                date: measured_at,
             } = measurement;
 
             let measurement = measurement.round() as u16;
-            let timestamp = {
-                let timestamp = DateTime::parse_from_str(
-                    &timestamp, "%F %T %z",
-                )
-                .context("failed to parse heart rate measurement date")?;
-                DateTime::from(timestamp)
+            let measured_at = {
+                let measured_at =
+                    DateTime::parse_from_str(&measured_at, "%F %T %z")
+                        .context(
+                            "failed to parse heart rate measurement date",
+                        )?;
+                DateTime::from(measured_at)
             };
 
             ctx.transact(|ctx| async move {
                 let rate_exists = HeartRate::find_one({
                     HeartRateConditions::builder()
-                        .timestamp(Comparison::Eq(timestamp))
+                        .measured_at(Comparison::Eq(measured_at))
                         .build()
                 })
                 .exists(&ctx)
@@ -47,16 +48,14 @@ async fn receive(
                 .context("failed to lookup conflicting heart rates")?;
 
                 if !rate_exists {
-                    let mut rate = Record::new({
-                        HeartRate::builder()
-                            .measurement(measurement)
-                            .timestamp(timestamp)
-                            .build()
-                    });
+                    let mut rate = HeartRate::builder()
+                        .measurement(measurement)
+                        .measured_at(measured_at)
+                        .build();
                     rate.save(&ctx).await?;
                 } else {
                     debug!(
-                        %timestamp,
+                        %measured_at,
                         "existing heart rate for timestamp",
                     )
                 }

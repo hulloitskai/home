@@ -14,12 +14,12 @@ import {
   FormHelperText,
 } from "@chakra-ui/react";
 
-interface HandleFieldValues {
+export interface WithHandleFieldValues {
   name: string;
   handle: string;
 }
 
-export interface HandleFieldProps<TFieldValues extends HandleFieldValues>
+export interface HandleFieldProps<TFieldValues extends WithHandleFieldValues>
   extends BoxProps,
     Pick<
       InputProps,
@@ -28,22 +28,25 @@ export interface HandleFieldProps<TFieldValues extends HandleFieldValues>
   readonly formMethods: UseFormReturn<TFieldValues>;
 }
 
-const HANDLE_REGEX = /^([a-z0-9]+-*)*[a-z0-9]$/;
+const handleRegex = /^([a-z0-9]+-*)*[a-z0-9]$/;
+const handleIsRequired = true;
+const handleMinLength = 2;
+const handleMaxLength = 32;
 
-export const HandleField = <TFieldValues extends HandleFieldValues>({
+export const HandleField = <TFieldValues extends WithHandleFieldValues>({
   formMethods,
   defaultValue,
   placeholder,
   ...otherProps
 }: HandleFieldProps<TFieldValues>) => {
-  // TODO: Hack because of the limitations of react-hook-form@v7:
+  // HACK: Type cast due to the limitations of react-hook-form@v7:
   // https://github.com/react-hook-form/react-hook-form/issues/4373
   const {
     register,
     control,
     setValue,
     formState: { errors, isDirty },
-  } = formMethods as unknown as UseFormReturn<HandleFieldValues>;
+  } = formMethods as unknown as UseFormReturn<WithHandleFieldValues>;
 
   const name = useWatch({
     control,
@@ -59,27 +62,34 @@ export const HandleField = <TFieldValues extends HandleFieldValues>({
         shouldValidate: true,
       });
     }
-  }, [name, isDirty]);
+  }, [name, isDirty, setValue]);
 
   return (
-    <FormControl isRequired isInvalid={!!errors.handle} {...otherProps}>
+    <FormControl
+      isRequired={handleIsRequired}
+      isInvalid={!!errors.handle}
+      {...otherProps}
+    >
       <FormLabel>Handle</FormLabel>
       <Input
         type="text"
-        pattern={HANDLE_REGEX.source}
+        isRequired={handleIsRequired}
+        minLength={handleMinLength}
+        maxLength={handleMaxLength}
+        pattern={handleRegex.source}
         {...{ defaultValue, placeholder }}
         {...register("handle", {
-          required: true,
+          required: handleIsRequired,
           pattern: {
-            value: HANDLE_REGEX,
+            value: handleRegex,
             message: "Invalid format.",
           },
           minLength: {
-            value: 2,
+            value: handleMinLength,
             message: "Too short.",
           },
           maxLength: {
-            value: 32,
+            value: handleMaxLength,
             message: "Too long.",
           },
         })}
@@ -88,7 +98,8 @@ export const HandleField = <TFieldValues extends HandleFieldValues>({
         <FormErrorMessage>{errors.handle.message}</FormErrorMessage>
       )}
       <FormHelperText>
-        Can only contain lowercase letters, numbers, and dashes.
+        Can only contain lowercase letters, numbers, and dashes;{" "}
+        {handleMinLength}-{handleMaxLength} characters.
       </FormHelperText>
     </FormControl>
   );

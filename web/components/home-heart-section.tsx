@@ -8,15 +8,7 @@ import { HeartStat } from "components/heart-stat";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useHomeHeartSectionQuery } from "apollo";
-
-gql`
-  fragment HeartStatHeartRate on HeartRate {
-    id
-    measurement
-    timestamp
-  }
-`;
+import { useHomeHeartSectionQuery } from "apollo/schema";
 
 gql`
   query HomeHeartSection {

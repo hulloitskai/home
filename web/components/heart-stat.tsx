@@ -8,13 +8,13 @@ import { Text } from "@chakra-ui/react";
 import { HeartBeat } from "components/heart-beat";
 
 import { gql } from "@apollo/client";
-import type { HeartStatHeartRateFragment } from "apollo";
+import type { HeartStatHeartRateFragment } from "apollo/schema";
 
 gql`
   fragment HeartStatHeartRate on HeartRate {
     id
+    measuredAt
     measurement
-    timestamp
   }
 `;
 
@@ -23,7 +23,7 @@ export interface HeartStatProps extends BoxProps {
 }
 
 export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {
-  const { measurement, timestamp: timestampISO } = rate ?? {};
+  const { measuredAt: measuredAtISO, measurement } = rate ?? {};
 
   // Update last-measured description every 5 seconds.
   const [lastMeasured, setLastMeasured] = useState<string | undefined>();
@@ -33,11 +33,11 @@ export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {
       units: ["h", "m", "s"],
       round: true,
     };
-    if (timestampISO) {
-      const timestamp = DateTime.fromISO(timestampISO);
+    if (measuredAtISO) {
+      const measuredAt = DateTime.fromISO(measuredAtISO);
       (() => {
         const lastReported = humanizeDuration(
-          timestamp.diffNow().toMillis(),
+          measuredAt.diffNow().toMillis(),
           humanizeDurationOptions,
         );
         setLastMeasured(lastReported);
@@ -45,16 +45,14 @@ export const HeartStat: FC<HeartStatProps> = ({ rate, ...otherProps }) => {
 
       const interval = setInterval(() => {
         const value = humanizeDuration(
-          timestamp.diffNow().toMillis(),
+          measuredAt.diffNow().toMillis(),
           humanizeDurationOptions,
         );
-        if (value !== lastMeasured) {
-          setLastMeasured(value);
-        }
+        setLastMeasured(value);
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [timestampISO]);
+  }, [measuredAtISO]);
 
   return (
     <VStack {...otherProps}>

@@ -1,14 +1,16 @@
 {
   "name": "web",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "dev": "next dev -H ${WEB_HOST:-0.0.0.0} -p ${WEB_PORT:-8000}",
+    "dev": "dotenv yarn dev:inner",
+    "dev:inner": "next dev -H ${WEB_HOST:-0.0.0.0} -p ${WEB_PORT:-8000}",
     "format": "prettier --write .",
     "lint": "eslint . && tsc --noEmit",
     "build": "next build",
-    "start": "next start -H ${WEB_HOST:-0.0.0.0} -p ${WEB_PORT:-8000}",
+    "start": "dotenv yarn start:inner",
+    "start:inner": "next start -H ${WEB_HOST:-0.0.0.0} -p ${WEB_PORT:-8000}",
     "generate": "npm run generate:graphql",
     "generate:graphql": "graphql-codegen --config codegen.yml"
   },
@@ -35,6 +37,7 @@
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
     "deepmerge": "^4.2.2",
+    "dotenv-cli": "^4.1.1",
     "framer-motion": "^5.3.3",
     "graphql": "^16.0.1",
     "humanize-duration": "^3.27.0",
@@ -48,6 +51,7 @@
     "react-textarea-autosize": "^8.3.3",
     "sentry": "^0.1.2",
     "slugify": "^1.6.3",
+    "subscriptions-transport-ws": "^0.11.0",
     "tailwindcss": "^2.2.19"
   },
   "devDependencies": {
@@ -67,7 +71,6 @@
     "@types/tailwindcss": "^2.2.4",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
-    "dotenv": "^10.0.0",
     "eslint": "<8.0.0",
     "eslint-config-next": "^12.0.4",
     "eslint-config-prettier": "^8.3.0",

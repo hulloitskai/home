@@ -7,7 +7,7 @@ import { Progress } from "@chakra-ui/react";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useMusicLyricsQuery } from "apollo";
+import { useMusicLyricsQuery } from "apollo/schema";
 
 gql`
   query MusicLyrics {

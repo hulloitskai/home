@@ -1,30 +1,28 @@
 use super::*;
 
 #[derive(Debug, Clone, From)]
-pub(super) struct FormResponseObject {
-    pub record: Record<FormResponse>,
-}
+pub(super) struct FormResponseObject(FormResponse);
 
 #[Object(name = "FormResponse")]
 impl FormResponseObject {
     async fn id(&self) -> Id<FormResponse> {
-        self.record.id().into()
+        let FormResponseObject(response) = self;
+        response.id.into()
     }
 
     async fn created_at(&self) -> DateTimeScalar {
-        self.record.created_at().into()
+        let FormResponseObject(response) = self;
+        response.created_at.into()
     }
 
-    async fn updated_at(&self) -> DateTimeScalar {
-        self.record.updated_at().into()
-    }
-
-    async fn respondent(&self) -> &str {
-        self.record.respondent.as_str()
+    async fn respondent(&self) -> &String {
+        let FormResponseObject(response) = self;
+        &response.respondent
     }
 
     async fn fields(&self) -> Vec<FormResponseFieldObject> {
-        self.record
+        let FormResponseObject(response) = self;
+        response
             .fields
             .iter()
             .cloned()
@@ -39,11 +37,11 @@ impl FormResponseObject {
 
 impl FormResponseObject {
     async fn resolve_form(&self, ctx: &Context<'_>) -> Result<FormObject> {
+        let FormResponseObject(response) = self;
         let services = ctx.services();
         let ctx = EntityContext::new(services.clone());
 
-        let form = self
-            .record
+        let form = response
             .form()
             .load(&ctx)
             .await

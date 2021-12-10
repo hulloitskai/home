@@ -11,10 +11,10 @@ import { MusicLyrics } from "components/music-lyrics";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useHomeMusicSectionQuery } from "apollo";
-import { useHomeMusicSectionHeartbeatQuery } from "apollo";
+import { useHomeMusicSectionQuery } from "apollo/schema";
+import { useHomeMusicSectionHeartbeatQuery } from "apollo/schema";
 
-import type { HomeMusicSectionQuery } from "apollo";
+import type { HomeMusicSectionQuery } from "apollo/schema";
 
 gql`
   query HomeMusicSection {
@@ -65,7 +65,11 @@ export const HomeMusicSection: FC<HomeMusicSectionProps> = ({
   const { musicInfo } = data ?? {};
 
   // Record data timestamp.
-  const dataTimestamp = useMemo(() => DateTime.now(), [data]);
+  const dataTimestamp = useMemo(
+    () => DateTime.now(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data],
+  );
 
   // Send heartbeat signal every 2.5 seconds.
   useHomeMusicSectionHeartbeatQuery({
@@ -102,7 +106,7 @@ export const HomeMusicSection: FC<HomeMusicSectionProps> = ({
     } else {
       setInterpolatedProgress(undefined);
     }
-  }, [musicInfo]);
+  }, [musicInfo, dataTimestamp]);
 
   const render = (info: NonNullable<HomeMusicSectionQuery["musicInfo"]>) => {
     const { isPlaying, track } = info;

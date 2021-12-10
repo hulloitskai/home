@@ -18,7 +18,6 @@ pub use phone::*;
 
 use super::*;
 
-use entrust::Record;
 use entrust::{AggregateOneQuery, AggregateQuery, MaybeAggregateOneQuery};
 use entrust::{Comparison, SortingDirection};
 use entrust::{EmptyConditions, EntityConditions};
@@ -26,6 +25,7 @@ use entrust::{EmptySorting, EntitySorting};
 use entrust::{Entity, EntityContext, EntityId, EntityServices};
 use entrust::{FindOneQuery, FindQuery, MaybeFindOneQuery};
 use entrust::{Object, ObjectId};
+use entrust::{Updateable, UpdateableView, UpdateableViewMut};
 
 use ::bson::DateTime as BsonDateTime;
 use ::bson::{bson, doc, from_document, to_document};

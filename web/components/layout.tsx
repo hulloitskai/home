@@ -16,7 +16,7 @@ import { InternalLink, InternalLinkOverlay } from "components/link";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useLayoutFooterQuery } from "apollo";
+import { useLayoutFooterQuery } from "apollo/schema";
 
 export interface LayoutProps extends Omit<StackProps, "direction"> {
   badge: string;
@@ -158,9 +158,13 @@ export const LayoutFooter: FC<LayoutFooterProps> = () => {
   });
   const { viewer } = data ?? {};
   const { email, isAdmin } = viewer ?? {};
-  useEffect(() => {
-    refetch();
-  }, [user]);
+  useEffect(
+    () => {
+      refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user],
+  );
 
   const tooltipBg = useColorModeValue("gray.900", undefined);
   const tooltipStyles = useMemo(

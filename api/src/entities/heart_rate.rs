@@ -4,39 +4,63 @@ pub type HeartRateId = EntityId<HeartRate>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct HeartRate {
-    pub timestamp: DateTime,
+    #[builder(default, setter(skip))]
+    pub id: HeartRateId,
+
+    pub measured_at: DateTime,
     pub measurement: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct HeartRateDocument {
-    timestamp: BsonDateTime,
-    measurement: u16,
+    pub _id: ObjectId,
+    pub measured_at: BsonDateTime,
+    pub measurement: u16,
+}
+
+impl From<HeartRate> for HeartRateDocument {
+    fn from(rate: HeartRate) -> Self {
+        let HeartRate {
+            id,
+            measured_at,
+            measurement,
+        } = rate;
+
+        HeartRateDocument {
+            _id: id.into(),
+            measured_at: BsonDateTime::from_chrono(measured_at),
+            measurement,
+        }
+    }
+}
+
+impl From<HeartRateDocument> for HeartRate {
+    fn from(doc: HeartRateDocument) -> Self {
+        let HeartRateDocument {
+            _id,
+            measured_at,
+            measurement,
+        } = doc;
+
+        Self {
+            id: _id.into(),
+            measured_at: measured_at.to_chrono(),
+            measurement,
+        }
+    }
 }
 
 impl Object for HeartRate {
     fn to_document(&self) -> Result<Document> {
-        let HeartRate {
-            timestamp,
-            measurement,
-        } = self.clone();
-        let doc = HeartRateDocument {
-            timestamp: timestamp.into(),
-            measurement,
-        };
+        let doc = HeartRateDocument::from(self.to_owned());
         let doc = to_document(&doc)?;
         Ok(doc)
     }
 
     fn from_document(doc: Document) -> Result<Self> {
-        let HeartRateDocument {
-            timestamp,
-            measurement,
-        } = from_document(doc)?;
-        let rate = Self {
-            timestamp: timestamp.to_chrono(),
-            measurement,
-        };
+        let doc = from_document::<HeartRateDocument>(doc)?;
+        let rate = Self::from(doc);
         Ok(rate)
     }
 }
@@ -47,20 +71,24 @@ impl Entity for HeartRate {
     type Services = Services;
     type Conditions = HeartRateConditions;
     type Sorting = HeartRateSorting;
+
+    fn id(&self) -> EntityId<Self> {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Builder)]
 pub struct HeartRateConditions {
     #[builder(default, setter(into))]
-    pub timestamp: Option<Comparison<DateTime>>,
+    pub measured_at: Option<Comparison<DateTime>>,
 }
 
 impl EntityConditions for HeartRateConditions {
-    fn into_document(self) -> Document {
-        let HeartRateConditions { timestamp } = self;
+    fn to_document(&self) -> Document {
+        let HeartRateConditions { measured_at } = self;
         let mut doc = Document::new();
-        if let Some(timestamp) = timestamp {
-            doc.insert("timestamp", timestamp);
+        if let Some(measured_at) = measured_at {
+            doc.insert("measuredAt", measured_at);
         }
         doc
     }
@@ -68,14 +96,14 @@ impl EntityConditions for HeartRateConditions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HeartRateSorting {
-    Timestamp(SortingDirection),
+    MeasuredAt(SortingDirection),
 }
 
 impl EntitySorting for HeartRateSorting {
-    fn into_document(self) -> Document {
+    fn to_document(&self) -> Document {
         use HeartRateSorting::*;
         match self {
-            Timestamp(direction) => doc! { "timestamp": direction },
+            MeasuredAt(direction) => doc! { "measuredAt": direction },
         }
     }
 }

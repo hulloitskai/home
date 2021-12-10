@@ -24,7 +24,7 @@ import { SkeletonBlock } from "components/skeleton";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useFormResponseDialogQuery } from "apollo";
+import { useFormResponseDialogQuery } from "apollo/schema";
 
 gql`
   query FormResponseDialog($responseId: ID!) {

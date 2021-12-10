@@ -18,7 +18,7 @@ import { CreateFormDialog } from "components/create-form-dialog";
 
 import { gql } from "@apollo/client";
 import { useHandleQueryError } from "components/apollo";
-import { useAdminResearchSectionQuery } from "apollo";
+import { useAdminResearchSectionQuery } from "apollo/schema";
 
 gql`
   query AdminResearchSection($skip: Int = 0) {

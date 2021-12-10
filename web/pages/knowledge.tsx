@@ -7,7 +7,7 @@ import { ClientOnly } from "components/client-only";
 import { KnowledgeGraph } from "components/knowledge-graph";
 
 import { gql } from "@apollo/client";
-import { useKnowledgePageQuery } from "apollo";
+import { useKnowledgePageQuery } from "apollo/schema";
 
 gql`
   query KnowledgePage {

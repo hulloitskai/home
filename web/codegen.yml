@@ -1,12 +1,12 @@
 overwrite: true
-schema: http://localhost:3000/graphql
+schema: http://localhost:16001/graphql
 documents:
   - ./components/**/*.ts
   - ./components/**/*.tsx
   - ./pages/**/*.ts
   - ./pages/**/*.tsx
 generates:
-  ./apollo/index.ts:
+  ./apollo/schema.ts:
     plugins:
       - typescript
       - typescript-operations
