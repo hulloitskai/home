@@ -10,11 +10,12 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Login to Docker Hub
+      - name: Login to GHCR
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Restore Docker cache
         uses: actions/cache@v2
         env:
@@ -31,7 +32,7 @@ jobs:
         id: generate-tags
         uses: hulloitskai/generate-docker-tags-action@v0.2.1
         with:
-          repo: hulloitskai/home-web
+          repo: ghcr.io/hulloitskai/home-web
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
