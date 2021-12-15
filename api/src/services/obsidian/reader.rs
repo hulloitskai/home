@@ -13,7 +13,6 @@ use walkdir::WalkDir;
 #[derive(Debug)]
 pub(super) struct Reader {
     vault_path: String,
-    vault_dir: File,
 }
 
 impl Reader {
@@ -30,10 +29,7 @@ impl Reader {
             vault_dir.metadata().context("failed to read vault")?;
         ensure!(vault_dir_meta.is_dir(), "vault must be a directory");
 
-        let reader = Self {
-            vault_path,
-            vault_dir,
-        };
+        let reader = Self { vault_path };
         Ok(reader)
     }
 
