@@ -96,7 +96,7 @@ impl ServiceInner {
         let event: Event = event.into();
         let ServiceInner { client, write_key } = &self;
         debug!(event = %format_event(&event), "sending event");
-        client.send(write_key.to_owned(), event.into()).await
+        client.send(write_key.clone(), event.into()).await
     }
 }
 

@@ -62,7 +62,7 @@ impl Service {
         };
 
         let url = {
-            let mut url = issuer_base_url.to_owned();
+            let mut url = issuer_base_url.clone();
             {
                 let mut segments = url.path_segments_mut().unwrap();
                 segments.push("userinfo");

@@ -40,7 +40,7 @@ impl HeartRateQuery {
         ctx: &Context<'_>,
     ) -> Result<Option<HeartRateObject>> {
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         let mut rates = HeartRate::find({
             let one_day_ago = now() - Duration::days(1);

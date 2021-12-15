@@ -110,7 +110,7 @@ impl FormResponseQuery {
     ) -> Result<Option<FormResponseObject>> {
         let userinfo = ctx.userinfo();
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         if let Some(userinfo) = userinfo {
             ensure!(userinfo.is_admin, "not authorized");

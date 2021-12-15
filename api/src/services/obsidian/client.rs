@@ -65,7 +65,7 @@ impl Service {
             }
             None => {
                 let notes = {
-                    let reader = reader.to_owned();
+                    let reader = reader.clone();
                     spawn_blocking(move || reader.list_notes())
                         .await
                         .unwrap()?
@@ -90,6 +90,7 @@ impl Service {
     }
 
     pub async fn get_note(&self, id: &str) -> Result<Option<Note>> {
+        let id = id.to_owned();
         let Self {
             reader,
             notes_cache: cache,
@@ -101,23 +102,23 @@ impl Service {
         let _permit = sem.acquire().await.unwrap();
 
         // Retrieve note from cache, otherwise read note from disk.
-        let note = cache.get(&String::from(id));
+        let note = cache.get(&id);
         let note = match note {
             Some(note) => {
-                trace!(note = id, "got note from cache");
+                trace!(note = %id, "got note from cache");
                 note
             }
             None => {
                 let note = {
-                    let id = id.to_owned();
-                    let reader = reader.to_owned();
+                    let reader = reader.clone();
+                    let id = id.clone();
                     spawn_blocking(move || {
                         reader.read_note(&id).context("failed to read note")
                     })
                     .await
                     .unwrap()?
                 };
-                cache.insert(id.to_owned(), note.clone()).await;
+                cache.insert(id.clone(), note.clone()).await;
                 debug!(%id, "got note");
                 note
             }
@@ -145,7 +146,7 @@ impl Service {
                             continue;
                         }
                     }
-                    lookup.insert(name.to_owned(), other_note.to_owned());
+                    lookup.insert(name.clone(), other_note.clone());
                 }
             }
             lookup

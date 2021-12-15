@@ -53,7 +53,7 @@ impl From<HeartRateDocument> for HeartRate {
 
 impl Object for HeartRate {
     fn to_document(&self) -> Result<Document> {
-        let doc = HeartRateDocument::from(self.to_owned());
+        let doc = HeartRateDocument::from(self.clone());
         let doc = to_document(&doc)?;
         Ok(doc)
     }

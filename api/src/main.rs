@@ -310,7 +310,7 @@ async fn run() -> Result<()> {
                     ]
                     .into_iter()
                     .map(|url| {
-                        let mut url = url.to_owned();
+                        let mut url = url.clone();
                         url.set_path("");
                         let mut url = url.to_string();
                         url.pop();

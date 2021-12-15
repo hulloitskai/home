@@ -232,7 +232,7 @@ impl FormQuery {
     ) -> Result<Option<FormObject>> {
         let identity = ctx.userinfo();
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         let form_id = FormId::from(id);
         let form = Form::get(form_id)
@@ -264,7 +264,7 @@ impl FormQuery {
     ) -> Result<Option<FormObject>> {
         let identity = ctx.userinfo();
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         let handle =
             Handle::from_str(&handle).context("failed to parse handle")?;
@@ -301,7 +301,7 @@ impl FormQuery {
     ) -> Result<Vec<FormObject>> {
         let identity = ctx.userinfo();
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         if let Some(identity) = identity {
             ensure!(identity.is_admin, "not authorized");
@@ -310,18 +310,17 @@ impl FormQuery {
         }
         ensure!(take <= 25, "can only take up to 25 forms");
 
-        let forms = if include_archived {
-            Form::with_deleted()
-        } else {
-            Form::all()
-        };
-        let forms = forms
-            .skip(skip)
-            .take(take)
-            .sort(FormSorting::CreatedAt(SortingDirection::Desc))
-            .load(&ctx)
-            .await
-            .context("failed to find forms")?;
+        let forms = Form::find({
+            FormConditions::builder()
+                .include_archived(include_archived)
+                .build()
+        })
+        .skip(skip)
+        .take(take)
+        .sort(FormSorting::CreatedAt(SortingDirection::Desc))
+        .load(&ctx)
+        .await
+        .context("failed to find forms")?;
         let forms = forms
             .try_collect::<Vec<_>>()
             .await
@@ -406,7 +405,7 @@ impl FormMutation {
     ) -> Result<CreateFormPayload> {
         let identity = ctx.userinfo();
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         if let Some(identity) = identity {
             ensure!(identity.is_admin, "not authorized");
@@ -452,7 +451,7 @@ impl FormMutation {
     ) -> Result<UpdateFormPayload> {
         let identity = ctx.userinfo();
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         if let Some(identity) = identity {
             ensure!(identity.is_admin, "not authorized");
@@ -501,7 +500,7 @@ impl FormMutation {
         input: SubmitFormInput,
     ) -> Result<SubmitFormPayload> {
         let services = ctx.services();
-        let ctx = EntityContext::new(services.to_owned());
+        let ctx = EntityContext::new(services.clone());
 
         let SubmitFormInput {
             form_id,

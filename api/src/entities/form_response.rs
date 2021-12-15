@@ -70,7 +70,7 @@ impl From<FormResponseDocument> for FormResponse {
 
 impl Object for FormResponse {
     fn to_document(&self) -> Result<Document> {
-        let doc = FormResponseDocument::from(self.to_owned());
+        let doc = FormResponseDocument::from(self.clone());
         let doc = to_document(&doc)?;
         Ok(doc)
     }

@@ -64,7 +64,7 @@ checksum = "8b26702f315f53b6071259e15dd9d64528213b44d61de1ec926eca7715d62203"
 
 [[package]]
 name = "api"
-version = "0.8.10"
+version = "0.8.11"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -745,8 +745,8 @@ dependencies = [
 
 [[package]]
 name = "entrust"
-version = "0.3.1"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.3.1#4347d1e1658fec8aca2986d38acdaf01335fcffe"
+version = "0.3.2"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.3.2#bad91f75b88d8823742b80bcd8cbfacca6991963"
 dependencies = [
  "anyhow",
  "async-trait",

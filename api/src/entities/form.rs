@@ -192,7 +192,7 @@ impl Form {
 
 impl Object for Form {
     fn to_document(&self) -> Result<Document> {
-        let doc = FormDocument::from(self.to_owned());
+        let doc = FormDocument::from(self.clone());
         let doc = to_document(&doc)?;
         Ok(doc)
     }

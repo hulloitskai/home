@@ -52,7 +52,8 @@ impl Reader {
     }
 
     pub fn read_note(&self, id: &str) -> Result<Option<Note>> {
-        let path = self.note_path(id);
+        let id = id.to_owned();
+        let path = self.note_path(&id);
         let text = match read_to_string(&path) {
             Ok(text) => text,
             Err(error) => {
@@ -113,7 +114,7 @@ impl Reader {
         };
 
         let note = Note::builder()
-            .id(id.to_owned())
+            .id(id)
             .names(names)
             .links(links)
             .tags(tags)
