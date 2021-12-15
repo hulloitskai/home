@@ -132,8 +132,6 @@ impl EntityServices for Services {
 
 #[derive(Debug, Clone, Builder)]
 pub struct Settings {
-    pub api_base_url: Url,
-    pub api_public_base_url: Url,
+    pub base_url: Url,
     pub web_base_url: Url,
-    pub web_public_base_url: Url,
 }

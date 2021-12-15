@@ -9,7 +9,7 @@ import {
   handleCallback,
 } from "components/auth0-handler";
 
-import { webPublicBaseURL } from "config";
+import { baseUrl } from "config";
 
 export const setCookie = (
   res: NextApiResponse,
@@ -36,7 +36,7 @@ const authHandler = handleAuth({
     });
     return handleLogout(req, res, {
       ...options,
-      returnTo: `${webPublicBaseURL}/api/auth/callback`,
+      returnTo: `${baseUrl}/api/auth/callback`,
     });
   },
   callback: async (req, res, options) => {

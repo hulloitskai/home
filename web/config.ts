@@ -5,10 +5,8 @@ const {
   projectName,
   packageName,
   packageVersion,
-  apiBaseURL,
-  apiPublicBaseURL,
-  webBaseURL,
-  webPublicBaseURL,
+  baseUrl,
+  apiBaseUrl,
   sentryDSN,
   segmentWriteKey,
 } = {
@@ -18,10 +16,8 @@ const {
   projectName: string;
   packageName: string;
   packageVersion: string;
-  apiBaseURL: string | undefined;
-  apiPublicBaseURL: string | undefined;
-  webBaseURL: string | undefined;
-  webPublicBaseURL: string | undefined;
+  baseUrl: string | undefined;
+  apiBaseUrl: string | undefined;
   sentryDSN: string | undefined;
   segmentWriteKey: string | undefined;
 };
@@ -30,10 +26,8 @@ export {
   projectName,
   packageName,
   packageVersion,
-  apiBaseURL,
-  apiPublicBaseURL,
-  webBaseURL,
-  webPublicBaseURL,
+  apiBaseUrl,
+  baseUrl,
   sentryDSN,
   segmentWriteKey,
 };

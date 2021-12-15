@@ -64,7 +64,7 @@ checksum = "8b26702f315f53b6071259e15dd9d64528213b44d61de1ec926eca7715d62203"
 
 [[package]]
 name = "api"
-version = "0.8.11"
+version = "0.8.12"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -745,14 +745,15 @@ dependencies = [
 
 [[package]]
 name = "entrust"
-version = "0.3.2"
-source = "git+https://github.com/hulloitskai/entrust?tag=v0.3.2#bad91f75b88d8823742b80bcd8cbfacca6991963"
+version = "0.3.4"
+source = "git+https://github.com/hulloitskai/entrust?tag=v0.3.4#27663f0d9d7a09622162158f71c43ce526e62b04"
 dependencies = [
  "anyhow",
  "async-trait",
  "base64",
  "bson",
  "chrono",
+ "derivative",
  "futures-core",
  "futures-util",
  "heck",

@@ -45,7 +45,8 @@ impl Form {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct FormDocument {
-    pub _id: ObjectId,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
 
     pub created_at: BsonDateTime,
 
@@ -86,7 +87,7 @@ impl From<Form> for FormDocument {
         } = doc;
 
         FormDocument {
-            _id: id.into(),
+            id: id.into(),
             created_at: BsonDateTime::from_chrono(created_at),
             updated_at: updated_at.map(BsonDateTime::from_chrono),
             archived_at: archived_at.map(BsonDateTime::from_chrono),
@@ -103,7 +104,7 @@ impl From<Form> for FormDocument {
 impl From<FormDocument> for Form {
     fn from(doc: FormDocument) -> Self {
         let FormDocument {
-            _id,
+            id,
             created_at,
             updated_at,
             archived_at,
@@ -116,7 +117,7 @@ impl From<FormDocument> for Form {
         } = doc;
 
         Form {
-            id: _id.into(),
+            id: id.into(),
             created_at: created_at.to_chrono(),
             updated_at: updated_at.map(BsonDateTime::to_chrono),
             archived_at: archived_at.map(BsonDateTime::to_chrono),

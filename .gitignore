@@ -1,6 +1,5 @@
 # == Config ==
-/.env
-
+.env.local
 
 # == IDE ==
 # VSCode (keeping workspace configurations):

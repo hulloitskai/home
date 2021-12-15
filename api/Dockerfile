@@ -33,9 +33,9 @@ RUN addgroup -g 1001 -S docker && \
 USER docker
 
 # Run api
-ENV API_ENV=production
-ENV API_HOST=0.0.0.0
-ENV API_PORT=3000
-EXPOSE $API_PORT
+ENV ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
+EXPOSE $PORT
 ENTRYPOINT ["/app/api"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$API_PORT/health
+HEALTHCHECK CMD curl --fail --head http://localhost:$PORT/health

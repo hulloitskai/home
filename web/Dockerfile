@@ -39,10 +39,10 @@ RUN addgroup -g 1001 -S docker && \
 USER docker
 
 # Run web
-ENV NODE_ENV=production
-ENV WEB_HOST=0.0.0.0
-ENV WEB_PORT=8000
-EXPOSE $WEB_PORT
+ENV ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=8000
+EXPOSE $PORT
 ENTRYPOINT ["yarn"]
 CMD ["start"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$WEB_PORT/api/health
+HEALTHCHECK CMD curl --fail --head http://localhost:$PORT/api/health

@@ -23,7 +23,7 @@ import { TypedTypePolicies as TypePolicies } from "apollo/helpers";
 import { split as splitLinks } from "@apollo/client";
 import { from as mergeLinks } from "@apollo/client";
 
-import { apiBaseURL, apiPublicBaseURL } from "config";
+import { apiBaseUrl } from "config";
 
 const typePolicies: TypePolicies = {
   KnowledgeEntryLinks: { keyFields: false },
@@ -40,15 +40,11 @@ const typePolicies: TypePolicies = {
 };
 
 const createTerminatingLink = (): ApolloLink => {
-  if (!apiPublicBaseURL) {
+  if (!apiBaseUrl) {
     throw new Error("Missing API public base URL.");
   }
-
   const httpLink = new HttpLink({
-    uri:
-      typeof window !== "undefined"
-        ? `${apiPublicBaseURL}/graphql`
-        : `${apiBaseURL}/graphql`,
+    uri: `${apiBaseUrl}/graphql`,
     credentials: "include",
   });
   if (typeof window === "undefined") {
@@ -57,7 +53,7 @@ const createTerminatingLink = (): ApolloLink => {
 
   const wsLink = new WsLink({
     uri: (() => {
-      const { protocol, host, pathname } = new URL(apiPublicBaseURL);
+      const { protocol, host, pathname } = new URL(apiBaseUrl);
       const path = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
       switch (protocol) {
         case "http:":

@@ -9,7 +9,7 @@ pub use health_webhook::*;
 use super::*;
 
 use entities::*;
-use services::Services;
+use services::{Services, Settings};
 
 use entrust::Comparison;
 use entrust::{Entity, EntityId};

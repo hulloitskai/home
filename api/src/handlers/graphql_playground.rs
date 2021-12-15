@@ -11,8 +11,9 @@ pub struct GraphQLPlaygroundExtension {
 
 impl GraphQLPlaygroundExtension {
     pub fn new(services: &Services) -> Result<Self> {
+        let Settings { base_url, .. } = services.settings();
         let endpoint = {
-            let mut endpoint = services.settings().api_public_base_url.clone();
+            let mut endpoint = base_url.clone();
             if !matches!(endpoint.scheme(), "http" | "https") {
                 bail!("invalid GraphQL playground endpoint scheme");
             }

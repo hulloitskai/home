@@ -18,12 +18,12 @@ pub struct FormResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct FormResponseDocument {
-    pub _id: ObjectId,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
 
     pub created_at: BsonDateTime,
 
-    pub _form_id: ObjectId,
-
+    pub form_id: ObjectId,
     pub respondent: String,
     pub fields: Vec<FormResponseField>,
 }
@@ -32,16 +32,16 @@ impl From<FormResponse> for FormResponseDocument {
     fn from(response: FormResponse) -> Self {
         let FormResponse {
             id,
-            form_id,
             created_at,
+            form_id,
             respondent,
             fields,
         } = response;
 
         FormResponseDocument {
-            _id: id.into(),
-            _form_id: form_id.into(),
+            id: id.into(),
             created_at: BsonDateTime::from_chrono(created_at),
+            form_id: form_id.into(),
             respondent,
             fields,
         }
@@ -51,17 +51,17 @@ impl From<FormResponse> for FormResponseDocument {
 impl From<FormResponseDocument> for FormResponse {
     fn from(doc: FormResponseDocument) -> Self {
         let FormResponseDocument {
-            _id,
+            id,
             created_at,
-            _form_id,
+            form_id,
             respondent,
             fields,
         } = doc;
 
         FormResponse {
-            id: _id.into(),
+            id: id.into(),
             created_at: created_at.to_chrono(),
-            form_id: _form_id.into(),
+            form_id: form_id.into(),
             respondent,
             fields,
         }

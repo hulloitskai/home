@@ -14,7 +14,9 @@ pub struct HeartRate {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HeartRateDocument {
-    pub _id: ObjectId,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+
     pub measured_at: BsonDateTime,
     pub measurement: u16,
 }
@@ -28,7 +30,7 @@ impl From<HeartRate> for HeartRateDocument {
         } = rate;
 
         HeartRateDocument {
-            _id: id.into(),
+            id: id.into(),
             measured_at: BsonDateTime::from_chrono(measured_at),
             measurement,
         }
@@ -38,13 +40,13 @@ impl From<HeartRate> for HeartRateDocument {
 impl From<HeartRateDocument> for HeartRate {
     fn from(doc: HeartRateDocument) -> Self {
         let HeartRateDocument {
-            _id,
+            id,
             measured_at,
             measurement,
         } = doc;
 
         Self {
-            id: _id.into(),
+            id: id.into(),
             measured_at: measured_at.to_chrono(),
             measurement,
         }

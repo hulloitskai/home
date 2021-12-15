@@ -40,10 +40,12 @@ cover:_
    ./bootstrap-workspace.sh
    ```
 
-3. Fill out [`.env`](.env) file:
+3. Set environment overrides:
 
    ```bash
-   vi .env
+   vi ./web/.env.local
+   vi ./api/.env.local
+   vi ./migrator/.env.local
    ```
 
 4. Start background dependencies:

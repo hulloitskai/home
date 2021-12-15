@@ -10,6 +10,3 @@ cd ./web && yarn install && cd ..
 
 echo 'Installing dependencies: `migrator`' >&2
 cd ./migrator && yarn install && cd ..
-
-echo 'Bootstrapping .env from .env.example' >&2
-cp .env.example .env
